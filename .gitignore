@@ -1,0 +1,7 @@
+.env
+pycache/
+*.pyc
+instance/
+.venv/
+env/
+mobilestore.db

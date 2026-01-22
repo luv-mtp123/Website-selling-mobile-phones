@@ -1,44 +1,51 @@
-#### 📱 MobileStore - Website Bán Điện Thoại Tích Hợp AI
+#### **📱 MobileStore - Website Bán Điện Thoại Tích Hợp AI**
 
 
 
-&nbsp;	Chào mừng bạn đến với dự án MobileStore! Đây là một website thương mại điện tử bán điện thoại di động được xây dựng bằng Python Flask, tích hợp trí tuệ nhân tạo Google Gemini để tự động gợi ý phụ kiện phù hợp cho từng dòng máy.
+** 	Chào mừng bạn đến với dự án MobileStore! Đây là một website thương mại điện tử bán điện thoại di động được xây dựng bằng Python Flask, tích hợp trí tuệ nhân tạo Google Gemini để tự động gợi ý phụ kiện phù hợp cho từng dòng máy.**
 
 
 
-##### ✨ **Tính Năng Nổi Bật :**
+##### **✨ Tính Năng Nổi Bật :**
 
 
 
-\- Mua sắm thông minh:
+###### **🛍️ Trải Nghiệm Mua Sắm**
 
 
 
-\- Tìm kiếm sản phẩm theo tên.
+**Danh mục đa dạng: Hiển thị sản phẩm với hình ảnh sắc nét, chuẩn model (iPhone 15 Pro Max, S24 Ultra...).**
 
 
 
-\- Lọc theo thương hiệu (Apple, Samsung, Xiaomi...).
+**Tìm kiếm \& Lọc:**
 
 
 
-\- Sắp xếp theo giá (Tăng/Giảm dần).
+* **Tìm nhanh theo tên sản phẩm.**
 
 
 
-##### **🤖 Trợ lý ảo AI (Gemini):**
+* **Lọc theo thương hiệu (Apple, Samsung, Google...).**
 
 
 
-\- Tự động phân tích tên điện thoại bạn đang xem.
+* **Sắp xếp giá tiền**
+* 
+
+**##### 🤖 Trợ lý ảo AI (Gemini):**
 
 
 
-\- Gợi ý 3 món phụ kiện "chuẩn bài" nhất (ốp lưng, sạc nhanh...) kèm lý do thuyết phục.
+**- Tự động phân tích tên điện thoại bạn đang xem.**
 
 
 
-\- Hoạt động mượt mà trên mọi phiên bản Python (kể cả 3.14 mới nhất).
+**- Gợi ý 3 món phụ kiện "chuẩn bài" nhất (ốp lưng, sạc nhanh...) kèm lý do thuyết phục.**
+
+
+
+**- Hoạt động mượt mà trên mọi phiên bản Python (kể cả 3.14 mới nhất).**
 
 
 
@@ -46,31 +53,31 @@
 
 
 
-Đăng ký / Đăng nhập / Đăng xuất.
+**Đăng ký / Đăng nhập / Đăng xuất.**
 
 
 
-Phân quyền: Khách hàng (User) và Quản trị viên (Admin).
+**Phân quyền: Khách hàng (User) và Quản trị viên (Admin).**
 
 
 
-Cập nhật thông tin cá nhân.
+**Cập nhật thông tin cá nhân.**
 
 
 
-Quản trị (Admin Dashboard):
+###### **Quản trị (Admin Dashboard):**
 
 
 
-Thêm mới sản phẩm (kèm link ảnh).
+**Thêm mới sản phẩm (kèm link ảnh).**
 
 
 
-Xóa sản phẩm.
+**Xóa sản phẩm.**
 
 
 
-Xem thống kê số lượng người dùng và sản phẩm.
+**Xem thống kê số lượng người dùng và sản phẩm.**
 
 
 
@@ -78,43 +85,43 @@ Xem thống kê số lượng người dùng và sản phẩm.
 
 
 
-Trước khi chạy, hãy đảm bảo máy bạn đã cài:
+###### **Trước khi chạy, hãy đảm bảo máy bạn đã cài:**
 
 
 
-Python (Khuyên dùng bản 3.10 trở lên, dự án này hỗ trợ cả Python 3.14).
+**Python (Khuyên dùng bản 3.10 trở lên, dự án này hỗ trợ cả Python 3.14).**
 
 
 
-PIP (Trình quản lý thư viện Python).
+**PIP (Trình quản lý thư viện Python).**
 
 
 
-Các thư viện cần thiết:
+**Các thư viện cần thiết:**
 
 
 
-Dự án sử dụng các thư viện nhẹ và phổ biến:
+###### **Dự án sử dụng các thư viện nhẹ và phổ biến:**
 
 
 
-Flask (Web Framework)
+**Flask (Web Framework)**
 
 
 
-Flask-SQLAlchemy (Cơ sở dữ liệu)
+**Flask-SQLAlchemy (Cơ sở dữ liệu)**
 
 
 
-Flask-Login (Quản lý đăng nhập)
+**Flask-Login (Quản lý đăng nhập)**
 
 
 
-requests (Gọi API Google Gemini)
+**requests (Gọi API Google Gemini)**
 
 ##### 
 
-##### 🚀 Hướng Dẫn Chạy (3 Bước Đơn Giản)
+##### **🚀 Hướng Dẫn Chạy (3 Bước Đơn Giản)**
 
 
 
@@ -122,17 +129,17 @@ requests (Gọi API Google Gemini)
 
 
 
-Mở Terminal (hoặc CMD/PowerShell) tại thư mục dự án và chạy lệnh:
+**Mở Terminal (hoặc CMD/PowerShell) tại thư mục dự án và chạy lệnh:**
 
 
 
-&nbsp;	pip install -r requirements.txt
+\*\* 	pip install -r requirements.txt\*\*
 
 
 
 
 
-(Nếu chưa có file requirements.txt, hãy tạo nó với nội dung: Flask, Flask-SQLAlchemy, Flask-Login, requests, werkzeug).
+**(Nếu chưa có file requirements.txt, hãy tạo nó với nội dung: Flask, Flask-SQLAlchemy, Flask-Login, requests, werkzeug).**
 
 
 
@@ -140,9 +147,9 @@ Mở Terminal (hoặc CMD/PowerShell) tại thư mục dự án và chạy lện
 
 
 
-Mở file utils.py, đảm bảo biến GEMINI\_API\_KEY đã được điền mã Key của bạn.
+**Mở file utils.py, đảm bảo biến GEMINI\_API\_KEY đã được điền mã Key của bạn.**
 
-(Hiện tại trong code đã tích hợp sẵn Key hoạt động tốt).
+**(Hiện tại trong code đã tích hợp sẵn Key hoạt động tốt).**
 
 
 
@@ -150,21 +157,21 @@ Mở file utils.py, đảm bảo biến GEMINI\_API\_KEY đã được điền m
 
 
 
-Gõ lệnh sau vào Terminal:
+**Gõ lệnh sau vào Terminal:**
 
 
 
-&nbsp;	python app.py
+\*\* 	python app.py\*\*
 
 
 
 
 
-Sau đó mở trình duyệt và truy cập: 👉 http://127.0.0.1:5000
+**Sau đó mở trình duyệt và truy cập: 👉 http://127.0.0.1:5000**
 
 
 
-Lưu ý: Nếu bạn muốn reset dữ liệu (ví dụ ảnh bị lỗi), hãy XÓA file mobilestore.db đi rồi chạy lại lệnh trên. Hệ thống sẽ tự động tạo lại dữ liệu mới sạch sẽ.
+**Lưu ý: Nếu bạn muốn reset dữ liệu (ví dụ ảnh bị lỗi), hãy XÓA file mobilestore.db đi rồi chạy lại lệnh trên. Hệ thống sẽ tự động tạo lại dữ liệu mới sạch sẽ.**
 
 
 
@@ -172,43 +179,43 @@ Lưu ý: Nếu bạn muốn reset dữ liệu (ví dụ ảnh bị lỗi), hãy 
 
 
 
-Khi chạy lần đầu, hệ thống tự động tạo 2 tài khoản mẫu để bạn test:
+**Khi chạy lần đầu, hệ thống tự động tạo 2 tài khoản mẫu để bạn test:**
 
 
 
-Vai trò
+**Vai trò**
 
 
 
-Tên đăng nhập
+**Tên đăng nhập**
 
 
 
-Mật khẩu
+**Mật khẩu**
 
 
 
-Quản trị viên (Admin)
+**Quản trị viên (Admin)**
 
 
 
-admin
+**admin**
 
 
 
-123456
+**123456**
 
 
 
-Khách hàng (User)
+**Khách hàng (User)**
 
 
 
-khach
+**khach**
 
 
 
-123456
+**123456**
 
 
 
@@ -216,39 +223,39 @@ khach
 
 
 
-Để bạn dễ dàng chỉnh sửa code:
+**Để bạn dễ dàng chỉnh sửa code:**
 
 
 
-MobileStore/
+**MobileStore/**
 
-├── app.py                # File CHÍNH (Chạy file này)
+**├── app.py                # File CHÍNH (Chạy file này)**
 
-├── utils.py              # Xử lý kết nối AI Gemini
+**├── utils.py              # Xử lý kết nối AI Gemini**
 
-├── models.py             # Định nghĩa bảng User, Product
+**├── models.py             # Định nghĩa bảng User, Product**
 
-├── extensions.py         # Khởi tạo db, login\_manager
+**├── extensions.py         # Khởi tạo db, login\_manager**
 
-├── requirements.txt      # Danh sách thư viện
+**├── requirements.txt      # Danh sách thư viện**
 
-├── mobilestore.db        # File dữ liệu (Tự sinh ra)
+**├── mobilestore.db        # File dữ liệu (Tự sinh ra)**
 
-└── templates/            # Giao diện HTML
+**└── templates/            # Giao diện HTML**
 
-&nbsp;   ├── base.html         # Khung sườn chung (Menu, Footer)
+**    ├── base.html         # Khung sườn chung (Menu, Footer)**
 
-&nbsp;   ├── home.html         # Trang chủ
+**    ├── home.html         # Trang chủ**
 
-&nbsp;   ├── detail.html       # Chi tiết sản phẩm (+ Gợi ý AI)
+**    ├── detail.html       # Chi tiết sản phẩm (+ Gợi ý AI)**
 
-&nbsp;   ├── login.html        # Đăng nhập
+**    ├── login.html        # Đăng nhập**
 
-&nbsp;   ├── register.html     # Đăng ký
+**    ├── register.html     # Đăng ký**
 
-&nbsp;   ├── dashboard.html    # Trang cá nhân của khách hàng
+**    ├── dashboard.html    # Trang cá nhân của khách hàng**
 
-&nbsp;   ├── admin\_dashborad.html   #File dành cho Admin để xem thống kê và quản lý (thêm/xóa) sản phẩm.
+    **├── admin\_dashborad.html   #File dành cho Admin để xem thống kê và quản lý (thêm/xóa) sản phẩm.**
 
 
 

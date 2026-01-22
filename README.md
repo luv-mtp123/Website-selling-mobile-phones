@@ -31,9 +31,10 @@
 
 
 * **Sắp xếp giá tiền**
-* 
 
-**##### 🤖 Trợ lý ảo AI (Gemini):**
+
+
+##### **🤖 Trợ lý ảo AI (Gemini):**
 
 
 
@@ -133,7 +134,7 @@
 
 
 
-\*\* 	pip install -r requirements.txt\*\*
+ 	pip install -r requirements.txt 
 
 
 
@@ -161,7 +162,7 @@
 
 
 
-\*\* 	python app.py\*\*
+ 	python app.py
 
 
 

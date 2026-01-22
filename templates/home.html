@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm p-3">
+            <form action="/" method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="q" class="form-control" placeholder="Tìm tên điện thoại..." value="{{ search_query }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="brand" class="form-select">
+                        <option value="">Tất cả hãng</option>
+                        {% for b in brands %}
+                        <option value="{{ b }}" {% if request.args.get('brand') == b %}selected{% endif %}>{{ b }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="sort" class="form-select">
+                        <option value="">Sắp xếp</option>
+                        <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Giá tăng dần</option>
+                        <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Giá giảm dần</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> Tìm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+    {% for product in products %}
+    <div class="col">
+        <div class="card h-100 card-product shadow-sm">
+            <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+            <div class="card-body">
+                <h5 class="card-title text-primary">{{ product.name }}</h5>
+                <p class="card-text text-danger fw-bold">{{ "{:,.0f}".format(product.price) }} đ</p>
+                <p class="card-text text-muted small">{{ product.brand }}</p>
+            </div>
+            <div class="card-footer bg-white border-top-0">
+                <a href="/product/{{ product.id }}" class="btn btn-outline-primary w-100">Xem chi tiết</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center">
+        <p>Không tìm thấy sản phẩm nào.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -3,18 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile Store AI</title>
+    <title>Mobile Store - Công Nghệ Đỉnh Cao</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #f8f9fa; }
-        .card-product { transition: transform 0.2s; cursor: pointer; }
-        .card-product:hover { transform: translateY(-5px); shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .navbar-brand { font-weight: bold; color: #0d6efd !important; }
-        .ai-box { background-color: #eef2ff; border: 1px dashed #4f46e5; border-radius: 8px; padding: 15px; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+        .navbar-brand { font-weight: 800; font-size: 1.5rem; color: #0d6efd !important; }
+        .card-product { transition: all 0.3s ease; border: none; border-radius: 12px; overflow: hidden; }
+        .card-product:hover { transform: translateY(-8px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .sale-badge { position: absolute; top: 10px; right: 10px; background: #dc3545; color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; z-index: 10; font-weight: bold;}
+
+        /* Badge AI mới */
+        .ai-badge { background: linear-gradient(45deg, #6200ea, #d500f9); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; vertical-align: middle; margin-left: 5px; }
+
+        /* Chatbot Style & Tết (Giữ nguyên style cũ của bạn) */
+        .chatbot-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: #0d6efd; color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 1000; animation: bounce 2s infinite; }
+        .chatbot-window { position: fixed; bottom: 100px; right: 30px; width: 350px; height: 450px; background: white; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.2); z-index: 1000; display: none; flex-direction: column; overflow: hidden; }
+        .chat-header { background: #0d6efd; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .chat-body { flex: 1; padding: 15px; overflow-y: auto; background: #f8f9fa; }
+        .chat-footer { padding: 10px; border-top: 1px solid #eee; display: flex; }
+        .chat-msg { margin-bottom: 10px; padding: 8px 12px; border-radius: 15px; max-width: 80%; font-size: 0.9rem; }
+        .chat-bot { background: #e9ecef; align-self: flex-start; color: #333; }
+        .chat-user { background: #0d6efd; color: white; margin-left: auto; }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-10px);} 60% {transform: translateY(-5px);} }
+
+        /* Câu đối Tết */
+        .tet-couplet { position: fixed; top: 15%; width: 80px; background-color: #d32f2f; color: #ffeb3b; border: 2px solid #ffeb3b; border-radius: 15px; padding: 15px 5px; text-align: center; font-weight: bold; font-family: 'Times New Roman', serif; font-size: 20px; line-height: 1.5; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 900; display: none; cursor: default; }
+        .tet-couplet.left { left: 20px; }
+        .tet-couplet.right { right: 20px; }
+        @media (min-width: 1400px) { .tet-couplet { display: block; } }
+
+        /* Hoa rơi */
+        .petal { position: fixed; top: -50px; z-index: 9999; pointer-events: none; user-select: none; animation: fall linear forwards; opacity: 0.8; }
+        @keyframes fall { 0% { transform: translateY(0) rotate(0deg) translateX(0); opacity: 1; } 100% { transform: translateY(105vh) rotate(360deg) translateX(50px); opacity: 0; } }
     </style>
 </head>
 <body>
+    <!-- Câu đối Tết -->
+    <div class="tet-couplet left">🌸<br>CUNG<br>CHÚC<br>TÂN<br>XUÂN</div>
+    <div class="tet-couplet right">🌸<br>VẠN<br>SỰ<br>NHƯ<br>Ý</div>
+
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
         <div class="container">
             <a class="navbar-brand" href="/"><i class="fas fa-mobile-alt"></i> MobileStore</a>
@@ -23,30 +52,57 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link fw-bold" href="/">Trang chủ</a></li>
+
+                    <!-- [NEW] Menu So Sánh AI -->
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold text-primary" href="/compare">
+                            <i class="fas fa-balance-scale"></i> So sánh AI <span class="ai-badge">Mới</span>
+                        </a>
+                    </li>
                 </ul>
-                <ul class="navbar-nav">
+                <ul class="navbar-nav align-items-center">
+                    <!-- Giỏ hàng -->
+                    <li class="nav-item me-3">
+                        <a class="nav-link position-relative btn btn-light rounded-circle" href="/cart">
+                            <i class="fas fa-shopping-cart text-primary"></i>
+                            {% if session.get('cart') %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                {{ session.get('cart')|length }}
+                            </span>
+                            {% endif %}
+                        </a>
+                    </li>
+
                     {% if current_user.is_authenticated %}
                         {% if current_user.role == 'admin' %}
-                            <li class="nav-item"><a class="nav-link text-danger fw-bold" href="/admin">Trang Quản Trị</a></li>
+                            <li class="nav-item"><a class="nav-link text-danger fw-bold" href="/admin">Quản Trị</a></li>
                         {% endif %}
-                        <li class="nav-item"><a class="nav-link" href="/dashboard">Xin chào, {{ current_user.username }}</a></li>
-                        <li class="nav-item"><a class="btn btn-outline-danger btn-sm ms-2" href="/logout">Đăng xuất</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDrop" role="button" data-bs-toggle="dropdown">
+                                Xin chào, {{ current_user.username }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/dashboard">Hồ sơ & Đơn hàng</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="/logout">Đăng xuất</a></li>
+                            </ul>
+                        </li>
                     {% else %}
                         <li class="nav-item"><a class="nav-link" href="/login">Đăng nhập</a></li>
-                        <li class="nav-item"><a class="btn btn-primary btn-sm ms-2" href="/register">Đăng ký</a></li>
+                        <li class="nav-item"><a class="btn btn-primary btn-sm ms-2 px-3 rounded-pill" href="/register">Đăng ký</a></li>
                     {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container mt-4 mb-5" style="min-height: 80vh;">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show">
-                        {{ message }}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm">
+                        <i class="fas fa-info-circle me-2"></i> {{ message }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 {% endfor %}
@@ -56,11 +112,67 @@
         {% block content %}{% endblock %}
     </div>
 
-    <footer class="bg-white text-center py-4 mt-5 border-top">
-        <div class="container">
-            <p class="text-muted mb-0">&copy; 2024 MobileStore. Tích hợp Gemini AI.</p>
+    <!-- Footer -->
+    <footer class="bg-white text-dark py-5 mt-auto border-top">
+        <div class="container text-center">
+            <p class="mb-0 small">&copy; 2024 MobileStore. Powered by <strong>Gemini AI</strong>.</p>
         </div>
     </footer>
+
+    <!-- Chatbot Widget -->
+    <div class="chatbot-btn" onclick="toggleChat()"><i class="fas fa-comment-dots"></i></div>
+    <div class="chatbot-window" id="chatWindow">
+        <div class="chat-header">
+            <span><i class="fas fa-robot"></i> Trợ lý ảo AI</span>
+            <button type="button" class="btn-close btn-close-white" onclick="toggleChat()"></button>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="chat-msg chat-bot">Chào bạn! Mình có thể giúp gì cho bạn? (Hỏi về giá, địa chỉ, sản phẩm...)</div>
+        </div>
+        <div class="chat-footer">
+            <input type="text" id="chatInput" class="form-control me-2" placeholder="Nhập câu hỏi..." onkeypress="if(event.keyCode==13) sendChat()">
+            <button class="btn btn-primary" onclick="sendChat()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleChat() {
+            var chatWin = document.getElementById('chatWindow');
+            chatWin.style.display = (chatWin.style.display === 'none' || chatWin.style.display === '') ? 'flex' : 'none';
+        }
+
+        async function sendChat() {
+            var input = document.getElementById('chatInput');
+            var msg = input.value;
+            if(!msg) return;
+            var body = document.getElementById('chatBody');
+            body.innerHTML += `<div class="d-flex justify-content-end"><div class="chat-msg chat-user">${msg}</div></div>`;
+            input.value = '';
+            body.scrollTop = body.scrollHeight;
+            try {
+                const res = await fetch('/api/chatbot', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: msg})
+                });
+                const data = await res.json();
+                body.innerHTML += `<div class="d-flex"><div class="chat-msg chat-bot">${data.response}</div></div>`;
+                body.scrollTop = body.scrollHeight;
+            } catch (e) { console.error(e); }
+        }
+        function createPetal() {
+            const petal = document.createElement('div');
+            petal.classList.add('petal');
+            const items = ['🌸', '🌸', '🌺', '🧧'];
+            petal.innerText = items[Math.floor(Math.random() * items.length)];
+            petal.style.left = Math.random() * 100 + 'vw';
+            petal.style.animationDuration = Math.random() * 5 + 5 + 's';
+            petal.style.fontSize = Math.random() * 15 + 15 + 'px';
+            document.body.appendChild(petal);
+            setTimeout(() => { petal.remove(); }, 10000);
+        }
+        setInterval(createPetal, 500);
+    </script>
 </body>
 </html>

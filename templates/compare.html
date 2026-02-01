@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="text-center mb-5">
+    <h1 class="text-primary fw-bold display-5"><i class="fas fa-balance-scale"></i> So Sánh Sản Phẩm AI</h1>
+    <p class="lead text-muted">Chọn 2 sản phẩm để chuyên gia Gemini AI phân tích và đưa ra lời khuyên mua sắm.</p>
+</div>
+
+<div class="card shadow-lg border-0 rounded-4 mb-5">
+    <div class="card-body p-5 bg-light">
+        <form method="POST" class="row g-4 align-items-center justify-content-center">
+            <!-- Sản phẩm 1 -->
+            <div class="col-md-5">
+                <label class="form-label fw-bold">Sản phẩm 1</label>
+                <select name="product1" class="form-select form-select-lg shadow-sm" required>
+                    <option value="" disabled selected>-- Chọn máy thứ nhất --</option>
+                    {% for p in products %}
+                    <option value="{{ p.id }}" {% if p1 and p1.id == p.id %}selected{% endif %}>
+                        {{ p.name }} - {{ "{:,.0f}".format(p.price) }}đ
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- VS Icon -->
+            <div class="col-md-2 text-center">
+                <div class="rounded-circle bg-danger text-white d-inline-flex align-items-center justify-content-center shadow" style="width: 60px; height: 60px; font-weight: bold; font-size: 1.2rem;">VS</div>
+            </div>
+
+            <!-- Sản phẩm 2 -->
+            <div class="col-md-5">
+                <label class="form-label fw-bold">Sản phẩm 2</label>
+                <select name="product2" class="form-select form-select-lg shadow-sm" required>
+                    <option value="" disabled selected>-- Chọn máy thứ hai --</option>
+                    {% for p in products %}
+                    <option value="{{ p.id }}" {% if p2 and p2.id == p.id %}selected{% endif %}>
+                        {{ p.name }} - {{ "{:,.0f}".format(p.price) }}đ
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Nút submit -->
+            <div class="col-12 text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill shadow fw-bold text-uppercase">
+                    <i class="fas fa-bolt me-2"></i> Phân Tích Ngay
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if result %}
+<div class="row">
+    <!-- Cột trái: Hình ảnh sản phẩm -->
+    <div class="col-md-4">
+        <div class="card shadow border-0 mb-3 text-center">
+            <div class="card-body">
+                <h5 class="fw-bold text-primary">{{ p1.name }}</h5>
+                <img src="{{ p1.image_url }}" class="img-fluid rounded mb-2" style="max-height: 150px;">
+                <h5 class="text-danger">{{ "{:,.0f}".format(p1.price) }} đ</h5>
+            </div>
+        </div>
+        <div class="card shadow border-0 text-center">
+            <div class="card-body">
+                <h5 class="fw-bold text-primary">{{ p2.name }}</h5>
+                <img src="{{ p2.image_url }}" class="img-fluid rounded mb-2" style="max-height: 150px;">
+                <h5 class="text-danger">{{ "{:,.0f}".format(p2.price) }} đ</h5>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cột phải: Kết quả từ AI -->
+    <div class="col-md-8">
+        <div class="card shadow border-0 h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-star me-2"></i> Đánh giá chi tiết từ Chuyên gia AI</h5>
+            </div>
+            <div class="card-body p-4">
+                <!-- Hiển thị nội dung Markdown đã được filter xử lý -->
+                <div class="ai-result">
+                    <!-- Sử dụng replace để xuống dòng thủ công trong bảng -->
+                    {{ result | replace('\n', '<br>') | safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

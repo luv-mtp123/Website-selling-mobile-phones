@@ -1,25 +1,43 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-4">
-        <div class="card shadow">
-            <div class="card-body">
-                <h3 class="text-center mb-4">Đăng Nhập</h3>
-                <form method="POST">
-                    <div class="mb-3">
-                        <label class="form-label">Tên đăng nhập</label>
-                        <input type="text" name="username" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Mật khẩu</label>
-                        <input type="password" name="password" class="form-control" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
-                </form>
-                <div class="mt-3 text-center">
-                    <a href="/register">Chưa có tài khoản? Đăng ký</a>
+<div class="row justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="col-md-5">
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+            <div class="card-header bg-primary text-white text-center py-4">
+                <h3 class="mb-0 fw-bold">Đăng Nhập</h3>
+                <p class="mb-0 small opacity-75">Chào mừng bạn trở lại với MobileStore</p>
+            </div>
+            <div class="card-body p-5 bg-white">
+
+                <!-- Nút đăng nhập Google -->
+                <div class="d-grid mb-3">
+                    <a href="/login/google" class="btn btn-outline-danger btn-lg rounded-pill fw-bold">
+                        <i class="fab fa-google me-2"></i> Đăng nhập bằng Google
+                    </a>
                 </div>
+
+                <div class="position-relative text-center my-4">
+                    <hr class="text-muted">
+                    <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted">HOẶC</span>
+                </div>
+
+                <form method="POST">
+                    <div class="form-floating mb-3">
+                        <input type="text" name="username" class="form-control" id="floatingInput" placeholder="username" required>
+                        <label for="floatingInput">Tên đăng nhập</label>
+                    </div>
+                    <div class="form-floating mb-4">
+                        <input type="password" name="password" class="form-control" id="floatingPassword" placeholder="Password" required>
+                        <label for="floatingPassword">Mật khẩu</label>
+                    </div>
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold">ĐĂNG NHẬP</button>
+                    </div>
+                    <div class="text-center">
+                        <a href="/register" class="text-decoration-none">Chưa có tài khoản? <span class="fw-bold">Đăng ký ngay</span></a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

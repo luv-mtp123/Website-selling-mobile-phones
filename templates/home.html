@@ -1,54 +1,94 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card shadow-sm p-3">
-            <form action="/" method="GET" class="row g-3">
-                <div class="col-md-4">
-                    <input type="text" name="q" class="form-control" placeholder="Tìm tên điện thoại..." value="{{ search_query }}">
-                </div>
-                <div class="col-md-3">
-                    <select name="brand" class="form-select">
-                        <option value="">Tất cả hãng</option>
-                        {% for b in brands %}
-                        <option value="{{ b }}" {% if request.args.get('brand') == b %}selected{% endif %}>{{ b }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select name="sort" class="form-select">
-                        <option value="">Sắp xếp</option>
-                        <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Giá tăng dần</option>
-                        <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Giá giảm dần</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> Tìm</button>
-                </div>
-            </form>
-        </div>
+<!-- Banner -->
+<div class="card bg-dark text-white mb-4 border-0 rounded-4 overflow-hidden shadow">
+    <img src="https://images.unsplash.com/photo-1556656793-02715d8dd6f8?w=1600&q=80" class="card-img" alt="Banner" style="height: 300px; object-fit: cover; opacity: 0.6;">
+    <div class="card-img-overlay d-flex flex-column justify-content-center align-items-center text-center">
+        <h1 class="display-4 fw-bold">Công Nghệ Tương Lai</h1>
+        <p class="lead">Sở hữu những siêu phẩm mới nhất với giá ưu đãi</p>
+        <a href="#products" class="btn btn-primary btn-lg rounded-pill px-4">Mua Ngay</a>
     </div>
 </div>
 
+<!-- Bộ lọc Smart Search -->
+<div class="card shadow-sm p-4 mb-4 rounded-4 border-0" id="products">
+    <div class="mb-2 text-primary fw-bold"><i class="fas fa-magic"></i> Tìm kiếm thông minh (AI)</div>
+    <form action="/" method="GET" class="row g-3">
+        <div class="col-md-5">
+            <!-- Ô tìm kiếm hỗ trợ ngôn ngữ tự nhiên -->
+            <input type="text" name="q" class="form-control" placeholder="VD: Điện thoại Samsung dưới 20 triệu..." value="{{ search_query }}">
+        </div>
+        <div class="col-md-3">
+            <select name="brand" class="form-select">
+                <option value="">Tất cả hãng</option>
+                {% for b in brands %}
+                <option value="{{ b }}" {% if request.args.get('brand') == b %}selected{% endif %}>{{ b }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="sort" class="form-select">
+                <option value="">Sắp xếp</option>
+                <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Giá tăng dần</option>
+                <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Giá giảm dần</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> Tìm</button>
+        </div>
+    </form>
+    <div class="form-text ms-1 mt-2 text-muted fst-italic">
+        <small>Mẹo: Nhập "iPhone giá rẻ" hoặc "Máy chụp ảnh đẹp" để AI tự lọc.</small>
+    </div>
+</div>
+
+<!-- [QUAN TRỌNG] Thông báo kết quả lọc AI (nếu có) -->
+{% if ai_message %}
+<div class="alert alert-success d-flex align-items-center shadow-sm" role="alert">
+    <i class="fas fa-robot fs-4 me-3"></i>
+    <div>
+        <strong>{{ ai_message }}</strong>
+    </div>
+</div>
+{% endif %}
+
+<!-- Danh sách sản phẩm -->
 <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
     {% for product in products %}
     <div class="col">
         <div class="card h-100 card-product shadow-sm">
-            <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
-            <div class="card-body">
-                <h5 class="card-title text-primary">{{ product.name }}</h5>
-                <p class="card-text text-danger fw-bold">{{ "{:,.0f}".format(product.price) }} đ</p>
-                <p class="card-text text-muted small">{{ product.brand }}</p>
-            </div>
-            <div class="card-footer bg-white border-top-0">
-                <a href="/product/{{ product.id }}" class="btn btn-outline-primary w-100">Xem chi tiết</a>
+            {% if product.is_sale %}
+            <span class="sale-badge">SALE</span>
+            {% endif %}
+
+            <a href="/product/{{ product.id }}">
+                <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover; padding: 15px;" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+            </a>
+
+            <div class="card-body d-flex flex-column">
+                <h6 class="card-title fw-bold text-dark text-truncate">{{ product.name }}</h6>
+                <div class="mt-auto">
+                    {% if product.is_sale %}
+                        <p class="card-text text-danger fw-bold mb-0 fs-5">{{ product.sale_price | vnd }}</p>
+                        <p class="card-text text-muted small text-decoration-line-through">{{ product.price | vnd }}</p>
+                    {% else %}
+                        <p class="card-text text-danger fw-bold fs-5">{{ product.price | vnd }}</p>
+                    {% endif %}
+
+                    <div class="d-grid gap-2 mt-2">
+                        <a href="/product/{{ product.id }}" class="btn btn-outline-primary btn-sm rounded-pill">Chi tiết</a>
+                        <form action="/cart/add/{{ product.id }}" method="POST">
+                             <button type="submit" class="btn btn-primary btn-sm w-100 rounded-pill"><i class="fas fa-cart-plus"></i> Thêm giỏ</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     {% else %}
-    <div class="col-12 text-center">
-        <p>Không tìm thấy sản phẩm nào.</p>
+    <div class="col-12 text-center py-5">
+        <p class="text-muted">Không tìm thấy sản phẩm nào phù hợp tiêu chí lọc.</p>
     </div>
     {% endfor %}
 </div>

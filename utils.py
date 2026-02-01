@@ -2,83 +2,91 @@ import os
 import requests
 import json
 import time
+import re
 
 # --- CẤU HÌNH ---
-# Sử dụng os.environ.get để lấy key an toàn từ file .env hoặc biến môi trường
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 
-def get_gemini_suggestions(product_name):
-    """
-    Hàm gọi Google Gemini API để gợi ý phụ kiện.
-    Sử dụng REST API thông qua thư viện requests.
-    Tự động retry nếu gặp lỗi quá tải (429).
-    """
-    # 1. Kiểm tra Key (Lấy lại từ os.environ phòng trường hợp chưa load kịp lúc import)
+def call_gemini_api(prompt):
+    """Hàm gọi API chung để tái sử dụng"""
     api_key = os.environ.get("GEMINI_API_KEY")
-
     if not api_key:
-        return "⚠️ Lỗi: Chưa cấu hình GEMINI_API_KEY trong file .env"
+        return "⚠️ Lỗi: Chưa cấu hình GEMINI_API_KEY"
 
-    # 2. Cấu hình Endpoint
-    # Chuyển sang 'gemini-2.5-flash' vì 'gemini-2.0-flash' bị giới hạn quota (429).
-    # Nếu vẫn lỗi, bạn có thể thử 'gemini-flash-latest'
     target_model = "gemini-2.5-flash"
+
+    # [QUAN TRỌNG] Đây là dòng đã sửa. KHÔNG được có dấu [] hay () bao quanh link
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_model}:generateContent?key={api_key}"
 
-    headers = {
-        "Content-Type": "application/json"
-    }
+    headers = {"Content-Type": "application/json"}
+    data = {"contents": [{"parts": [{"text": prompt}]}]}
 
-    # 3. Tạo nội dung gửi đi (Prompt)
+    try:
+        # Tăng timeout lên 30s để AI kịp suy nghĩ
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+
+        if response.status_code == 200:
+            result = response.json()
+            try:
+                return result['candidates'][0]['content']['parts'][0]['text']
+            except (KeyError, IndexError):
+                return None
+        else:
+            print(f"Gemini Error {response.status_code}: {response.text}")
+            return None
+    except Exception as e:
+        print(f"Network Error: {str(e)}")
+        return None
+
+
+def get_gemini_suggestions(product_name):
+    """Gợi ý phụ kiện"""
     prompt = (
         f"Tôi đang xem điện thoại {product_name}. "
-        "Hãy đóng vai chuyên gia, gợi ý 3 phụ kiện cần thiết nhất (như ốp lưng, sạc, tai nghe...). "
-        "Giải thích ngắn gọn 1 dòng lý do nên mua. Định dạng: Gạch đầu dòng, tiếng Việt. "
-        "Không cần chào hỏi, đi thẳng vào vấn đề."
+        "Hãy đóng vai chuyên gia, gợi ý 3 phụ kiện cần thiết nhất. "
+        "Giải thích ngắn gọn 1 dòng lý do. Định dạng: Gạch đầu dòng, tiếng Việt."
+    )
+    return call_gemini_api(prompt) or "Hiện tại chưa có gợi ý."
+
+
+def analyze_search_intents(query):
+    """
+    SMART SEARCH: Phân tích câu tìm kiếm tự nhiên thành JSON bộ lọc.
+    """
+    prompt = (
+        f"Phân tích câu tìm kiếm: '{query}' từ người dùng muốn mua điện thoại. "
+        "Hãy trích xuất các tiêu chí lọc và trả về định dạng JSON thuần túy (không markdown, không giải thích). "
+        "Các trường JSON cần lấy (nếu không có thì để null): "
+        "- brand: (Apple, Samsung, Xiaomi, Google, Oppo... hoặc null) "
+        "- min_price: (số nguyên hoặc null) "
+        "- max_price: (số nguyên hoặc null) "
+        "- sort: ('price_asc' nếu tìm giá rẻ/thấp, 'price_desc' nếu tìm giá cao/xịn, hoặc null) "
+        "Ví dụ: 'điện thoại giá rẻ dưới 5 triệu' -> {\"max_price\": 5000000, \"sort\": \"price_asc\", \"brand\": null}"
     )
 
-    # Cấu trúc JSON theo chuẩn Gemini API
-    data = {
-        "contents": [{
-            "parts": [{"text": prompt}]
-        }]
-    }
+    response_text = call_gemini_api(prompt)
+    if not response_text: return None
 
-    # 4. Gửi yêu cầu (Có cơ chế Retry)
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            response = requests.post(url, headers=headers, json=data, timeout=10)
+    try:
+        # Làm sạch chuỗi JSON phòng trường hợp AI trả về markdown code block
+        clean_json = re.sub(r"```json|```", "", response_text).strip()
+        return json.loads(clean_json)
+    except json.JSONDecodeError:
+        return None
 
-            if response.status_code == 200:
-                result = response.json()
-                try:
-                    text = result['candidates'][0]['content']['parts'][0]['text']
-                    return text
-                except (KeyError, IndexError):
-                    return "Gemini không trả về nội dung hợp lệ."
 
-            elif response.status_code == 429:
-                # Lỗi quá tải (Rate Limit) -> Chờ và thử lại
-                if attempt < max_retries - 1:
-                    time.sleep(2 * (attempt + 1))  # Chờ 2s, 4s...
-                    continue
-                else:
-                    return "⚠️ Hệ thống đang bận (Quá giới hạn request). Vui lòng thử lại sau."
-
-            elif response.status_code == 404:
-                # Nếu vẫn lỗi 404 model, thử list lại (như logic cũ nhưng rút gọn)
-                return f"Lỗi Model (404): Không tìm thấy '{target_model}'. Hãy kiểm tra lại API Key hoặc đổi model."
-
-            elif response.status_code == 400:
-                return "Lỗi yêu cầu (400): Kiểm tra lại dữ liệu gửi đi."
-            elif response.status_code == 403:
-                return "Lỗi quyền truy cập (403): API Key sai hoặc bị chặn."
-            else:
-                return f"Lỗi kết nối Gemini (Mã {response.status_code}): {response.text}"
-
-        except Exception as e:
-            return f"Lỗi kết nối mạng: {str(e)}"
-
-    return "Lỗi không xác định."
+def get_comparison_result(p1_name, p1_price, p1_desc, p2_name, p2_price, p2_desc):
+    """
+    AI COMPARISON: So sánh 2 sản phẩm và trả về Markdown
+    """
+    prompt = (
+        f"So sánh chi tiết 2 điện thoại sau:\n"
+        f"1. {p1_name} (Giá: {p1_price} đ) - Đặc điểm: {p1_desc}\n"
+        f"2. {p2_name} (Giá: {p2_price} đ) - Đặc điểm: {p2_desc}\n\n"
+        "Yêu cầu:\n"
+        "- Kẻ bảng so sánh (định dạng Markdown) về: Hiệu năng, Camera, Pin, và Giá trị/Giá tiền.\n"
+        "- Đưa ra kết luận ngắn gọn: Ai nên mua máy nào?\n"
+        "- Giọng văn khách quan, chuyên gia công nghệ."
+    )
+    return call_gemini_api(prompt) or "Hệ thống đang bận, vui lòng thử lại sau."

@@ -2,34 +2,69 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-body text-center">
-                <div class="display-1 text-secondary"><i class="fas fa-user-circle"></i></div>
-                <h4 class="mt-2">{{ current_user.username }}</h4>
-                <span class="badge bg-info">{{ current_user.role }}</span>
+    <!-- Cột trái: Thông tin user -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-body text-center py-5">
+                <div class="mb-3">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Avatar" width="100" class="rounded-circle shadow-sm">
+                </div>
+                <h4 class="fw-bold">{{ current_user.full_name or current_user.username }}</h4>
+                <p class="text-muted mb-1">{{ current_user.email }}</p>
+                <span class="badge bg-primary rounded-pill px-3">{{ current_user.role }}</span>
             </div>
         </div>
-    </div>
-    <div class="col-md-8">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">Cập nhật thông tin</h5>
-            </div>
+
+        <div class="card shadow-sm border-0 rounded-3 mt-4">
+            <div class="card-header bg-white fw-bold">Cập nhật hồ sơ</div>
             <div class="card-body">
                 <form action="/profile/update" method="POST">
                     <div class="mb-3">
-                        <label class="form-label">Họ và tên</label>
+                        <label class="form-label small">Họ và tên</label>
                         <input type="text" name="full_name" class="form-control" value="{{ current_user.full_name or '' }}">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Email</label>
+                        <label class="form-label small">Email</label>
                         <input type="email" name="email" class="form-control" value="{{ current_user.email }}">
                     </div>
-                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill">Lưu thay đổi</button>
                 </form>
             </div>
         </div>
+    </div>
+
+    <!-- Cột phải: Lịch sử đơn hàng [NEW] -->
+    <div class="col-md-8">
+        <h4 class="mb-3 fw-bold border-start border-4 border-primary ps-3">Lịch sử đơn hàng</h4>
+        {% if orders %}
+            {% for order in orders %}
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Đơn hàng #{{ order.id }}</strong>
+                        <span class="text-muted small ms-2">{{ order.date_created.strftime('%d/%m/%Y %H:%M') }}</span>
+                    </div>
+                    <span class="badge bg-success">{{ order.status }}</span>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush mb-3">
+                        {% for detail in order.details %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>{{ detail.product_name }} <small class="text-muted">x{{ detail.quantity }}</small></span>
+                            <span>{{ detail.price | vnd }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    <div class="d-flex justify-content-between align-items-center border-top pt-2">
+                        <span class="text-muted small"><i class="fas fa-map-marker-alt"></i> {{ order.address }}</span>
+                        <h5 class="text-danger fw-bold mb-0">{{ order.total_price | vnd }}</h5>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-light text-center">Bạn chưa có đơn hàng nào. <a href="/">Mua ngay!</a></div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

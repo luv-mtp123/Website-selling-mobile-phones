@@ -14,7 +14,7 @@
 
 ##### 
 
-#### 🌸 Giao Diện Tết Giáp Thìn:
+#### 🌸 Giao Diện Tết BÍNH NGỌ:
 
 ###### 
 
@@ -204,27 +204,27 @@
 
 ##### └── templates/            # Giao diện HTML
 
-##### &nbsp;   ├── base.html         # Layout chung + Hiệu ứng Tết + Chatbot UI
+#####     ├── base.html         # Layout chung + Hiệu ứng Tết + Chatbot UI
 
-##### &nbsp;   ├── home.html         # Trang chủ + Smart Search + Banner Tết
+#####     ├── home.html         # Trang chủ + Smart Search + Banner Tết
 
-##### &nbsp;   ├── detail.html       # Chi tiết sản phẩm
+#####     ├── detail.html       # Chi tiết sản phẩm
 
-##### &nbsp;   ├── compare.html      # So sánh AI (Giao diện VS mới)
+#####     ├── compare.html      # So sánh AI (Giao diện VS mới)
 
-##### &nbsp;   ├── cart.html         # Giỏ hàng
+#####     ├── cart.html         # Giỏ hàng
 
-##### &nbsp;   ├── checkout.html     # Thanh toán
+#####     ├── checkout.html     # Thanh toán
 
-##### &nbsp;   ├── login.html        # Đăng nhập
+#####     ├── login.html        # Đăng nhập
 
-##### &nbsp;   ├── register.html     # Đăng ký
+#####     ├── register.html     # Đăng ký
 
-##### &nbsp;   ├── dashboard.html    # Trang cá nhân user
+#####     ├── dashboard.html    # Trang cá nhân user
 
-##### &nbsp;   ├── admin\_dashboard.html # Admin: Thống kê \& Danh sách (Đã tách code sửa)
+#####     ├── admin\_dashboard.html # Admin: Thống kê \& Danh sách (Đã tách code sửa)
 
-##### &nbsp;   └── admin\_edit.html      # Admin: Form sửa sản phẩm (Mới)
+#####     └── admin\_edit.html      # Admin: Form sửa sản phẩm (Mới)
 
 ##### 
 

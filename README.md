@@ -278,7 +278,7 @@
 
 ##### 
 
-##### Lỗi TemplateSyntaxError: Encountered unknown tag 'endblock':
+* ##### Lỗi TemplateSyntaxError: Encountered unknown tag 'endblock':
 
 ##### 
 
@@ -286,7 +286,7 @@
 
 ##### 
 
-##### Lỗi View function mapping is overwriting...:
+* ##### Lỗi View function mapping is overwriting...:
 
 ##### 
 
@@ -294,7 +294,7 @@
 
 ##### 
 
-##### Lỗi 'product' is undefined khi vào Admin:
+* ##### Lỗi 'product' is undefined khi vào Admin:
 
 ##### 
 
@@ -302,7 +302,7 @@
 
 ##### 
 
-##### Trang chủ không hiện sản phẩm:
+* ##### Trang chủ không hiện sản phẩm:
 
 ##### 
 

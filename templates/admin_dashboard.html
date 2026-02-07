@@ -1,53 +1,82 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2 class="mb-4">Trang Quản Trị (Admin)</h2>
+<h2 class="mb-4 text-primary fw-bold"><i class="fas fa-user-shield"></i> Trang Quản Trị (Admin)</h2>
 
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <h3>{{ products|length }}</h3>
-                <p>Sản phẩm</p>
+<!-- Thống kê -->
+<div class="row mb-4 g-3">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white border-0 shadow-sm rounded-3">
+            <div class="card-body d-flex align-items-center justify-content-between p-4">
+                <div>
+                    <h2 class="fw-bold mb-0">{{ products|length }}</h2>
+                    <p class="mb-0 opacity-75">Sản phẩm</p>
+                </div>
+                <i class="fas fa-mobile-alt fa-3x opacity-50"></i>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <h3>{{ users|length }}</h3>
-                <p>Người dùng</p>
+    <div class="col-md-4">
+        <div class="card bg-success text-white border-0 shadow-sm rounded-3">
+            <div class="card-body d-flex align-items-center justify-content-between p-4">
+                <div>
+                    <h2 class="fw-bold mb-0">{{ users|length }}</h2>
+                    <p class="mb-0 opacity-75">Người dùng</p>
+                </div>
+                <i class="fas fa-users fa-3x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-warning text-dark border-0 shadow-sm rounded-3">
+            <div class="card-body d-flex align-items-center justify-content-between p-4">
+                <div>
+                    <h2 class="fw-bold mb-0">{{ orders|length }}</h2>
+                    <p class="mb-0 opacity-75">Đơn hàng</p>
+                </div>
+                <i class="fas fa-shopping-bag fa-3x opacity-50"></i>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card shadow mb-4">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Quản lý sản phẩm</h5>
-        <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addProductModal"><i class="fas fa-plus"></i> Thêm mới</button>
+<!-- Quản lý sản phẩm -->
+<div class="card shadow border-0 rounded-4 overflow-hidden mb-5">
+    <div class="card-header bg-white p-3 d-flex justify-content-between align-items-center border-bottom">
+        <h5 class="mb-0 fw-bold text-dark">Danh sách sản phẩm</h5>
+        <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addProductModal">
+            <i class="fas fa-plus me-2"></i> Thêm mới
+        </button>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
                     <tr>
-                        <th>ID</th>
-                        <th>Tên</th>
-                        <th>Hãng</th>
-                        <th>Giá</th>
+                        <th class="ps-4">ID</th>
+                        <th style="width: 100px;">Ảnh</th>
+                        <th>Tên & Hãng</th>
+                        <th>Giá bán</th>
                         <th>Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for p in products %}
                     <tr>
-                        <td>{{ p.id }}</td>
-                        <td>{{ p.name }}</td>
-                        <td>{{ p.brand }}</td>
-                        <td>{{ "{:,.0f}".format(p.price) }}</td>
+                        <td class="ps-4 fw-bold text-muted">#{{ p.id }}</td>
                         <td>
-                            <a href="/admin/product/delete/{{ p.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa?')">Xóa</a>
+                            <img src="{{ p.image_url }}" style="width: 50px; height: 50px; object-fit: cover;" class="rounded border">
+                        </td>
+                        <td>
+                            <div class="fw-bold text-primary">{{ p.name }}</div>
+                            <span class="badge bg-light text-dark border">{{ p.brand }}</span>
+                            {% if p.is_sale %}<span class="badge bg-danger">Sale</span>{% endif %}
+                        </td>
+                        <td class="fw-bold text-danger">{{ "{:,.0f}".format(p.sale_price if p.is_sale else p.price) }}</td>
+                        <td>
+                            <a href="/product/{{ p.id }}" class="btn btn-sm btn-outline-info me-1" target="_blank" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
+                            <a href="/admin/product/edit/{{ p.id }}" class="btn btn-sm btn-outline-primary me-1" title="Sửa"><i class="fas fa-edit"></i></a>
+                            <a href="/admin/product/delete/{{ p.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn xóa?')" title="Xóa"><i class="fas fa-trash-alt"></i></a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -59,25 +88,63 @@
 
 <!-- Modal Thêm Sản phẩm -->
 <div class="modal fade" id="addProductModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <form action="/admin/product/add" method="POST">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">Thêm điện thoại mới</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-2"><input type="text" name="name" class="form-control" placeholder="Tên điện thoại" required></div>
-                    <div class="mb-2"><input type="text" name="brand" class="form-control" placeholder="Hãng (Apple, Samsung...)" required></div>
-                    <div class="mb-2"><input type="number" name="price" class="form-control" placeholder="Giá tiền" required></div>
-                    <div class="mb-2"><textarea name="description" class="form-control" placeholder="Mô tả"></textarea></div>
-                    <div class="mb-2"><input type="text" name="image_url" class="form-control" placeholder="URL Hình ảnh"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Tên sản phẩm</label>
+                            <input type="text" name="name" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Hãng sản xuất</label>
+                            <input type="text" name="brand" class="form-control" list="brands" required>
+                            <datalist id="brands">
+                                <option value="Apple"><option value="Samsung"><option value="Xiaomi"><option value="Oppo">
+                            </datalist>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Giá niêm yết</label>
+                            <input type="number" name="price" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Loại sản phẩm</label>
+                            <select name="category" class="form-select">
+                                <option value="phone">Điện thoại</option>
+                                <option value="accessory">Phụ kiện</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">URL Hình ảnh</label>
+                            <input type="text" name="image_url" class="form-control" placeholder="https://...">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Mô tả chi tiết</label>
+                            <textarea name="description" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="col-12 bg-light p-3 rounded">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="is_sale" id="saleSwitch">
+                                <label class="form-check-label fw-bold" for="saleSwitch">Đang giảm giá?</label>
+                            </div>
+                            <div class="mt-2">
+                                <input type="number" name="sale_price" class="form-control" placeholder="Giá sau giảm (nếu có)">
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Lưu</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary px-4">Lưu sản phẩm</button>
                 </div>
             </div>
         </form>
     </div>
 </div>
+
 {% endblock %}

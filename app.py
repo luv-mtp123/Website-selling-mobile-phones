@@ -8,7 +8,7 @@ from extensions import db, login_manager
 from models import User, Product, Order, OrderDetail
 # Thư viện cho Google Login (Cần cài: pip install authlib requests)
 from authlib.integrations.flask_client import OAuth
-from utils import get_gemini_suggestions, analyze_search_intents, get_comparison_result
+from utils import get_gemini_suggestions, analyze_search_intents, get_comparison_result, call_gemini_api
 
 
 # --- HÀM LOAD .ENV ---
@@ -71,49 +71,49 @@ def markdown_filter(text):
     text = text.replace('|', '&#124;')
     return text
 
-# --- DỮ LIỆU CHATBOT ---
-CHATBOT_DATA = {
-    "xin chào": "Chào bạn! MobileStore có thể giúp gì cho bạn?",
-    "hi": "Chào bạn! Bạn cần tư vấn điện thoại nào?",
-    "cửa hàng ở đâu": "Địa chỉ của chúng tôi tại: 123 Đường ABC, Quận 1, TP.HCM.",
-    "địa chỉ": "Bạn có thể ghé thăm shop tại 123 Đường ABC, Quận 1, TP.HCM nhé!",
-    "có ship không": "Chúng tôi hỗ trợ giao hàng toàn quốc (COD).",
-    "giao hàng": "Thời gian giao hàng từ 2-4 ngày tùy khu vực.",
-    "thanh toán": "Bạn có thể thanh toán khi nhận hàng (COD) hoặc chuyển khoản.",
-    "bảo hành": "Tất cả máy bán ra đều được bảo hành chính hãng 12 tháng.",
-    "iphone 15 giá bao nhiêu": "iPhone 15 hiện đang có giá cực tốt, mời bạn xem chi tiết tại trang chủ.",
-    "samsung s24 ultra": "Siêu phẩm Galaxy S24 Ultra đang sẵn hàng, camera cực đỉnh!",
-    "xiaomi": "Xiaomi bên mình có nhiều dòng ngon bổ rẻ như Xiaomi 14.",
-    "tư vấn điện thoại": "Bạn thích chụp ảnh, chơi game hay pin trâu? Hãy cho mình biết nhu cầu nhé.",
-    "pin trâu": "Nếu thích pin trâu, bạn có thể tham khảo iPhone 15 Pro Max hoặc S24 Ultra.",
-    "chụp ảnh đẹp": "Để chụp ảnh đẹp, Pixel 8 Pro hoặc S24 Ultra là lựa chọn số 1.",
-    "chơi game": "Chơi game thì iPhone hoặc các dòng Gaming Phone là mượt nhất.",
-    "trả góp": "Hiện tại shop chưa hỗ trợ trả góp, xin lỗi bạn nha.",
-    "đổi trả": "Hỗ trợ 1 đổi 1 trong 30 ngày nếu có lỗi nhà sản xuất.",
-    "khuyến mãi": "Đang có chương trình giảm giá ốp lưng khi mua kèm máy đấy!",
-    "liên hệ": "Hotline: 1900 1234 - Email: support@mobilestore.com",
-    "giờ làm việc": "Shop mở cửa từ 8:00 - 21:00 tất cả các ngày trong tuần.",
-    "phụ kiện": "Bên mình có đầy đủ cáp, sạc, tai nghe, ốp lưng chính hãng.",
-    "ốp lưng": "Rất nhiều mẫu ốp lưng thời trang đang chờ bạn.",
-    "tai nghe": "Tai nghe bluetooth, có dây đủ cả.",
-    "sạc dự phòng": "Sạc dự phòng 10.000mAh, 20.000mAh giá chỉ từ 300k.",
-    "iphone cũ": "Hiện shop chỉ bán máy mới 100% nguyên seal.",
-    "samsung cũ": "Shop cam kết chỉ bán hàng mới chính hãng.",
-    "quên mật khẩu": "Bạn vui lòng liên hệ admin để được reset mật khẩu nhé.",
-    "đăng ký": "Bạn nhấn vào nút Đăng ký ở góc trên bên phải màn hình nhé.",
-    "đăng nhập": "Nút Đăng nhập nằm ngay cạnh nút Đăng ký đó ạ.",
-    "giỏ hàng": "Bạn có thể xem lại các sản phẩm đã chọn trong mục Giỏ hàng.",
-    "xóa giỏ hàng": "Vào giỏ hàng và nhấn nút Xóa để loại bỏ sản phẩm không ưng ý.",
-    "đặt hàng": "Sau khi chọn xong, nhấn Thanh toán để hoàn tất đơn hàng nhé.",
-    "hủy đơn": "Để hủy đơn, vui lòng gọi hotline ngay lập tức.",
-    "admin": "Admin rất đẹp trai và thân thiện.",
-    "bot tên gì": "Mình là trợ lý ảo AI của MobileStore.",
-    "ngu": "Bạn đừng mắng mình, mình chỉ là bot thôi mà :(",
-    "thông minh": "Cảm ơn bạn đã khen, mình sẽ cố gắng hơn!",
-    "giá rẻ": "Shop luôn cam kết giá tốt nhất thị trường.",
-    "uy tín": "Uy tín làm nên thương hiệu MobileStore.",
-    "cảm ơn": "Không có chi! Cần gì cứ hỏi mình nhé."
-}
+
+# --- CHATBOT LOGIC MỚI ---
+def process_chatbot_message(msg):
+    msg = msg.lower()
+
+    # 1. Logic Rule-based (Nhanh, không tốn tiền, xử lý câu hỏi thường gặp)
+    keywords = {
+        "xin chào": "Chào bạn! Chúc bạn một năm mới An Khang Thịnh Vượng! Bạn cần tìm điện thoại gì?",
+        "cửa hàng": "MobileStore ở 123 Đường Tết, Quận 1. Mở cửa xuyên Tết nhé!",
+        "địa chỉ": "Địa chỉ: 123 Đường Tết, Quận 1, TP.HCM.",
+        "giao hàng": "Shop giao hàng hỏa tốc trong 2h nội thành.",
+        "bảo hành": "Bảo hành 12 tháng chính hãng, 1 đổi 1 trong 30 ngày.",
+        "thanh toán": "Hỗ trợ tiền mặt, chuyển khoản và cà thẻ.",
+        "iphone 15": "iPhone 15 đang có giá cực tốt, giảm ngay 2 triệu dịp Tết này.",
+        "admin": "Admin đang đi chúc Tết, nhưng bạn cứ để lại lời nhắn nhé!",
+        "bot tên gì": "Mình là Trợ lý ảo AI MobileStore v2.0.",
+    }
+
+    for key, response in keywords.items():
+        if key in msg:
+            return response
+
+    # 2. Fallback sang Gemini AI (Nếu không khớp từ khóa nào ở trên)
+    # Đây là phần "Tích hợp AI" nhưng vẫn giữ được tốc độ cho câu hỏi dễ
+    ai_prompt = (
+        f"Khách hàng hỏi: '{msg}'. "
+        "Bạn là nhân viên tư vấn bán điện thoại. Hãy trả lời ngắn gọn (dưới 50 từ), thân thiện, có emoji."
+        "Nếu khách hỏi sản phẩm cụ thể, hãy mời họ xem chi tiết trên web."
+    )
+    ai_response = call_gemini_api(ai_prompt)
+
+    if ai_response:
+        return ai_response
+    else:
+        return "Xin lỗi, hiện tại kết nối AI đang bận. Bạn vui lòng hỏi lại sau hoặc gọi hotline nhé."
+
+
+@app.route('/api/chatbot', methods=['POST'])
+def chatbot_api():
+    data = request.json
+    user_msg = data.get('message', '')
+    response = process_chatbot_message(user_msg)
+    return jsonify({'response': response})
 
 
 # --- ROUTES CHÍNH ---
@@ -210,9 +210,11 @@ def compare_page():
 @app.route('/product/<int:id>')
 def product_detail(id):
     product = Product.query.get_or_404(id)
-    # Gợi ý phụ kiện AI
+    # Gợi ý AI
     ai_suggestion = get_gemini_suggestions(product.name)
-    return render_template('detail.html', product=product, ai_suggestion=ai_suggestion)
+    # Gợi ý database (cùng hãng)
+    recommendations = Product.query.filter(Product.brand == product.brand, Product.id != id).limit(4).all()
+    return render_template('detail.html', product=product, ai_suggestion=ai_suggestion, recommendations=recommendations)
 
 
 # --- ROUTES GOOGLE LOGIN ---
@@ -360,8 +362,8 @@ def checkout():
 
 
 # --- API CHATBOT ---
-@app.route('/api/chatbot', methods=['POST'])
-def chatbot_api():
+# @app.route('/api/chatbot', methods=['POST'])
+# def chatbot_api():
     data = request.json
     user_msg = data.get('message', '').lower().strip()
     response = "Xin lỗi, mình chưa hiểu ý bạn."
@@ -436,8 +438,9 @@ def update_profile():
     return redirect(url_for('dashboard'))
 
 
-# --- ADMIN ROUTES ---
 
+
+# --- ADMIN ROUTES (ĐÃ NÂNG CẤP) ---
 @app.route('/admin')
 @login_required
 def admin_dashboard():
@@ -452,18 +455,14 @@ def admin_dashboard():
 @login_required
 def add_product():
     if current_user.role != 'admin': abort(403)
-    name = request.form.get('name')
-    brand = request.form.get('brand')
-    price = request.form.get('price')
-    description = request.form.get('description')
-    image_url = request.form.get('image_url')
-    category = request.form.get('category')
-
-    new_product = Product(name=name, brand=brand, price=price,
-                          description=description, image_url=image_url, category=category)
-    db.session.add(new_product)
+    db.session.add(Product(
+        name=request.form.get('name'), brand=request.form.get('brand'), price=request.form.get('price'),
+        description=request.form.get('description'), image_url=request.form.get('image_url'),
+        category=request.form.get('category', 'phone'), is_sale=bool(request.form.get('is_sale')),
+        sale_price=request.form.get('sale_price') or 0
+    ))
     db.session.commit()
-    flash('Thêm sản phẩm thành công!', 'success')
+    flash('Thêm thành công!', 'success')
     return redirect(url_for('admin_dashboard'))
 
 
@@ -471,11 +470,32 @@ def add_product():
 @login_required
 def delete_product(id):
     if current_user.role != 'admin': abort(403)
-    product = Product.query.get_or_404(id)
-    db.session.delete(product)
+    db.session.delete(Product.query.get_or_404(id))
     db.session.commit()
-    flash('Đã xóa sản phẩm.', 'success')
     return redirect(url_for('admin_dashboard'))
+
+
+# [NEW] Route Sửa sản phẩm
+@app.route('/admin/product/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_product(id):
+    if current_user.role != 'admin': abort(403)
+    product = Product.query.get_or_404(id)
+
+    if request.method == 'POST':
+        product.name = request.form.get('name')
+        product.brand = request.form.get('brand')
+        product.price = request.form.get('price')
+        product.description = request.form.get('description')
+        product.image_url = request.form.get('image_url')
+        product.is_sale = 'is_sale' in request.form
+        product.sale_price = request.form.get('sale_price')
+
+        db.session.commit()
+        flash('Cập nhật thành công!', 'success')
+        return redirect(url_for('admin_dashboard'))
+
+    return render_template('admin_edit.html', product=product)
 
 
 # --- KHỞI TẠO DỮ LIỆU ---
@@ -496,31 +516,31 @@ def initialize_database():
             # --- CÁC SẢN PHẨM CŨ ---
             {"name": "iPhone 15 Pro Max", "brand": "Apple", "price": 34990000, "category": "phone", "is_sale": False,
              "desc": "Titan tự nhiên, Chip A17 Pro, Camera 5x.",
-             "img": "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=800"},
+             "img": "https://cdn.mobilecity.vn/mobilecity-vn/images/2023/09/iphone-15-pro-max-titan-trang-cu.jpg.webp"},
             {"name": "Samsung Galaxy S24 Ultra", "brand": "Samsung", "price": 31990000, "category": "phone",
              "is_sale": True, "sale_price": 29990000,
              "desc": "Quyền năng AI, Camera 200MP, S-Pen.",
-             "img": "https://images.unsplash.com/photo-1706801933957-e89c6d482253?w=800"},
+             "img": "https://m.media-amazon.com/images/I/71WcjsOVOmL._AC_SX679_.jpg"},
             {"name": "Xiaomi 14", "brand": "Xiaomi", "price": 22990000, "category": "phone", "is_sale": False,
              "desc": "Ống kính Leica, Snapdragon 8 Gen 3.",
-             "img": "https://images.unsplash.com/photo-1663641773426-30239b03cb8d?w=800"},
+             "img": "https://m.media-amazon.com/images/I/51hOisZjbeL._AC_SX679_.jpg"},
             {"name": "Google Pixel 8 Pro", "brand": "Google", "price": 24000000, "category": "phone", "is_sale": False,
              "desc": "Camera AI đỉnh cao, Android gốc.",
-             "img": "https://images.unsplash.com/photo-1696357062402-990861194247?w=800"},
+             "img": "https://m.media-amazon.com/images/I/71h9zq4viSL._AC_SL1500_.jpg"},
 
             # --- 15 ĐIỆN THOẠI MỚI ---
             {"name": "iPhone 13 128GB", "brand": "Apple", "price": 13990000, "category": "phone", "is_sale": True,
              "sale_price": 12590000,
              "desc": "Thiết kế vuông vức, Camera kép sắc nét.",
-             "img": "https://images.unsplash.com/photo-1632661674596-df8be070a5c5?w=800"},
+             "img": "https://m.media-amazon.com/images/I/51wPUCGf9zL._AC_SL1166_.jpg"},
             {"name": "Samsung Galaxy A54 5G", "brand": "Samsung", "price": 8490000, "category": "phone",
              "is_sale": False,
              "desc": "Chống nước IP67, Camera OIS ổn định.",
-             "img": "https://images.unsplash.com/photo-1678911820864-e2c567c655d7?w=800"},
+             "img": "https://m.media-amazon.com/images/I/61A+wkddftL._AC_SL1500_.jpg"},
             {"name": "Xiaomi Redmi Note 13 Pro", "brand": "Xiaomi", "price": 7290000, "category": "phone",
              "is_sale": True, "sale_price": 6890000,
              "desc": "Camera 200MP, Sạc siêu nhanh 67W.",
-             "img": "https://images.unsplash.com/photo-1598327105666-5b89351aff23?w=800"},
+             "img": "https://m.media-amazon.com/images/I/51qT8RuY56L._AC_SL1200_.jpg"},
             {"name": "Oppo Reno 10 5G", "brand": "Oppo", "price": 9990000, "category": "phone", "is_sale": False,
              "desc": "Chuyên gia chân dung, Thiết kế 3D cong.",
              "img": "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=800"},

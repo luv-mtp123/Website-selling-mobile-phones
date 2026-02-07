@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow border-0 rounded-4">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="mb-0 fw-bold"><i class="fas fa-edit me-2"></i> Chỉnh sửa sản phẩm #{{ product.id }}</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold">Tên sản phẩm</label>
+                            <input type="text" name="name" class="form-control" value="{{ product.name }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Hãng</label>
+                            <input type="text" name="brand" class="form-control" value="{{ product.brand }}" required>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label fw-bold">URL Hình ảnh</label>
+                            <input type="text" name="image_url" class="form-control" value="{{ product.image_url }}">
+                            <div class="mt-2">
+                                <img src="{{ product.image_url }}" style="height: 100px; border-radius: 8px; border: 1px solid #ddd;">
+                                <small class="text-muted d-block">Ảnh hiện tại</small>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Giá gốc (VNĐ)</label>
+                            <input type="number" name="price" class="form-control fw-bold" value="{{ product.price }}" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card bg-light border-0 p-3 h-100">
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" name="is_sale" id="editSale" {% if product.is_sale %}checked{% endif %}>
+                                    <label class="form-check-label fw-bold text-danger" for="editSale">Kích hoạt Giảm giá</label>
+                                </div>
+                                <input type="number" name="sale_price" class="form-control" placeholder="Giá khuyến mãi" value="{{ product.sale_price or '' }}">
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Mô tả sản phẩm</label>
+                            <textarea name="description" class="form-control" rows="5">{{ product.description }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                        <a href="/admin" class="btn btn-outline-secondary px-4 rounded-pill">Hủy bỏ</a>
+                        <button type="submit" class="btn btn-primary px-5 rounded-pill fw-bold">Lưu Thay Đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,49 +1,55 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="text-center mb-5">
-    <h1 class="text-primary fw-bold display-5"><i class="fas fa-balance-scale"></i> So Sánh Sản Phẩm AI</h1>
-    <p class="lead text-muted">Chọn 2 sản phẩm để chuyên gia Gemini AI phân tích và đưa ra lời khuyên mua sắm.</p>
+<div class="text-center mb-5 pt-3">
+    <h1 class="text-primary fw-bold display-5">
+        <span class="text-dark">AI</span> <span class="text-danger">VS</span> Battle
+    </h1>
+    <p class="lead text-muted">So sánh chi tiết thông số và nhận tư vấn từ chuyên gia AI</p>
 </div>
 
-<div class="card shadow-lg border-0 rounded-4 mb-5">
+<div class="card shadow-lg border-0 rounded-4 mb-5 overflow-hidden">
+    <div class="card-header bg-dark text-white p-4 text-center">
+        <h4 class="mb-0 text-uppercase fw-bold">Chọn sản phẩm mà bạn muốn so sánh</h4>
+    </div>
     <div class="card-body p-5 bg-light">
-        <form method="POST" class="row g-4 align-items-center justify-content-center">
-            <!-- Sản phẩm 1 -->
-            <div class="col-md-5">
-                <label class="form-label fw-bold">Sản phẩm 1</label>
-                <select name="product1" class="form-select form-select-lg shadow-sm" required>
-                    <option value="" disabled selected>-- Chọn máy thứ nhất --</option>
-                    {% for p in products %}
-                    <option value="{{ p.id }}" {% if p1 and p1.id == p.id %}selected{% endif %}>
-                        {{ p.name }} - {{ "{:,.0f}".format(p.price) }}đ
-                    </option>
-                    {% endfor %}
-                </select>
+        <form method="POST">
+            <div class="row align-items-center">
+                <!-- SP 1 -->
+                <div class="col-md-5">
+                    <div class="form-floating">
+                        <select name="product1" class="form-select shadow-sm fw-bold text-primary" id="p1" required>
+                            <option value="" disabled selected>Chọn sản phẩm trái</option>
+                            {% for p in products %}
+                            <option value="{{ p.id }}" {% if p1 and p1.id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="p1">Sản phẩm 1</label>
+                    </div>
+                </div>
+
+                <!-- VS Icon -->
+                <div class="col-md-2 text-center my-3 my-md-0">
+                    <div class="rounded-circle bg-danger text-white d-inline-flex align-items-center justify-content-center shadow-lg" style="width: 70px; height: 70px; font-weight: 900; font-size: 1.5rem; border: 4px solid white;">VS</div>
+                </div>
+
+                <!-- SP 2 -->
+                <div class="col-md-5">
+                    <div class="form-floating">
+                        <select name="product2" class="form-select shadow-sm fw-bold text-danger" id="p2" required>
+                            <option value="" disabled selected>Chọn sản phẩm phải</option>
+                            {% for p in products %}
+                            <option value="{{ p.id }}" {% if p2 and p2.id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="p2">Sản phẩm 2</label>
+                    </div>
+                </div>
             </div>
 
-            <!-- VS Icon -->
-            <div class="col-md-2 text-center">
-                <div class="rounded-circle bg-danger text-white d-inline-flex align-items-center justify-content-center shadow" style="width: 60px; height: 60px; font-weight: bold; font-size: 1.2rem;">VS</div>
-            </div>
-
-            <!-- Sản phẩm 2 -->
-            <div class="col-md-5">
-                <label class="form-label fw-bold">Sản phẩm 2</label>
-                <select name="product2" class="form-select form-select-lg shadow-sm" required>
-                    <option value="" disabled selected>-- Chọn máy thứ hai --</option>
-                    {% for p in products %}
-                    <option value="{{ p.id }}" {% if p2 and p2.id == p.id %}selected{% endif %}>
-                        {{ p.name }} - {{ "{:,.0f}".format(p.price) }}đ
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- Nút submit -->
-            <div class="col-12 text-center mt-4">
-                <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill shadow fw-bold text-uppercase">
-                    <i class="fas fa-bolt me-2"></i> Phân Tích Ngay
+            <div class="text-center mt-5">
+                <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill shadow-sm fw-bold text-uppercase scale-hover">
+                    <i class="fas fa-bolt me-2 text-warning"></i> Phân Tích Ngay
                 </button>
             </div>
         </form>
@@ -51,40 +57,48 @@
 </div>
 
 {% if result %}
-<div class="row">
-    <!-- Cột trái: Hình ảnh sản phẩm -->
-    <div class="col-md-4">
-        <div class="card shadow border-0 mb-3 text-center">
-            <div class="card-body">
+<div class="row g-4 animate-up">
+    <!-- Hình ảnh trực quan -->
+    <div class="col-md-12">
+        <div class="row g-0 rounded-4 overflow-hidden shadow-sm mb-4 bg-white">
+            <div class="col-6 border-end p-4 text-center">
                 <h5 class="fw-bold text-primary">{{ p1.name }}</h5>
-                <img src="{{ p1.image_url }}" class="img-fluid rounded mb-2" style="max-height: 150px;">
-                <h5 class="text-danger">{{ "{:,.0f}".format(p1.price) }} đ</h5>
+                <img src="{{ p1.image_url }}" class="img-fluid my-3" style="max-height: 200px;">
+                <h4 class="text-danger">{{ "{:,.0f}".format(p1.price) }} đ</h4>
             </div>
-        </div>
-        <div class="card shadow border-0 text-center">
-            <div class="card-body">
-                <h5 class="fw-bold text-primary">{{ p2.name }}</h5>
-                <img src="{{ p2.image_url }}" class="img-fluid rounded mb-2" style="max-height: 150px;">
-                <h5 class="text-danger">{{ "{:,.0f}".format(p2.price) }} đ</h5>
+            <div class="col-6 p-4 text-center">
+                <h5 class="fw-bold text-danger">{{ p2.name }}</h5>
+                <img src="{{ p2.image_url }}" class="img-fluid my-3" style="max-height: 200px;">
+                <h4 class="text-danger">{{ "{:,.0f}".format(p2.price) }} đ</h4>
             </div>
         </div>
     </div>
 
-    <!-- Cột phải: Kết quả từ AI -->
-    <div class="col-md-8">
-        <div class="card shadow border-0 h-100">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-star me-2"></i> Đánh giá chi tiết từ Chuyên gia AI</h5>
+    <!-- Kết quả AI -->
+    <div class="col-12">
+        <div class="card shadow border-0 rounded-4">
+            <div class="card-header bg-gradient-primary text-white p-3">
+                <h5 class="mb-0"><i class="fas fa-brain me-2"></i> Kết quả phân tích</h5>
             </div>
             <div class="card-body p-4">
-                <!-- Hiển thị nội dung Markdown đã được filter xử lý -->
-                <div class="ai-result">
-                    <!-- Sử dụng replace để xuống dòng thủ công trong bảng -->
-                    {{ result | replace('\n', '<br>') | safe }}
+                <div class="table-responsive ai-result-table">
+                    <!-- Hiển thị HTML trực tiếp từ AI -->
+                    {{ result | safe }}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* CSS riêng cho bảng so sánh */
+    .ai-result-table table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+    .ai-result-table th, .ai-result-table td { padding: 12px; border: 1px solid #dee2e6; vertical-align: middle; }
+    .ai-result-table th { background-color: #f8f9fa; font-weight: bold; text-align: center; }
+    .scale-hover:hover { transform: scale(1.05); transition: 0.3s; }
+    .animate-up { animation: slideUp 0.5s ease-out; }
+    @keyframes slideUp { from {opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
+    .bg-gradient-primary { background: linear-gradient(45deg, #0d6efd, #0043a8); }
+</style>
 {% endif %}
 {% endblock %}

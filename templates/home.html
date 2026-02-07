@@ -1,25 +1,32 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<!-- Banner -->
-<div class="card bg-dark text-white mb-4 border-0 rounded-4 overflow-hidden shadow">
-    <img src="https://images.unsplash.com/photo-1556656793-02715d8dd6f8?w=1600&q=80" class="card-img" alt="Banner" style="height: 300px; object-fit: cover; opacity: 0.6;">
-    <div class="card-img-overlay d-flex flex-column justify-content-center align-items-center text-center">
-        <h1 class="display-4 fw-bold">Công Nghệ Tương Lai</h1>
-        <p class="lead">Sở hữu những siêu phẩm mới nhất với giá ưu đãi</p>
-        <a href="#products" class="btn btn-primary btn-lg rounded-pill px-4">Mua Ngay</a>
+<!-- Banner Tết -->
+<div class="card mb-4 border-0 rounded-4 overflow-hidden shadow position-relative">
+    <img src="https://img.freepik.com/free-vector/gradient-lunar-new-year-background_23-2149945037.jpg" class="card-img" alt="Tet Banner" style="height: 350px; object-fit: cover;">
+    <div class="card-img-overlay d-flex flex-column justify-content-center align-items-center text-center text-white" style="background: rgba(0,0,0,0.3);">
+        <h1 class="display-3 fw-bold text-warning mb-3" style="text-shadow: 2px 2px 4px #d32f2f;">XUÂN BÍNH NGỌ</h1>
+        <p class="lead fw-bold mb-4">Lì Xì Công Nghệ - Rước Lộc Đầu Năm</p>
+        <a href="#products" class="btn btn-warning btn-lg rounded-pill px-5 fw-bold text-danger shadow">
+            <i class="fas fa-gift me-2"></i> SĂN SALE NGAY
+        </a>
     </div>
 </div>
 
 <!-- Bộ lọc Smart Search -->
-<div class="card shadow-sm p-4 mb-4 rounded-4 border-0" id="products">
-    <div class="mb-2 text-primary fw-bold"><i class="fas fa-magic"></i> Tìm kiếm thông minh (AI)</div>
+<div class="card shadow-sm p-4 mb-5 rounded-4 border-0" id="products" style="border-top: 5px solid #d32f2f !important;">
+    <div class="d-flex align-items-center mb-3">
+        <i class="fas fa-robot fs-3 text-danger me-2"></i>
+        <h4 class="mb-0 fw-bold text-danger">AI Smart Search</h4>
+    </div>
     <form action="/" method="GET" class="row g-3">
-        <div class="col-md-5">
-            <!-- Ô tìm kiếm hỗ trợ ngôn ngữ tự nhiên -->
-            <input type="text" name="q" class="form-control" placeholder="VD: Điện thoại Samsung dưới 20 triệu..." value="{{ search_query }}">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" name="q" class="form-control border-start-0 ps-0" placeholder="VD: Tìm iPhone chơi game giá dưới 20 triệu..." value="{{ search_query }}">
+            </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <select name="brand" class="form-select">
                 <option value="">Tất cả hãng</option>
                 {% for b in brands %}
@@ -30,56 +37,69 @@
         <div class="col-md-2">
             <select name="sort" class="form-select">
                 <option value="">Sắp xếp</option>
-                <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Giá tăng dần</option>
-                <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Giá giảm dần</option>
+                <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Giá rẻ trước</option>
+                <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Giá cao trước</option>
             </select>
         </div>
         <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> Tìm</button>
+            <button type="submit" class="btn btn-danger w-100 fw-bold">Tìm Kiếm</button>
         </div>
     </form>
-    <div class="form-text ms-1 mt-2 text-muted fst-italic">
-        <small>Mẹo: Nhập "iPhone giá rẻ" hoặc "Máy chụp ảnh đẹp" để AI tự lọc.</small>
-    </div>
 </div>
 
-<!-- [QUAN TRỌNG] Thông báo kết quả lọc AI (nếu có) -->
+<!-- Thông báo AI -->
 {% if ai_message %}
-<div class="alert alert-success d-flex align-items-center shadow-sm" role="alert">
-    <i class="fas fa-robot fs-4 me-3"></i>
-    <div>
-        <strong>{{ ai_message }}</strong>
+<div class="alert alert-warning border-2 border-warning d-flex align-items-center shadow-sm mb-4 rounded-3" role="alert">
+    <i class="fas fa-sparkles fs-4 me-3 text-warning"></i>
+    <div class="text-dark">
+        {{ ai_message }}
     </div>
 </div>
 {% endif %}
 
 <!-- Danh sách sản phẩm -->
+<div class="d-flex align-items-center mb-4">
+    <h3 class="fw-bold text-danger border-start border-4 border-warning ps-3 mb-0">SẢN PHẨM NỔI BẬT</h3>
+    <img src="https://cdn-icons-png.flaticon.com/512/4256/4256900.png" width="40" class="ms-2">
+</div>
+
 <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
     {% for product in products %}
     <div class="col">
-        <div class="card h-100 card-product shadow-sm">
+        <div class="card h-100 card-product shadow-sm border-0">
             {% if product.is_sale %}
-            <span class="sale-badge">SALE</span>
+            <div class="position-absolute top-0 start-0 m-2 badge bg-warning text-danger fw-bold shadow-sm p-2">
+                <i class="fas fa-tag"></i> GIẢM SỐC
+            </div>
             {% endif %}
 
-            <a href="/product/{{ product.id }}">
-                <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover; padding: 15px;" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+            <a href="/product/{{ product.id }}" class="text-center p-3">
+                <img src="{{ product.image_url }}" class="card-img-top rounded" alt="{{ product.name }}" style="height: 180px; object-fit: contain;" onerror="this.src='https://via.placeholder.com/300x200?text=MobileStore'">
             </a>
 
-            <div class="card-body d-flex flex-column">
-                <h6 class="card-title fw-bold text-dark text-truncate">{{ product.name }}</h6>
+            <div class="card-body d-flex flex-column pt-0">
+                <div class="mb-2">
+                    <span class="badge bg-light text-muted border">{{ product.brand }}</span>
+                </div>
+                <h6 class="card-title fw-bold text-dark text-truncate mb-3">
+                    <a href="/product/{{ product.id }}" class="text-decoration-none text-dark">{{ product.name }}</a>
+                </h6>
+
                 <div class="mt-auto">
                     {% if product.is_sale %}
-                        <p class="card-text text-danger fw-bold mb-0 fs-5">{{ product.sale_price | vnd }}</p>
-                        <p class="card-text text-muted small text-decoration-line-through">{{ product.price | vnd }}</p>
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="h5 text-danger fw-bold mb-0 me-2">{{ product.sale_price | vnd }}</span>
+                            <span class="text-muted small text-decoration-line-through">{{ product.price | vnd }}</span>
+                        </div>
                     {% else %}
-                        <p class="card-text text-danger fw-bold fs-5">{{ product.price | vnd }}</p>
+                        <div class="h5 text-danger fw-bold mb-2">{{ product.price | vnd }}</div>
                     {% endif %}
 
-                    <div class="d-grid gap-2 mt-2">
-                        <a href="/product/{{ product.id }}" class="btn btn-outline-primary btn-sm rounded-pill">Chi tiết</a>
+                    <div class="d-grid gap-2">
                         <form action="/cart/add/{{ product.id }}" method="POST">
-                             <button type="submit" class="btn btn-primary btn-sm w-100 rounded-pill"><i class="fas fa-cart-plus"></i> Thêm giỏ</button>
+                             <button type="submit" class="btn btn-outline-danger w-100 rounded-pill fw-bold">
+                                 <i class="fas fa-cart-plus"></i> Thêm Vào Giỏ
+                             </button>
                         </form>
                     </div>
                 </div>
@@ -88,7 +108,8 @@
     </div>
     {% else %}
     <div class="col-12 text-center py-5">
-        <p class="text-muted">Không tìm thấy sản phẩm nào phù hợp tiêu chí lọc.</p>
+        <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="100" class="mb-3 opacity-50">
+        <p class="text-muted fs-5">Không tìm thấy sản phẩm nào phù hợp.</p>
     </div>
     {% endfor %}
 </div>

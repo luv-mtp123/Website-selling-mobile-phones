@@ -1,4 +1,4 @@
-## **📱 MobileStore - Siêu Thị Điện Thoại Thông Minh Tích Hợp AI (Phiên Bản Tết 2024)**
+## **📱 MobileStore - Siêu Thị Điện Thoại Thông Minh Tích Hợp AI (Phiên Bản Tết 2026)**
 
 
 
@@ -26,6 +26,32 @@
 
 ##### 
 
+#### 🎨 Quản Lý Biến Thể Sản Phẩm (Mới Cập Nhật):
+
+
+
+##### Hệ thống Màu sắc \& Phiên bản: Admin có thể thêm không giới hạn các tùy chọn cho sản phẩm (VD: Màu Titan Xanh, Bản 256GB/512GB...).
+
+##### 
+
+##### Ảnh \& Giá Động:
+
+##### 
+
+##### Mỗi màu sắc có thể gắn link ảnh riêng -> Khách chọn màu, ảnh sản phẩm tự đổi.
+
+##### 
+
+##### Mỗi phiên bản có giá riêng -> Khách chọn dung lượng, giá tiền tự nhảy.
+
+##### 
+
+##### Phân loại thông minh: Hệ thống tự động ẩn phần chọn biến thể đối với sản phẩm là "Phụ kiện" để giao diện gọn gàng.
+
+
+
+
+
 #### 🤖 Chatbot Hybrid (Thông Minh Hơn):
 
 ##### 
@@ -50,17 +76,19 @@
 
 ##### 
 
-#### 🔍 AI Smart Search \& Compare (Đã Sửa Lỗi):
+#### 🛠️ Sửa Lỗi \& Tối Ưu Hóa (Bug Fixes):
+
+#### 
+
+##### AI Smart Search: Sử dụng Regex mạnh mẽ để "bắt" dữ liệu JSON từ AI chính xác hơn, loại bỏ lỗi khi AI nói nhiều lời dẫn.
 
 ##### 
 
-##### Sử dụng Regex để trích xuất dữ liệu JSON từ AI chính xác hơn, khắc phục lỗi tìm kiếm trước đây.
+##### Xử lý JSON an toàn: Chuyển logic giải mã dữ liệu từ Frontend về Backend (Python) để triệt tiêu lỗi SyntaxError và Unexpected token trên trình duyệt.
 
 ##### 
 
-##### Bảng so sánh sản phẩm được render ra HTML đẹp mắt thay vì Markdown thô.
-
-##### 
+##### Format Tiền tệ: Khắc phục lỗi ValueError khi định dạng giá tiền từ chuỗi ký tự.
 
 #### 🚀 Tính Năng Chi Tiết
 
@@ -307,6 +335,30 @@
 ##### 
 
 ##### Hãy xóa file .db và chạy lại python app.py để hàm initialize\_database() nạp dữ liệu.
+
+##### 
+
+* ##### Lỗi sqlite3.OperationalError: no such column: product.colors:
+
+##### 
+
+##### Do database cũ thiếu cột mới. Hãy xóa file .db và chạy lại app để tạo mới.
+
+##### 
+
+* ##### Lỗi SyntaxError: Unexpected token hoặc TypeError: Object of type Undefined:
+
+##### 
+
+##### Do dữ liệu JSON bị lỗi khi truyền xuống Javascript. Code mới nhất trong app.py và admin\_edit.html đã khắc phục triệt để bằng cách xử lý tại Backend.
+
+##### 
+
+* ##### Lỗi ValueError: Unknown format code 'f':
+
+##### 
+
+##### Đã fix trong hàm vnd\_filter (app.py) để ép kiểu dữ liệu an toàn.
 
 ##### 
 

@@ -1,61 +1,162 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
+<div class="row justify-content-center mb-5">
+    <div class="col-md-10">
         <div class="card shadow border-0 rounded-4">
-            <div class="card-header bg-primary text-white py-3">
-                <h4 class="mb-0 fw-bold"><i class="fas fa-edit me-2"></i> Chỉnh sửa sản phẩm #{{ product.id }}</h4>
+            <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
+                <h4 class="mb-0 fw-bold"><i class="fas fa-edit me-2"></i> Chỉnh sửa: {{ product.name }}</h4>
+                <span class="badge bg-light text-primary fs-6">{{ product.category|upper }}</span>
             </div>
             <div class="card-body p-4">
-                <form method="POST">
-                    <div class="row g-3">
-                        <div class="col-md-8">
-                            <label class="form-label fw-bold">Tên sản phẩm</label>
-                            <input type="text" name="name" class="form-control" value="{{ product.name }}" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Hãng</label>
-                            <input type="text" name="brand" class="form-control" value="{{ product.brand }}" required>
-                        </div>
-                        
-                        <div class="col-12">
-                            <label class="form-label fw-bold">URL Hình ảnh</label>
-                            <input type="text" name="image_url" class="form-control" value="{{ product.image_url }}">
-                            <div class="mt-2">
-                                <img src="{{ product.image_url }}" style="height: 100px; border-radius: 8px; border: 1px solid #ddd;">
-                                <small class="text-muted d-block">Ảnh hiện tại</small>
+                <form method="POST" id="editForm">
+                    <div class="row g-4">
+                        <!-- Cột Trái: Thông tin cơ bản -->
+                        <div class="col-md-6">
+                            <h5 class="text-primary border-bottom pb-2 mb-3">Thông tin chung</h5>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Tên sản phẩm</label>
+                                <input type="text" name="name" class="form-control" value="{{ product.name }}" required>
                             </div>
-                        </div>
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <label class="form-label fw-bold">Hãng</label>
+                                    <input type="text" name="brand" class="form-control" value="{{ product.brand }}" required>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label class="form-label fw-bold">Giá gốc (VNĐ)</label>
+                                    <input type="number" name="price" class="form-control fw-bold" value="{{ product.price }}" required>
+                                </div>
+                            </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Giá gốc (VNĐ)</label>
-                            <input type="number" name="price" class="form-control fw-bold" value="{{ product.price }}" required>
-                        </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">URL Hình ảnh mặc định</label>
+                                <input type="text" name="image_url" class="form-control" value="{{ product.image_url }}">
+                                <div class="mt-2 text-center">
+                                    <img src="{{ product.image_url }}" style="height: 100px; border-radius: 8px; border: 1px solid #ddd;" onerror="this.style.display='none'">
+                                </div>
+                            </div>
 
-                        <div class="col-md-6">
-                            <div class="card bg-light border-0 p-3 h-100">
+                            <div class="card bg-light border-0 p-3 mb-3">
                                 <div class="form-check form-switch mb-2">
                                     <input class="form-check-input" type="checkbox" name="is_sale" id="editSale" {% if product.is_sale %}checked{% endif %}>
-                                    <label class="form-check-label fw-bold text-danger" for="editSale">Kích hoạt Giảm giá</label>
+                                    <label class="form-check-label fw-bold text-danger" for="editSale">Đang giảm giá</label>
                                 </div>
                                 <input type="number" name="sale_price" class="form-control" placeholder="Giá khuyến mãi" value="{{ product.sale_price or '' }}">
                             </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Mô tả sản phẩm</label>
+                                <textarea name="description" class="form-control" rows="4">{{ product.description }}</textarea>
+                            </div>
                         </div>
 
-                        <div class="col-12">
-                            <label class="form-label fw-bold">Mô tả sản phẩm</label>
-                            <textarea name="description" class="form-control" rows="5">{{ product.description }}</textarea>
+                        <!-- Cột Phải: Quản lý Biến thể (Chỉ hiện cho Phone) -->
+                        <div class="col-md-6">
+                            {% if product.category == 'phone' %}
+                            <div class="p-3 border rounded-3 bg-white h-100">
+                                <h5 class="text-danger border-bottom pb-2 mb-3"><i class="fas fa-layer-group"></i> Quản lý Biến thể</h5>
+
+                                <!-- 1. Quản lý Màu sắc -->
+                                <div class="mb-4">
+                                    <label class="fw-bold mb-2">Danh sách Màu sắc & Ảnh riêng</label>
+                                    <div class="text-muted small mb-2 fst-italic">Nhập tên màu và link ảnh tương ứng để khi khách chọn màu sẽ hiện ảnh đó.</div>
+                                    <div id="colorContainer"></div>
+                                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addColorRow()"><i class="fas fa-plus"></i> Thêm màu</button>
+                                </div>
+
+                                <!-- 2. Quản lý Phiên bản -->
+                                <div class="mb-4">
+                                    <label class="fw-bold mb-2">Danh sách Phiên bản & Giá riêng</label>
+                                    <div class="text-muted small mb-2 fst-italic">Ví dụ: 128GB, 256GB. Giá tiền tương ứng.</div>
+                                    <div id="versionContainer"></div>
+                                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addVersionRow()"><i class="fas fa-plus"></i> Thêm phiên bản</button>
+                                </div>
+
+                                <!-- Hidden Inputs để gửi JSON về server -->
+                                <input type="hidden" name="colors_json" id="colorsJson">
+                                <input type="hidden" name="versions_json" id="versionsJson">
+                            </div>
+                            {% else %}
+                            <div class="alert alert-secondary h-100 d-flex align-items-center justify-content-center text-center flex-column">
+                                <i class="fas fa-headphones fs-1 mb-3 text-muted"></i>
+                                <h5>Sản phẩm Phụ kiện</h5>
+                                <p>Phụ kiện (Sạc, cáp, ốp...) không hỗ trợ cấu hình biến thể phức tạp trong phiên bản này.</p>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
 
                     <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
                         <a href="/admin" class="btn btn-outline-secondary px-4 rounded-pill">Hủy bỏ</a>
-                        <button type="submit" class="btn btn-primary px-5 rounded-pill fw-bold">Lưu Thay Đổi</button>
+                        <button type="submit" class="btn btn-primary px-5 rounded-pill fw-bold" onclick="prepareData()">Lưu Thay Đổi</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // [FIX] Nhận dữ liệu list trực tiếp từ server, không cần JSON.parse thủ công dễ lỗi
+    // tojson filter sẽ biến list python thành mảng javascript hợp lệ
+    const initialColors = {{ colors_list | tojson | safe }};
+    const initialVersions = {{ versions_list | tojson | safe }};
+
+    // Khi trang load xong, vẽ lại các dòng dữ liệu cũ
+    window.onload = function() {
+        if (initialColors && initialColors.length > 0) {
+            initialColors.forEach(c => addColorRow(c.name, c.image));
+        } else {
+            {% if product.category == 'phone' %} addColorRow(); {% endif %}
+        }
+
+        if (initialVersions && initialVersions.length > 0) {
+            initialVersions.forEach(v => addVersionRow(v.name, v.price));
+        } else {
+            {% if product.category == 'phone' %} addVersionRow(); {% endif %}
+        }
+    };
+
+    function addColorRow(name='', image='') {
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2 color-row';
+        div.innerHTML = `
+            <input type="text" class="form-control" placeholder="Tên màu (VD: Titan Xanh)" value="${name || ''}">
+            <input type="text" class="form-control" placeholder="Link ảnh cho màu này" value="${image || ''}">
+            <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">X</button>
+        `;
+        document.getElementById('colorContainer').appendChild(div);
+    }
+
+    function addVersionRow(name='', price='') {
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2 version-row';
+        div.innerHTML = `
+            <input type="text" class="form-control" placeholder="Bản (VD: 256GB)" value="${name || ''}">
+            <input type="number" class="form-control" placeholder="Giá tiền (VNĐ)" value="${price || ''}">
+            <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">X</button>
+        `;
+        document.getElementById('versionContainer').appendChild(div);
+    }
+
+    function prepareData() {
+        // Gom dữ liệu Color vào JSON input
+        const colors = [];
+        document.querySelectorAll('.color-row').forEach(row => {
+            const inputs = row.querySelectorAll('input');
+            if(inputs[0].value) colors.push({name: inputs[0].value, image: inputs[1].value});
+        });
+        document.getElementById('colorsJson').value = JSON.stringify(colors);
+
+        // Gom dữ liệu Version vào JSON input
+        const versions = [];
+        document.querySelectorAll('.version-row').forEach(row => {
+            const inputs = row.querySelectorAll('input');
+            if(inputs[0].value) versions.push({name: inputs[0].value, price: inputs[1].value});
+        });
+        document.getElementById('versionsJson').value = JSON.stringify(versions);
+    }
+</script>
 {% endblock %}

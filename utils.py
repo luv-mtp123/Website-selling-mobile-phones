@@ -15,7 +15,9 @@ def call_gemini_api(prompt):
         return None
 
     target_model = "gemini-2.5-flash"
+    # [FIXED] Sửa lại URL chuẩn (bỏ các ký tự thừa do lỗi copy paste cũ)
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_model}:generateContent?key={api_key}"
+
     headers = {"Content-Type": "application/json"}
 
     # Thêm hướng dẫn hệ thống để AI trả lời ngắn gọn, đúng trọng tâm
@@ -25,8 +27,8 @@ def call_gemini_api(prompt):
         "contents": [{"parts": [{"text": prompt}]}],
         "systemInstruction": {"parts": [{"text": system_instruction}]},
         "generationConfig": {
-            "temperature": 0.1,  # Giảm nhiệt độ để AI trả lời chính xác, ít sáng tạo linh tinh
-            "maxOutputTokens": 1000
+            "temperature": 0.1,  # Giảm nhiệt độ để AI trả lời chính xác
+            "maxOutputTokens": 2000  # Tăng token để bảng so sánh dài không bị cắt
         }
     }
 
@@ -59,7 +61,6 @@ def get_gemini_suggestions(product_name):
 def analyze_search_intents(query):
     """
     SMART SEARCH: Phân tích intent người dùng
-    [UPDATED] Xử lý JSON mạnh mẽ hơn
     """
     prompt = (
         f"Phân tích query: '{query}'. "
@@ -76,7 +77,7 @@ def analyze_search_intents(query):
     response_text = call_gemini_api(prompt)
     if not response_text: return None
 
-    print(f"DEBUG AI Raw: {response_text}")  # Log để kiểm tra
+    # print(f"DEBUG AI Raw: {response_text}")
 
     try:
         # 1. Thử làm sạch Markdown
@@ -87,7 +88,6 @@ def analyze_search_intents(query):
         if match:
             clean_json = match.group(0)
             data = json.loads(clean_json)
-            print(f"DEBUG AI Parsed: {data}")
             return data
 
         return None
@@ -99,6 +99,7 @@ def analyze_search_intents(query):
 def get_comparison_result(p1_name, p1_price, p1_desc, p2_name, p2_price, p2_desc):
     """
     AI COMPARISON: Trả về bảng HTML trực tiếp để hiển thị đẹp hơn
+    [FIXED] Xử lý lỗi API trả về None và lọc sạch Markdown
     """
     prompt = (
         f"So sánh 2 điện thoại:\n"
@@ -108,6 +109,21 @@ def get_comparison_result(p1_name, p1_price, p1_desc, p2_name, p2_price, p2_desc
         "Màn hình, Camera, Hiệu năng, Pin, Đáng mua hơn?. "
         "Cột 1: Tiêu chí, Cột 2: {p1_name}, Cột 3: {p2_name}. "
         "Cuối cùng thêm 1 đoạn văn ngắn kết luận <b>Ai nên mua máy nào</b>. "
-        "Chỉ trả về HTML, không markdown."
+        "Chỉ trả về HTML, không markdown, không lời dẫn thừa."
     )
-    return call_gemini_api(prompt)
+
+    result = call_gemini_api(prompt)
+
+    if result:
+        # Lọc bỏ ```html và ``` ở đầu/cuối nếu có để tránh lỗi hiển thị
+        clean_html = re.sub(r"```html|```", "", result).strip()
+        return clean_html
+    else:
+        # Trả về thông báo lỗi HTML đẹp mắt thay vì None
+        return (
+            "<div class='alert alert-warning text-center'>"
+            "<i class='fas fa-exclamation-triangle fa-2x mb-2 text-warning'></i><br>"
+            "<strong>Hệ thống AI đang quá tải hoặc mất kết nối.</strong><br>"
+            "Vui lòng thử lại sau vài phút."
+            "</div>"
+        )

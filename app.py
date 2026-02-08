@@ -1,6 +1,7 @@
 import os
 import random
 import string
+import json  # [NEW] Import json để xử lý biến thể
 from flask import Flask, render_template, redirect, url_for, flash, request, abort, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, login_required, logout_user, current_user
@@ -55,6 +56,11 @@ def load_user(user_id):
 @app.template_filter('vnd')
 def vnd_filter(value):
     if value is None: return "0 đ"
+    # [FIX] Ép kiểu về float/int trước khi format để tránh lỗi ValueError với chuỗi
+    try:
+        value = float(value)
+    except (ValueError, TypeError):
+        return "0 đ"
     return "{:,.0f} đ".format(value).replace(",", ".")
 
 
@@ -205,6 +211,14 @@ def product_detail(id):
     product = Product.query.get_or_404(id)
     # Gợi ý AI (Giữ nguyên)
     ai_suggestion = get_gemini_suggestions(product.name)
+
+    # [NEW] Parse JSON từ database ra list để template sử dụng
+    try:
+        product.colors_list = json.loads(product.colors) if product.colors else []
+        product.versions_list = json.loads(product.versions) if product.versions else []
+    except (json.JSONDecodeError, TypeError):
+        product.colors_list = []
+        product.versions_list = []
 
     # [FIX] Logic gợi ý sản phẩm
     recommendations = []
@@ -387,19 +401,6 @@ def checkout():
     return render_template('checkout.html', cart=cart, total=total_amount)
 
 
-# --- API CHATBOT ---
-# @app.route('/api/chatbot', methods=['POST'])
-# def chatbot_api():
-    data = request.json
-    user_msg = data.get('message', '').lower().strip()
-    response = "Xin lỗi, mình chưa hiểu ý bạn."
-    for key, value in CHATBOT_DATA.items():
-        if key in user_msg:
-            response = value
-            break
-    return jsonify({'response': response})
-
-
 # --- AUTH ROUTES (CƠ BẢN) ---
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -517,11 +518,33 @@ def edit_product(id):
         product.is_sale = 'is_sale' in request.form
         product.sale_price = request.form.get('sale_price')
 
+        # [NEW] Lưu variants từ form (JSON string)
+        colors_json = request.form.get('colors_json')
+        versions_json = request.form.get('versions_json')
+        if colors_json: product.colors = colors_json
+        if versions_json: product.versions = versions_json
+
+
         db.session.commit()
         flash('Cập nhật thành công!', 'success')
         return redirect(url_for('admin_dashboard'))
 
-    return render_template('admin_edit.html', product=product)
+        # [FIX] Parse JSON tại Server trước khi gửi sang Template
+        # Điều này giải quyết triệt để lỗi SyntaxError hoặc Undefined
+    colors_list = []
+    versions_list = []
+    if product.colors:
+        try:
+            colors_list = json.loads(product.colors)
+        except:
+            colors_list = []
+
+    if product.versions:
+        try:
+            versions_list = json.loads(product.versions)
+        except:
+            versions_list = []
+    return render_template('admin_edit.html', product=product, colors_list=colors_list, versions_list=versions_list)
 
 
 # --- KHỞI TẠO DỮ LIỆU ---

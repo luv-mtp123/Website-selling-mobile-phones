@@ -24,6 +24,13 @@ class Product(db.Model):
     is_sale = db.Column(db.Boolean, default=False)
     sale_price = db.Column(db.Integer, nullable=True) # Giá sau khi giảm
 
+    # [NEW] Lưu trữ thông tin biến thể dưới dạng JSON String
+    # Cấu trúc colors: [{"name": "Titan Xanh", "image": "url_anh"}, ...]
+    # Cấu trúc versions: [{"name": "256GB", "price": 30000000}, ...]
+    colors = db.Column(db.Text, nullable=True)
+    versions = db.Column(db.Text, nullable=True)
+
+
 # [UPDATE] Thêm bảng Đơn hàng
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)

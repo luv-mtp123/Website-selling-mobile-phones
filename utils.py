@@ -23,7 +23,11 @@ def call_gemini_api(prompt):
 
     data = {
         "contents": [{"parts": [{"text": prompt}]}],
-        "systemInstruction": {"parts": [{"text": system_instruction}]}
+        "systemInstruction": {"parts": [{"text": system_instruction}]},
+        "generationConfig": {
+            "temperature": 0.1,  # Giảm nhiệt độ để AI trả lời chính xác, ít sáng tạo linh tinh
+            "maxOutputTokens": 1000
+        }
     }
 
     try:
@@ -55,24 +59,37 @@ def get_gemini_suggestions(product_name):
 def analyze_search_intents(query):
     """
     SMART SEARCH: Phân tích intent người dùng
-    Sử dụng Regex để trích xuất JSON chính xác từ phản hồi của AI
+    [UPDATED] Xử lý JSON mạnh mẽ hơn
     """
     prompt = (
         f"Phân tích query: '{query}'. "
-        "Trả về JSON duy nhất (không markdown) với các key: "
-        "brand (string/null), min_price (int/null), max_price (int/null), sort ('price_asc'/'price_desc'/null). "
-        "Ví dụ: 'iphone rẻ dưới 10 củ' -> {{\"brand\": \"Apple\", \"max_price\": 10000000, \"sort\": \"price_asc\", \"min_price\": null}}"
+        "Trả về 1 JSON duy nhất. Cấu trúc bắt buộc:\n"
+        "{\n"
+        "  \"brand\": \"Apple\" | \"Samsung\" | \"Xiaomi\" | \"Oppo\" | null,\n"
+        "  \"min_price\": int (VNĐ) | null,\n"
+        "  \"max_price\": int (VNĐ) | null,\n"
+        "  \"sort\": \"price_asc\" | \"price_desc\" | null\n"
+        "}\n"
+        "Lưu ý: 'dưới 10 triệu' -> max_price: 10000000. 'trên 5 củ' -> min_price: 5000000."
     )
 
     response_text = call_gemini_api(prompt)
     if not response_text: return None
 
+    print(f"DEBUG AI Raw: {response_text}")  # Log để kiểm tra
+
     try:
-        # Dùng Regex tìm chuỗi JSON nằm giữa dấu { và }
-        json_match = re.search(r"\{.*\}", response_text, re.DOTALL)
-        if json_match:
-            clean_json = json_match.group(0)
-            return json.loads(clean_json)
+        # 1. Thử làm sạch Markdown
+        clean_text = re.sub(r"```json|```", "", response_text).strip()
+
+        # 2. Dùng Regex tìm chuỗi JSON nằm giữa dấu { và } ngoài cùng
+        match = re.search(r"\{.*\}", clean_text, re.DOTALL)
+        if match:
+            clean_json = match.group(0)
+            data = json.loads(clean_json)
+            print(f"DEBUG AI Parsed: {data}")
+            return data
+
         return None
     except Exception as e:
         print(f"JSON Parse Error: {e}")

@@ -57,19 +57,6 @@ def vnd_filter(value):
     if value is None: return "0 đ"
     return "{:,.0f} đ".format(value).replace(",", ".")
 
-# Thêm bộ lọc markdown để hiển thị bảng so sánh đẹp.
-@app.template_filter('markdown')
-def markdown_filter(text):
-    """Chuyển đổi Markdown cơ bản sang HTML để hiển thị bảng so sánh AI"""
-    if not text: return ""
-    text = html.escape(text)
-    # Xử lý xuống dòng
-    text = text.replace('\n', '<br>')
-    # Xử lý in đậm **text** -> <strong>text</strong>
-    text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)
-    # Xử lý ký tự bảng để hiển thị tốt hơn (nếu AI trả về bảng markdown)
-    text = text.replace('|', '&#124;')
-    return text
 
 
 # --- CHATBOT LOGIC MỚI ---
@@ -132,25 +119,29 @@ def home():
     query = Product.query
 
     # --- SMART SEARCH LOGIC ---
-    # Nếu có từ khóa dài (>2 từ) và không chọn hãng thủ công -> Dùng AI phân tích
+    # Logic Smart Search (Tìm kiếm thông minh)
     if search_query and len(search_query.split()) > 2 and not brand_filter:
         ai_data = analyze_search_intents(search_query)
 
         if ai_data:
+            # Lọc theo Hãng
             if ai_data.get('brand'):
                 query = query.filter(Product.brand.contains(ai_data['brand']))
                 ai_message += f"Hãng: {ai_data['brand']} "
 
+            # Lọc theo Giá tối thiểu
             if ai_data.get('min_price'):
                 query = query.filter(Product.price >= ai_data['min_price'])
-                ai_message += f"| Trên: {'{:,.0f}'.format(ai_data['min_price'])}đ "
+                ai_message += f"| > {ai_data['min_price']:,}đ "
 
+            # Lọc theo Giá tối đa
             if ai_data.get('max_price'):
                 query = query.filter(Product.price <= ai_data['max_price'])
-                ai_message += f"| Dưới: {'{:,.0f}'.format(ai_data['max_price'])}đ "
+                ai_message += f"| < {ai_data['max_price']:,}đ "
 
+            # Sắp xếp
             if ai_data.get('sort'):
-                sort_by = ai_data['sort']  # Ghi đè sắp xếp theo ý định user
+                sort_by = ai_data['sort']
 
             if ai_message:
                 ai_message = f"🔍 AI đã tự động lọc: {ai_message}"
@@ -165,7 +156,7 @@ def home():
     if brand_filter:
         query = query.filter(Product.brand == brand_filter)
 
-    # Sắp xếp
+    # Xử lý Sắp xếp
     if sort_by == 'price_asc':
         query = query.order_by(Product.price.asc())
     elif sort_by == 'price_desc':
@@ -174,12 +165,13 @@ def home():
         query = query.order_by(Product.id.desc())  # Mặc định mới nhất
 
     products = query.all()
+
+    # Lấy danh sách hãng để hiển thị dropdown
     brands = db.session.query(Product.brand).distinct().all()
     brands = [b[0] for b in brands]
 
-    return render_template('home.html', products=products, brands=brands, search_query=search_query,
-                           ai_message=ai_message)
-
+    return render_template('home.html', products=products, brands=brands,
+                           search_query=search_query, ai_message=ai_message)
 
 # --- [NEW] ROUTE SO SÁNH SẢN PHẨM ---
 @app.route('/compare', methods=['GET', 'POST'])
@@ -207,13 +199,44 @@ def compare_page():
 
     return render_template('compare.html', products=all_products, result=result, p1=p1, p2=p2)
 
+
 @app.route('/product/<int:id>')
 def product_detail(id):
     product = Product.query.get_or_404(id)
-    # Gợi ý AI
+    # Gợi ý AI (Giữ nguyên)
     ai_suggestion = get_gemini_suggestions(product.name)
-    # Gợi ý database (cùng hãng)
-    recommendations = Product.query.filter(Product.brand == product.brand, Product.id != id).limit(4).all()
+
+    # [FIX] Logic gợi ý sản phẩm
+    recommendations = []
+
+    if product.category == 'phone':
+        # Nếu đang xem điện thoại -> Gợi ý phụ kiện
+        # 1. Lấy phụ kiện cùng hãng (Ví dụ: Tai nghe Samsung cho điện thoại Samsung)
+        brand_accessories = Product.query.filter_by(category='accessory', brand=product.brand).limit(2).all()
+
+        # 2. Lấy phụ kiện chung (Ví dụ: Sạc Anker, Kính cường lực, Ốp lưng...)
+        general_accessories = Product.query.filter_by(category='accessory', brand='Phụ kiện chung').limit(4).all()
+
+        # Gộp lại: Ưu tiên hàng hãng trước, sau đó điền đầy bằng phụ kiện chung
+        recommendations = brand_accessories + general_accessories
+
+        # Nếu vẫn chưa đủ 4 món, lấy thêm phụ kiện bất kỳ
+        if len(recommendations) < 4:
+            other_accessories = Product.query.filter_by(category='accessory').limit(4).all()
+            for acc in other_accessories:
+                if acc not in recommendations:
+                    recommendations.append(acc)
+
+        # Cắt lấy đúng 4 sản phẩm để hiển thị đẹp
+        recommendations = recommendations[:4]
+
+    else:
+        # Nếu đang xem phụ kiện -> Gợi ý các sản phẩm cùng hãng khác (có thể là điện thoại)
+        recommendations = Product.query.filter(Product.brand == product.brand, Product.id != id).limit(4).all()
+        # Fallback: Nếu không có (vd hãng lạ), gợi ý phụ kiện khác
+        if not recommendations:
+            recommendations = Product.query.filter(Product.category == 'accessory', Product.id != id).limit(4).all()
+
     return render_template('detail.html', product=product, ai_suggestion=ai_suggestion, recommendations=recommendations)
 
 
@@ -230,16 +253,19 @@ def authorize_google():
     try:
         token = oauth.google.authorize_access_token()
         user_info = token.get('userinfo')
-        # Lấy thông tin từ Google
         email = user_info['email']
-        name = user_info['name']
-
-        # Xử lý đăng nhập/đăng ký
-        return handle_social_login(email, name, 'Google')
+        # Xử lý logic đăng nhập Google (tự tạo user nếu chưa có)
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            base_name = email.split('@')[0]
+            user = User(username=base_name, email=email, password=generate_password_hash('google_login'), full_name=user_info['name'])
+            db.session.add(user)
+            db.session.commit()
+        login_user(user)
+        return redirect(url_for('home'))
     except Exception as e:
-        flash(f'Lỗi đăng nhập Google: {str(e)}', 'danger')
+        flash('Lỗi đăng nhập Google.', 'danger')
         return redirect(url_for('login'))
-
 
 def handle_social_login(email, full_name, provider):
     user = User.query.filter_by(email=email).first()

@@ -1,5 +1,5 @@
 from flask_login import UserMixin
-from extensions import db
+from .extensions import db
 from datetime import datetime
 
 class User(UserMixin, db.Model):
@@ -50,3 +50,10 @@ class OrderDetail(db.Model):
     product_name = db.Column(db.String(150), nullable=False) # Lưu tên cứng để nếu sp bị xóa vẫn còn lịch sử
     quantity = db.Column(db.Integer, nullable=False)
     price = db.Column(db.Integer, nullable=False) # Giá tại thời điểm mua
+
+# [NEW] Bảng lưu Cache AI để tiết kiệm API
+class AICache(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    prompt_hash = db.Column(db.String(500), unique=True, nullable=False) # Lưu câu hỏi (hoặc mã băm câu hỏi)
+    response_text = db.Column(db.Text, nullable=False) # Lưu câu trả lời của AI
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

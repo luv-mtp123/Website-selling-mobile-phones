@@ -1,366 +1,312 @@
-## **📱 MobileStore - Siêu Thị Điện Thoại Thông Minh Tích Hợp AI (Phiên Bản Tết 2026)**
+## **📱 MobileStore - Siêu Thị Điện Thoại Thông Minh Tích Hợp AI (Phiên Bản Tết 2026 - Modular MVC)**
 
-
-
-##### Chào mừng bạn đến với MobileStore! Đây là dự án thương mại điện tử hiện đại được xây dựng bằng Python Flask, tích hợp sâu Google Gemini AI để mang lại trải nghiệm mua sắm thông minh.
-
 ##### 
 
-##### Phiên bản này đã được nâng cấp toàn diện về giao diện (Theme Tết), tính năng quản trị (CRUD) và tối ưu hóa logic AI.
+##### **Chào mừng bạn đến với MobileStore! Đây là dự án throng mại điện tử hiện đại được xây dựng bằng Python Flask, tích hợp sâu Google Gemini AI.**
 
 ##### 
 
-### ✨ Các Tính Năng Mới Cập Nhật (What's New)
+##### **Phiên bản này đã được Tái cấu trúc (Refactor) toàn diện sang mô hình Modular MVC (Model-View-Controller) sử dụng Flask Blueprints, giúp mã nguồn chuyên nghiệp, dễ bảo trì và mở rộng hơn.**
 
 ##### 
 
-#### 🌸 Giao Diện Tết BÍNH NGỌ:
+### **✨ Cập Nhật Kiến Trúc Phần Mềm (New Architecture)**
 
-###### 
-
-##### Trang chủ được khoác áo mới với Banner Tết, hiệu ứng hoa rơi và màu sắc may mắn.
-
 ##### 
 
-##### Hệ thống câu đối và badge "Lì Xì" cho sản phẩm.
+##### **Dự án đã chuyển từ cấu trúc Monolithic (tất cả trong 1 file app.py) sang cấu trúc Modular MVC:**
 
 ##### 
-
-#### 🎨 Quản Lý Biến Thể Sản Phẩm (Mới Cập Nhật):
 
+#### **1. 🏗️ Mô Hình Modular MVC:**
 
-
-##### Hệ thống Màu sắc \& Phiên bản: Admin có thể thêm không giới hạn các tùy chọn cho sản phẩm (VD: Màu Titan Xanh, Bản 256GB/512GB...).
-
 ##### 
 
-##### Ảnh \& Giá Động:
+##### **Model (M): File app/models.py - Quản lý dữ liệu và cấu trúc Database (User, Product, Order...).**
 
 ##### 
 
-##### Mỗi màu sắc có thể gắn link ảnh riêng -> Khách chọn màu, ảnh sản phẩm tự đổi.
+##### **View (V): Thư mục app/templates/ - Giao diện HTML hiển thị cho người dùng.**
 
 ##### 
 
-##### Mỗi phiên bản có giá riêng -> Khách chọn dung lượng, giá tiền tự nhảy.
+##### **Controller (C): Thư mục app/routes/ - Xử lý logic nghiệp vụ và điều hướng request.**
 
 ##### 
-
-##### Phân loại thông minh: Hệ thống tự động ẩn phần chọn biến thể đối với sản phẩm là "Phụ kiện" để giao diện gọn gàng.
-
-
-
 
+##### **auth.py: Xử lý Đăng nhập, Đăng ký, Google OAuth.**
 
-#### 🤖 Chatbot Hybrid (Thông Minh Hơn):
-
 ##### 
 
-##### Cơ chế lai (Hybrid): Sử dụng từ khóa (Rule-based) để trả lời siêu tốc các câu hỏi thường gặp (địa chỉ, bảo hành) + Gemini AI để xử lý các câu hỏi tư vấn phức tạp.
+##### **admin.py: Xử lý Dashboard quản trị, CRUD sản phẩm.**
 
 ##### 
 
-##### Hoạt động mượt mà, không bị lag và tiết kiệm token AI.
+##### **main.py: Xử lý Trang chủ, Giỏ hàng, Chatbot, So sánh AI.**
 
 ##### 
 
-#### 🔧 Quản Trị Admin Nâng Cao:
+#### **2. 🔌 Application Factory Pattern:**
 
 ##### 
 
-##### Đã tách biệt giao diện: Danh sách sản phẩm (admin\_dashboard.html) và Sửa sản phẩm (admin\_edit.html).
+##### **Sử dụng app/\_\_init\_\_.py để khởi tạo ứng dụng, giúp quản lý cấu hình và extensions (DB, Login) tập trung, tránh lỗi vòng lặp (circular imports).**
 
 ##### 
 
-##### Admin có thể Thêm, Xóa, và Sửa chi tiết thông tin sản phẩm (Giá, Sale, Mô tả...).
+#### **3. 🚀 Entry Point Mới:**
 
 ##### 
-
-#### 🛠️ Sửa Lỗi \& Tối Ưu Hóa (Bug Fixes):
-
-#### 
 
-##### AI Smart Search: Sử dụng Regex mạnh mẽ để "bắt" dữ liệu JSON từ AI chính xác hơn, loại bỏ lỗi khi AI nói nhiều lời dẫn.
+##### **File run.py ở thư mục gốc đóng vai trò là điểm khởi chạy duy nhất của ứng dụng.**
 
 ##### 
 
-##### Xử lý JSON an toàn: Chuyển logic giải mã dữ liệu từ Frontend về Backend (Python) để triệt tiêu lỗi SyntaxError và Unexpected token trên trình duyệt.
+### **✨ Các Tính Năng Nghiệp Vụ (Features)**
 
 ##### 
 
-##### Format Tiền tệ: Khắc phục lỗi ValueError khi định dạng giá tiền từ chuỗi ký tự.
+#### **1. 🤖 Trí Tuệ Nhân Tạo (Gemini AI Integration)**
 
-#### 🚀 Tính Năng Chi Tiết
-
 ##### 
 
-#### 1\. Trí Tuệ Nhân Tạo (Gemini AI Integration)
+##### **Tìm Kiếm Thông Minh (Smart Search): Hiểu ngôn ngữ tự nhiên (VD: "iPhone giá rẻ dưới 10 triệu").**
 
 ##### 
 
-##### Tìm Kiếm Thông Minh (Smart Search): Hiểu ngôn ngữ tự nhiên.
+##### **So Sánh Sản Phẩm (AI Comparison): Kẻ bảng so sánh thông số và đưa ra lời khuyên mua sắm.**
 
 ##### 
 
-##### Ví dụ: "Điện thoại Samsung dưới 20 triệu chụp ảnh đẹp" -> Hệ thống tự động lọc Hãng Samsung, Giá < 20tr.
+##### **Gợi Ý Phụ Kiện: Tự động đề xuất phụ kiện phù hợp khi xem điện thoại.**
 
 ##### 
 
-##### So Sánh Sản Phẩm (AI Comparison): Kẻ bảng so sánh thông số, hiệu năng, pin giữa 2 máy bất kỳ và đưa ra lời khuyên mua sắm.
+##### **Chatbot Hybrid: Kết hợp trả lời kịch bản và AI, có cơ chế Caching để tiết kiệm quota API.**
 
 ##### 
 
-##### Gợi Ý Phụ Kiện: AI tự động đề xuất phụ kiện phù hợp khi xem chi tiết sản phẩm.
+#### **2. 🎨 Quản Lý Biến Thể Sản Phẩm**
 
 ##### 
 
-#### 2\. Người Dùng (User)
+##### **Hệ thống Màu sắc \& Phiên bản: Admin có thể thêm tùy chọn màu/dung lượng không giới hạn.**
 
 ##### 
 
-##### Đăng Nhập/Đăng Ký: Hỗ trợ Google OAuth và tài khoản thường.
+##### **Ảnh \& Giá Động: Khách chọn màu -> Đổi ảnh; Chọn dung lượng -> Đổi giá tiền.**
 
 ##### 
 
-##### Giỏ Hàng \& Thanh Toán: Thêm/sửa/xóa sản phẩm, tính tổng tiền, đặt hàng (lưu vào DB).
+#### **3. 🛍️ Thương Mại Điện Tử Hoàn Chỉnh**
 
 ##### 
 
-##### Lịch Sử Đơn Hàng: Xem lại các đơn hàng đã mua trong Dashboard cá nhân.
+##### **Giỏ hàng, Thanh toán, Lịch sử đơn hàng.**
 
 ##### 
 
-#### 3\. Quản Trị Viên (Admin)
+##### **Đăng nhập Google, Quản lý hồ sơ cá nhân.**
 
-
+##### 
 
-##### Truy cập /admin để xem thống kê tổng quan (Sản phẩm, User, Đơn hàng).
+### **📂 Cấu Trúc Thư Mục Mới (Project Structure)**
 
 ##### 
 
-##### Quản lý toàn bộ danh sách sản phẩm (CRUD).
+##### **MobileStore/**
 
-##### 
+##### **│**
 
-### 🛠 Cài Đặt \& Chạy Dự Án
+##### **├── run.py                  # (ENTRY POINT) File chạy chính của ứng dụng**
 
-##### 
+##### **├── .env                    # Cấu hình bảo mật (API Key, Secret Key)**
 
-#### Bước 1: Cài đặt thư viện
+##### **├── requirements.txt        # Danh sách thư viện**
 
-##### 
+##### **├── mobilestore.db          # Database SQLite**
 
-##### Mở Terminal tại thư mục dự án và chạy:
+##### **│**
 
-##### 
+##### **└── app/                    # (PACKAGE) Thư mục chứa Source Code**
 
-##### pip install -r requirements.txt
+#####     **├── \_\_init\_\_.py         # Khởi tạo App, DB, Login, đăng ký Blueprints**
 
-##### 
+#####     **├── extensions.py       # Khởi tạo các công cụ (SQLAlchemy, LoginManager, OAuth)**
 
-##### 
+#####     **├── models.py           # Định nghĩa Database (User, Product, Order, AICache)**
 
-#### Bước 2: Cấu hình Môi trường (.env)
+#####     **├── utils.py            # Logic gọi AI và xử lý dữ liệu**
 
-##### 
+#####     **│**
 
-##### Tạo file .env và điền các thông tin sau (Nếu chưa có, hãy copy từ file cũ):
+#####     **├── templates/          # (VIEW) Giao diện HTML**
 
-##### 
+#####     **│   ├── base.html       # Layout chung**
 
-##### SECRET\_KEY=chuoi-bi-mat-bao-mat-flask-123
+#####     **│   ├── home.html       # Trang chủ**
 
-##### GEMINI\_API\_KEY=Dien\_API\_Key\_Gemini\_Cua\_Ban\_Vao\_Day
+#####     **│   ├── admin\_\*.html    # Giao diện Admin**
 
-##### GOOGLE\_CLIENT\_ID=Dien\_Client\_ID\_Google
+#####     **│   └── ...             # Các file HTML khác**
 
-##### GOOGLE\_CLIENT\_SECRET=Dien\_Client\_Secret\_Google
+#####     **│**
 
-##### 
+#####     **└── routes/             # (CONTROLLER) Các bộ điều khiển**
 
-##### 
+#####         **├── main.py         # Xử lý: Home, Cart, Chatbot, So sánh**
 
-#### Bước 3: Khởi tạo Database (Quan Trọng)
+#####         **├── auth.py         # Xử lý: Login, Register, Logout, Google**
 
-##### 
+#####         **└── admin.py        # Xử lý: Dashboard, Thêm/Sửa/Xóa sản phẩm**
 
-##### Nếu bạn gặp lỗi hiển thị hoặc muốn nạp lại dữ liệu mẫu (Sản phẩm mới, User mẫu):
+##### 
 
 ##### 
 
-##### Xóa file mobilestore.db hiện có trong thư mục.
+### **🛠 Cài Đặt \& Chạy Dự Án**
 
 ##### 
 
-##### Chạy lại ứng dụng, hệ thống sẽ tự động tạo lại DB mới chuẩn xác.
+#### **Bước 1: Cài đặt thư viện**
 
 ##### 
 
-#### Bước 4: Chạy Website
+##### **Mở Terminal tại thư mục dự án và chạy:**
 
 ##### 
 
-##### python app.py
+##### **pip install -r requirements.txt**
 
 ##### 
 
 ##### 
 
-##### 👉 Truy cập: http://127.0.0.1:5000
+#### **Bước 2: Cấu hình Môi trường (.env)**
 
 ##### 
 
-##### 📂 Cấu Trúc Thư Mục Mới Nhất
+##### **Tạo file .env và điền các thông tin sau:**
 
 ##### 
-
-##### MobileStore/
-
-##### ├── app.py                # Logic chính (Đã cập nhật fix lỗi trùng lặp \& init DB)
-
-##### ├── utils.py              # Logic AI (Đã cập nhật Regex parsing)
-
-##### ├── models.py             # Database Models
-
-##### ├── extensions.py         # Config mở rộng
-
-##### ├── requirements.txt      # Thư viện
 
-##### ├── .env                  # Biến môi trường
+##### **SECRET\_KEY=chuoi-bi-mat-bao-mat-flask-123**
 
-##### ├── mobilestore.db        # Database SQLite
+##### **GEMINI\_API\_KEY=Dien\_API\_Key\_Gemini\_Cua\_Ban\_Vao\_Day**
 
-##### └── templates/            # Giao diện HTML
+##### **GOOGLE\_CLIENT\_ID=Dien\_Client\_ID\_Google**
 
-#####     ├── base.html         # Layout chung + Hiệu ứng Tết + Chatbot UI
+##### **GOOGLE\_CLIENT\_SECRET=Dien\_Client\_Secret\_Google**
 
-#####     ├── home.html         # Trang chủ + Smart Search + Banner Tết
-
-#####     ├── detail.html       # Chi tiết sản phẩm
-
-#####     ├── compare.html      # So sánh AI (Giao diện VS mới)
-
-#####     ├── cart.html         # Giỏ hàng
-
-#####     ├── checkout.html     # Thanh toán
-
-#####     ├── login.html        # Đăng nhập
-
-#####     ├── register.html     # Đăng ký
-
-#####     ├── dashboard.html    # Trang cá nhân user
-
-#####     ├── admin\_dashboard.html # Admin: Thống kê \& Danh sách (Đã tách code sửa)
-
-#####     └── admin\_edit.html      # Admin: Form sửa sản phẩm (Mới)
-
 ##### 
 
 ##### 
 
-#### 🔑 Tài Khoản Demo (Seed Data)
+#### **Bước 3: Khởi tạo Database (Quan Trọng)**
 
 ##### 
 
-##### Khi khởi chạy lần đầu (sau khi xóa DB cũ), hệ thống tạo sẵn:
+##### **Nếu bạn gặp lỗi hiển thị hoặc muốn nạp lại dữ liệu mẫu theo cấu trúc mới:**
 
 ##### 
 
-##### Vai trò
+##### **Xóa file mobilestore.db hiện có trong thư mục gốc.**
 
 ##### 
 
-##### Username
+##### **Chạy lại ứng dụng, hệ thống sẽ tự động tạo lại DB mới chuẩn xác.**
 
 ##### 
 
-##### Password
+#### **Bước 4: Chạy Website**
 
 ##### 
 
-##### Admin
+##### **Lưu ý: Không chạy python app.py nữa mà chạy file run.py.**
 
 ##### 
 
-##### admin
+##### **python run.py**
+
+##### 
 
 ##### 
 
-##### 123456
+##### **👉 Truy cập: http://127.0.0.1:5000**
 
 ##### 
 
-##### Khách
+##### **🔑 Tài Khoản Demo (Seed Data)**
 
 ##### 
 
-##### khach
+##### **Khi khởi chạy lần đầu (sau khi xóa DB cũ), hệ thống tạo sẵn:**
 
 ##### 
 
-##### 123456
+##### **Vai trò**
 
 ##### 
 
-#### 📝 Ghi Chú Khắc Phục Lỗi (Troubleshooting)
+##### **Username**
 
 ##### 
 
-* ##### Lỗi TemplateSyntaxError: Encountered unknown tag 'endblock':
+##### **Password**
 
 ##### 
 
-##### Do file HTML bị thiếu thẻ mở {% block content %}. Code mới nhất đã fix lỗi này.
+##### **Admin**
 
 ##### 
 
-* ##### Lỗi View function mapping is overwriting...:
+##### **admin**
 
 ##### 
 
-##### Do trùng tên hàm trong app.py. File app.py hiện tại đã được dọn dẹp sạch sẽ.
+##### **123456**
 
 ##### 
 
-* ##### Lỗi 'product' is undefined khi vào Admin:
+##### **Khách**
 
 ##### 
 
-##### Do code sửa sản phẩm nằm chung với trang danh sách. Đã tách ra thành admin\_edit.html.
+##### **khach**
 
 ##### 
 
-* ##### Trang chủ không hiện sản phẩm:
+##### **123456**
 
 ##### 
 
-##### Hãy xóa file .db và chạy lại python app.py để hàm initialize\_database() nạp dữ liệu.
+### **📝 Ghi Chú Khắc Phục Lỗi (Troubleshooting)**
 
 ##### 
 
-* ##### Lỗi sqlite3.OperationalError: no such column: product.colors:
+* ##### **Lỗi ModuleNotFoundError: No module named 'extensions':**
 
 ##### 
 
-##### Do database cũ thiếu cột mới. Hãy xóa file .db và chạy lại app để tạo mới.
+##### **Do import sai đường dẫn tương đối. Trong gói app, hãy dùng from .extensions import db.**
 
 ##### 
 
-* ##### Lỗi SyntaxError: Unexpected token hoặc TypeError: Object of type Undefined:
+* ##### **Lỗi sqlite3.OperationalError: no such column...:**
 
 ##### 
 
-##### Do dữ liệu JSON bị lỗi khi truyền xuống Javascript. Code mới nhất trong app.py và admin\_edit.html đã khắc phục triệt để bằng cách xử lý tại Backend.
+##### **Do cấu trúc bảng thay đổi. Hãy xóa file .db và chạy lại python run.py.**
 
 ##### 
 
-* ##### Lỗi ValueError: Unknown format code 'f':
+* ##### **Lỗi SyntaxError: Unexpected token (JSON Parse):**
 
 ##### 
 
-##### Đã fix trong hàm vnd\_filter (app.py) để ép kiểu dữ liệu an toàn.
+##### **Đã được khắc phục bằng cách xử lý JSON tại Backend (Python) thay vì Frontend.**
 
 ##### 
 
-### Chúc bạn có trải nghiệm tuyệt vời với MobileStore phiên bản Tết! 🌸🧧
+### **Chúc bạn thành công với kiến trúc Modular MVC chuyên nghiệp này! 🚀**
 

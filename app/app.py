@@ -9,6 +9,9 @@ from extensions import db, login_manager
 from models import User, Product, Order, OrderDetail
 # Thư viện cho Google Login (Cần cài: pip install authlib requests)
 from authlib.integrations.flask_client import OAuth
+# [IMPORTANT] Import thêm AICache
+import hashlib
+from models import User, Product, Order, OrderDetail, AICache
 from utils import get_gemini_suggestions, analyze_search_intents, get_comparison_result, call_gemini_api
 
 
@@ -64,6 +67,51 @@ def vnd_filter(value):
     return "{:,.0f} đ".format(value).replace(",", ".")
 
 
+# --- HÀM WRAPPER GỌI AI CÓ CACHE (TIẾT KIỆM QUOTA) ---
+def cached_ai_call(prompt_func, *args):
+    """
+    Hàm này kiểm tra xem câu hỏi đã có trong DB chưa.
+    Nếu có -> Trả về ngay (Nhanh, Free).
+    Nếu chưa -> Gọi API -> Lưu DB -> Trả về.
+    """
+    # Tạo key duy nhất cho câu hỏi
+    prompt_content = str(args)
+    prompt_hash = hashlib.md5(prompt_content.encode()).hexdigest()
+
+    # 1. Kiểm tra Cache trong Database
+    try:
+        cached = AICache.query.filter_by(prompt_hash=prompt_hash).first()
+        if cached:
+            print(f"⚡ [CACHE HIT] Lấy dữ liệu từ DB cho: {args[0] if args else 'Unknown'}")
+            # Nếu dữ liệu lưu là JSON, thử parse ra
+            try:
+                return json.loads(cached.response_text)
+            except:
+                return cached.response_text
+    except Exception as e:
+        print(f"⚠️ Cache Error: {e}")
+
+    # 2. Gọi API thật (Nếu không có cache)
+    print(f"🌐 [API CALL] Đang gọi Gemini cho: {args[0] if args else 'Unknown'}")
+    result = prompt_func(*args)
+
+    # 3. Lưu vào Cache nếu có kết quả hợp lệ
+    if result:
+        try:
+            # Nếu kết quả là dict/list, chuyển sang string để lưu
+            if isinstance(result, (dict, list)):
+                result_str = json.dumps(result)
+            else:
+                result_str = str(result)
+
+            new_cache = AICache(prompt_hash=prompt_hash, response_text=result_str)
+            db.session.add(new_cache)
+            db.session.commit()
+        except Exception as e:
+            print(f"⚠️ Save Cache Error: {e}")
+            db.session.rollback()
+
+    return result
 
 # --- CHATBOT LOGIC MỚI ---
 def process_chatbot_message(msg):
@@ -127,7 +175,8 @@ def home():
     # --- SMART SEARCH LOGIC ---
     # Logic Smart Search (Tìm kiếm thông minh)
     if search_query and len(search_query.split()) > 2 and not brand_filter:
-        ai_data = analyze_search_intents(search_query)
+        # [CACHE] Sử dụng Cache cho Smart Search
+        ai_data = cached_ai_call(analyze_search_intents, search_query)
 
         if ai_data:
             # Lọc theo Hãng

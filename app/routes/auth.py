@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db, oauth
 from app.models import User
+from app.utils import get_serializer, send_reset_email_simulation
 import random, string
 
 auth_bp = Blueprint('auth', __name__)
@@ -63,6 +64,58 @@ def logout():
     logout_user()
     return redirect(url_for('main.home'))
 
+
+# --- FORGOT PASSWORD ---
+
+@auth_bp.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if current_user.is_authenticated: return redirect(url_for('main.home'))
+
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+
+        if user:
+            # Tạo token hết hạn sau 15 phút (900s)
+            s = get_serializer(current_app.config['SECRET_KEY'])
+            token = s.dumps(email, salt='password-reset-salt')
+
+            # Giả lập gửi email (Test link sẽ hiện ở Console của server)
+            link = send_reset_email_simulation(email, token)
+
+            flash(f'Yêu cầu đã được gửi! (DEMO: Check Console để lấy link reset)', 'info')
+        else:
+            flash('Email không tồn tại trong hệ thống.', 'warning')
+
+    return render_template('forgot_password.html')
+
+
+@auth_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated: return redirect(url_for('main.home'))
+
+    s = get_serializer(current_app.config['SECRET_KEY'])
+    try:
+        email = s.loads(token, salt='password-reset-salt', max_age=900)
+    except:
+        flash('Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.', 'danger')
+        return redirect(url_for('auth.forgot_password'))
+
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+
+        if password != confirm_password:
+            flash('Mật khẩu xác nhận không khớp.', 'danger')
+        else:
+            user = User.query.filter_by(email=email).first()
+            if user:
+                user.password = generate_password_hash(password)
+                db.session.commit()
+                flash('Mật khẩu đã được thay đổi. Vui lòng đăng nhập.', 'success')
+                return redirect(url_for('auth.login'))
+
+    return render_template('reset_password.html')
 
 # --- GOOGLE OAUTH ---
 

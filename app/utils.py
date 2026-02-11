@@ -3,10 +3,56 @@ import requests
 import json
 import time
 import re
+from flask import current_app, url_for
+from itsdangerous import URLSafeTimedSerializer
 
 # --- CẤU HÌNH ---
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# --- FILE VALIDATION UTILS ---
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
+
+def validate_image_file(file):
+    """
+    Kiểm tra file upload:
+    1. Có tên file không?
+    2. Đuôi file hợp lệ không?
+    3. Kích thước file < 2MB không? (Kiểm tra length con trỏ file)
+    Trả về: (True, None) hoặc (False, "Lỗi cụ thể")
+    """
+    if file.filename == '':
+        return False, "Chưa chọn file."
+
+    if '.' not in file.filename or file.filename.rsplit('.', 1)[1].lower() not in ALLOWED_EXTENSIONS:
+        return False, "Định dạng file không hỗ trợ. Chỉ nhận: JPG, PNG, WEBP."
+
+    # Kiểm tra kích thước (seek đến cuối để lấy size, sau đó seek về đầu)
+    file.seek(0, os.SEEK_END)
+    file_length = file.tell()
+    file.seek(0)
+
+    if file_length > 2 * 1024 * 1024:  # 2MB
+        return False, "File quá lớn! Vui lòng chọn ảnh dưới 2MB."
+
+    return True, None
+
+
+# --- PASSWORD RESET UTILS ---
+def get_serializer(secret_key):
+    return URLSafeTimedSerializer(secret_key)
+
+
+def send_reset_email_simulation(to_email, token):
+    """
+    Giả lập gửi email. Trong thực tế sẽ dùng SMTP.
+    Ở đây sẽ in ra Console và trả về link để test.
+    """
+    reset_link = url_for('auth.reset_password', token=token, _external=True)
+    print("=" * 30)
+    print(f"EMAIL MOCK SENDING TO: {to_email}")
+    print(f"LINK RESET: {reset_link}")
+    print("=" * 30)
+    return reset_link
 
 def call_gemini_api(prompt):
     """Hàm gọi API chung"""

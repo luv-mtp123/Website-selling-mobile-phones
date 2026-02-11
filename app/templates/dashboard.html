@@ -2,69 +2,121 @@
 
 {% block content %}
 <div class="row">
-    <!-- Cột trái: Thông tin user -->
+    <!-- Cột trái: Thông tin user (CÓ FORM EDIT) -->
     <div class="col-md-4 mb-4">
-        <div class="card shadow-sm border-0 rounded-3">
-            <div class="card-body text-center py-5">
-                <div class="mb-3">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Avatar" width="100" class="rounded-circle shadow-sm">
-                </div>
-                <h4 class="fw-bold">{{ current_user.full_name or current_user.username }}</h4>
-                <p class="text-muted mb-1">{{ current_user.email }}</p>
+        <div class="card shadow-sm border-0 rounded-3 text-center py-4">
+            <div class="card-body">
+                <!-- Form Update Profile -->
+                <form action="/profile/update" method="POST" enctype="multipart/form-data">
+                    <div class="position-relative d-inline-block mb-3">
+                        <img src="{{ current_user.avatar_url or 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }}"
+                             alt="Avatar" width="120" height="120" class="rounded-circle shadow-sm border" id="avatarPreview" style="object-fit: cover;">
+
+                        <!-- Nút camera nhỏ để click upload -->
+                        <label for="avatarUpload" class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2 cursor-pointer shadow-sm" style="cursor: pointer;">
+                            <i class="fas fa-camera"></i>
+                        </label>
+                        <input type="file" name="avatar" id="avatarUpload" class="d-none" accept="image/*" onchange="previewAvatar(this)">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Họ và tên</label>
+                        <input type="text" name="full_name" class="form-control text-center fw-bold fs-5 border-0 bg-light" value="{{ current_user.full_name or current_user.username }}">
+                    </div>
+
+                    <p class="text-muted mb-3">{{ current_user.email }}</p>
+
+                    <button type="submit" class="btn btn-outline-primary rounded-pill btn-sm px-4">
+                        <i class="fas fa-save me-1"></i> Lưu thay đổi
+                    </button>
+                </form>
+            </div>
+            <div class="card-footer bg-white border-0">
                 <span class="badge bg-primary rounded-pill px-3">{{ current_user.role }}</span>
             </div>
         </div>
+    </div>
 
-        <div class="card shadow-sm border-0 rounded-3 mt-4">
-            <div class="card-header bg-white fw-bold">Cập nhật hồ sơ</div>
-            <div class="card-body">
-                <form action="/profile/update" method="POST">
-                    <div class="mb-3">
-                        <label class="form-label small">Họ và tên</label>
-                        <input type="text" name="full_name" class="form-control" value="{{ current_user.full_name or '' }}">
+    <!-- Cột phải: Tabs -->
+    <div class="col-md-8">
+        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active fw-bold" data-bs-toggle="pill" data-bs-target="#orders-tab">📦 Đơn hàng của tôi</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link fw-bold text-success" data-bs-toggle="pill" data-bs-target="#tradein-tab">♻️ Lịch sử Thu Cũ</button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- TAB ĐƠN HÀNG -->
+            <div class="tab-pane fade show active" id="orders-tab">
+                {% if orders %}
+                    {% for order in orders %}
+                    <div class="card shadow-sm border-0 mb-3">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <strong>#{{ order.id }} - {{ order.date_created.strftime('%d/%m/%Y') }}</strong>
+                            <span class="badge {% if order.status=='Pending' %}bg-warning{% elif order.status=='Completed' %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ order.status }}
+                            </span>
+                        </div>
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="text-danger fw-bold mb-1">{{ order.total_price | vnd }}</h5>
+                                <small class="text-muted"><i class="fas fa-map-marker-alt"></i> {{ order.address }}</small>
+                            </div>
+                            {% if order.status == 'Pending' %}
+                            <a href="/order/cancel/{{ order.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Hủy đơn này?')">Hủy đơn</a>
+                            {% endif %}
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small">Email</label>
-                        <input type="email" name="email" class="form-control" value="{{ current_user.email }}">
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-light text-center">Bạn chưa có đơn hàng nào.</div>
+                {% endif %}
+            </div>
+
+            <!-- TAB THU CŨ (Giữ nguyên) -->
+            <div class="tab-pane fade" id="tradein-tab">
+                {% if tradeins %}
+                    {% for item in tradeins %}
+                    <div class="card shadow-sm border-0 mb-3">
+                        <div class="row g-0">
+                            <div class="col-md-3">
+                                <img src="{{ item.image_proof }}" class="img-fluid rounded-start h-100" style="object-fit: cover; min-height: 100px;">
+                            </div>
+                            <div class="col-md-9">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="card-title fw-bold">{{ item.device_name }}</h6>
+                                        <span class="badge bg-{{ 'success' if item.status=='Approved' else 'secondary' }}">{{ item.status }}</span>
+                                    </div>
+                                    <p class="small text-muted mb-1">{{ item.condition }}</p>
+                                    {% if item.status == 'Approved' %}
+                                        <div class="text-success fw-bold small">Giá: {{ item.valuation_price | vnd }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 rounded-pill">Lưu thay đổi</button>
-                </form>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4"><p>Chưa có yêu cầu nào.</p></div>
+                {% endif %}
             </div>
         </div>
     </div>
-
-    <!-- Cột phải: Lịch sử đơn hàng [NEW] -->
-    <div class="col-md-8">
-        <h4 class="mb-3 fw-bold border-start border-4 border-primary ps-3">Lịch sử đơn hàng</h4>
-        {% if orders %}
-            {% for order in orders %}
-            <div class="card shadow-sm border-0 mb-3">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>Đơn hàng #{{ order.id }}</strong>
-                        <span class="text-muted small ms-2">{{ order.date_created.strftime('%d/%m/%Y %H:%M') }}</span>
-                    </div>
-                    <span class="badge bg-success">{{ order.status }}</span>
-                </div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush mb-3">
-                        {% for detail in order.details %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <span>{{ detail.product_name }} <small class="text-muted">x{{ detail.quantity }}</small></span>
-                            <span>{{ detail.price | vnd }}</span>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    <div class="d-flex justify-content-between align-items-center border-top pt-2">
-                        <span class="text-muted small"><i class="fas fa-map-marker-alt"></i> {{ order.address }}</span>
-                        <h5 class="text-danger fw-bold mb-0">{{ order.total_price | vnd }}</h5>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <div class="alert alert-light text-center">Bạn chưa có đơn hàng nào. <a href="/">Mua ngay!</a></div>
-        {% endif %}
-    </div>
 </div>
+
+<script>
+    function previewAvatar(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('avatarPreview').src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
 {% endblock %}

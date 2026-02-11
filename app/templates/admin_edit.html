@@ -19,6 +19,7 @@
                                 <label class="form-label fw-bold">Tên sản phẩm</label>
                                 <input type="text" name="name" class="form-control" value="{{ product.name }}" required>
                             </div>
+
                             <div class="row">
                                 <div class="col-6 mb-3">
                                     <label class="form-label fw-bold">Hãng</label>
@@ -28,6 +29,13 @@
                                     <label class="form-label fw-bold">Giá gốc (VNĐ)</label>
                                     <input type="number" name="price" class="form-control fw-bold" value="{{ product.price }}" required>
                                 </div>
+                            </div>
+
+                            <!-- Quản lý tồn kho -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-success"><i class="fas fa-boxes me-1"></i> Số lượng tồn kho</label>
+                                <input type="number" name="stock_quantity" class="form-control border-success fw-bold" value="{{ product.stock_quantity }}" required min="0">
+                                <div class="form-text">Số lượng máy thực tế còn trong kho.</div>
                             </div>
 
                             <div class="mb-3">
@@ -46,35 +54,35 @@
                                 <input type="number" name="sale_price" class="form-control" placeholder="Giá khuyến mãi" value="{{ product.sale_price or '' }}">
                             </div>
 
+                            <div class="form-check form-switch mb-3 ms-1">
+                                <input class="form-check-input" type="checkbox" name="is_active" id="editActive" {% if product.is_active %}checked{% endif %}>
+                                <label class="form-check-label fw-bold" for="editActive">Sản phẩm đang kinh doanh (Active)</label>
+                            </div>
+
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Mô tả sản phẩm</label>
                                 <textarea name="description" class="form-control" rows="4">{{ product.description }}</textarea>
                             </div>
                         </div>
 
-                        <!-- Cột Phải: Quản lý Biến thể (Chỉ hiện cho Phone) -->
+                        <!-- Cột Phải: Quản lý Biến thể -->
                         <div class="col-md-6">
                             {% if product.category == 'phone' %}
                             <div class="p-3 border rounded-3 bg-white h-100">
                                 <h5 class="text-danger border-bottom pb-2 mb-3"><i class="fas fa-layer-group"></i> Quản lý Biến thể</h5>
 
-                                <!-- 1. Quản lý Màu sắc -->
                                 <div class="mb-4">
                                     <label class="fw-bold mb-2">Danh sách Màu sắc & Ảnh riêng</label>
-                                    <div class="text-muted small mb-2 fst-italic">Nhập tên màu và link ảnh tương ứng để khi khách chọn màu sẽ hiện ảnh đó.</div>
                                     <div id="colorContainer"></div>
                                     <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addColorRow()"><i class="fas fa-plus"></i> Thêm màu</button>
                                 </div>
 
-                                <!-- 2. Quản lý Phiên bản -->
                                 <div class="mb-4">
                                     <label class="fw-bold mb-2">Danh sách Phiên bản & Giá riêng</label>
-                                    <div class="text-muted small mb-2 fst-italic">Ví dụ: 128GB, 256GB. Giá tiền tương ứng.</div>
                                     <div id="versionContainer"></div>
                                     <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addVersionRow()"><i class="fas fa-plus"></i> Thêm phiên bản</button>
                                 </div>
 
-                                <!-- Hidden Inputs để gửi JSON về server -->
                                 <input type="hidden" name="colors_json" id="colorsJson">
                                 <input type="hidden" name="versions_json" id="versionsJson">
                             </div>
@@ -82,7 +90,7 @@
                             <div class="alert alert-secondary h-100 d-flex align-items-center justify-content-center text-center flex-column">
                                 <i class="fas fa-headphones fs-1 mb-3 text-muted"></i>
                                 <h5>Sản phẩm Phụ kiện</h5>
-                                <p>Phụ kiện (Sạc, cáp, ốp...) không hỗ trợ cấu hình biến thể phức tạp trong phiên bản này.</p>
+                                <p>Phụ kiện không hỗ trợ cấu hình biến thể phức tạp.</p>
                             </div>
                             {% endif %}
                         </div>
@@ -99,13 +107,12 @@
 </div>
 
 <script>
-    // [FIX] Nhận dữ liệu list trực tiếp từ server, không cần JSON.parse thủ công dễ lỗi
-    // tojson filter sẽ biến list python thành mảng javascript hợp lệ
-    const initialColors = {{ colors_list | tojson | safe }};
-    const initialVersions = {{ versions_list | tojson | safe }};
+    // Sử dụng bộ lọc tojson của Jinja để truyền dữ liệu an toàn sang JS
+    const initialColors = {{ (colors_list or []) | tojson | safe }};
+    const initialVersions = {{ (versions_list or []) | tojson | safe }};
 
-    // Khi trang load xong, vẽ lại các dòng dữ liệu cũ
     window.onload = function() {
+        // Khởi tạo các hàng dữ liệu cũ
         if (initialColors && initialColors.length > 0) {
             initialColors.forEach(c => addColorRow(c.name, c.image));
         } else {
@@ -123,8 +130,8 @@
         const div = document.createElement('div');
         div.className = 'input-group mb-2 color-row';
         div.innerHTML = `
-            <input type="text" class="form-control" placeholder="Tên màu (VD: Titan Xanh)" value="${name || ''}">
-            <input type="text" class="form-control" placeholder="Link ảnh cho màu này" value="${image || ''}">
+            <input type="text" class="form-control" placeholder="Tên màu" value="${name || ''}">
+            <input type="text" class="form-control" placeholder="Link ảnh" value="${image || ''}">
             <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">X</button>
         `;
         document.getElementById('colorContainer').appendChild(div);
@@ -134,15 +141,15 @@
         const div = document.createElement('div');
         div.className = 'input-group mb-2 version-row';
         div.innerHTML = `
-            <input type="text" class="form-control" placeholder="Bản (VD: 256GB)" value="${name || ''}">
-            <input type="number" class="form-control" placeholder="Giá tiền (VNĐ)" value="${price || ''}">
+            <input type="text" class="form-control" placeholder="Bản" value="${name || ''}">
+            <input type="number" class="form-control" placeholder="Giá tiền" value="${price || ''}">
             <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">X</button>
         `;
         document.getElementById('versionContainer').appendChild(div);
     }
 
     function prepareData() {
-        // Gom dữ liệu Color vào JSON input
+        // Chuyển đổi dữ liệu các hàng thành JSON trước khi gửi form
         const colors = [];
         document.querySelectorAll('.color-row').forEach(row => {
             const inputs = row.querySelectorAll('input');
@@ -150,7 +157,6 @@
         });
         document.getElementById('colorsJson').value = JSON.stringify(colors);
 
-        // Gom dữ liệu Version vào JSON input
         const versions = [];
         document.querySelectorAll('.version-row').forEach(row => {
             const inputs = row.querySelectorAll('input');

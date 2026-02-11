@@ -27,10 +27,18 @@
                         <input type="text" name="username" class="form-control" id="floatingInput" placeholder="username" required>
                         <label for="floatingInput">Tên đăng nhập</label>
                     </div>
-                    <div class="form-floating mb-4">
+                    <div class="form-floating mb-2">
                         <input type="password" name="password" class="form-control" id="floatingPassword" placeholder="Password" required>
                         <label for="floatingPassword">Mật khẩu</label>
                     </div>
+
+                    <!-- [NEW] Nút Quên mật khẩu nằm ngay trong form -->
+                    <div class="d-flex justify-content-end mb-4">
+                        <a href="/forgot-password" class="text-decoration-none text-primary small fw-bold">
+                            Quên mật khẩu?
+                        </a>
+                    </div>
+
                     <div class="d-grid mb-3">
                         <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold">ĐĂNG NHẬP</button>
                     </div>

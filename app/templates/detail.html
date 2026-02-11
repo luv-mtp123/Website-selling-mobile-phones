@@ -2,94 +2,40 @@
 
 {% block content %}
 <style>
-    /* --- CSS Riêng cho trang chi tiết --- */
+    /* CSS cũ giữ nguyên */
     .product-title { font-size: 1.6rem; font-weight: 800; color: #333; margin-bottom: 5px; }
     .price-current { color: #d70018; font-size: 2.2rem; font-weight: 800; }
     .price-old { text-decoration: line-through; color: #777; font-size: 1.1rem; }
-
-    /* Box chọn phiên bản (Dung lượng, Màu sắc) */
     .variant-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
     .btn-variant {
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 8px 15px;
-        background: #fff;
-        color: #333;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: all 0.2s;
-        min-width: 80px;
-        text-align: center;
-        position: relative;
-        font-weight: 500;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
+        border: 1px solid #e0e0e0; border-radius: 8px; padding: 8px 15px; background: #fff;
+        color: #333; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; min-width: 80px;
+        text-align: center; position: relative; font-weight: 500; display: flex; flex-direction: column;
+        justify-content: center; align-items: center;
     }
     .btn-variant:hover { border-color: #d70018; background-color: #fffbfb; }
     .btn-variant.active { border-color: #d70018; color: #d70018; background: #fff0f0; font-weight: bold; }
-
-    /* Dấu tích chọn */
     .btn-variant.active::after {
-        content: '✔';
-        position: absolute;
-        top: -8px; right: -8px;
-        background: #d70018;
-        color: white;
-        font-size: 10px;
-        width: 18px; height: 18px;
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        border: 2px solid white;
+        content: '✔'; position: absolute; top: -8px; right: -8px; background: #d70018; color: white;
+        font-size: 10px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white;
     }
-
-    /* Box Khuyến mãi */
-    .promo-box {
-        background: linear-gradient(to bottom right, #fff0f0, #fff);
-        border: 1px solid #ffdecb;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 25px;
-        box-shadow: 0 4px 15px rgba(255, 100, 100, 0.05);
-    }
-    .promo-header { color: #d70018; font-weight: 800; margin-bottom: 15px; text-transform: uppercase; font-size: 1rem; display: flex; align-items: center; }
-    .promo-list { list-style: none; padding-left: 0; margin-bottom: 0; }
-    .promo-list li { margin-bottom: 10px; font-size: 0.95rem; display: flex; align-items: start; line-height: 1.5; }
-    .promo-list li i { color: #28a745; margin-top: 4px; margin-right: 10px; flex-shrink: 0; }
-
-    /* Buttons Mua Hàng */
     .btn-buy-now {
-        background: linear-gradient(180deg, #d70018, #be0015);
-        color: white; border: none; width: 100%; padding: 12px;
-        border-radius: 10px; font-weight: bold; text-transform: uppercase;
-        font-size: 1.2rem; box-shadow: 0 4px 10px rgba(215, 0, 24, 0.3);
-        transition: transform 0.2s;
+        background: linear-gradient(180deg, #d70018, #be0015); color: white; border: none; width: 100%; padding: 12px;
+        border-radius: 10px; font-weight: bold; text-transform: uppercase; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(215, 0, 24, 0.3); transition: transform 0.2s;
     }
     .btn-buy-now:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(215, 0, 24, 0.4); color: white; }
-
     .btn-add-cart {
-        border: 2px solid #d70018; color: #d70018; background: white;
-        width: 100%; padding: 10px; border-radius: 10px;
-        font-weight: bold; text-transform: uppercase; font-size: 0.8rem;
-        height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        border: 2px solid #d70018; color: #d70018; background: white; width: 100%; padding: 10px; border-radius: 10px;
+        font-weight: bold; text-transform: uppercase; font-size: 0.8rem; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
     .btn-add-cart:hover { background: #fff0f0; }
-
-    /* Modal Thông số kỹ thuật */
-    .tech-table tr:nth-child(odd) { background-color: #f8f9fa; }
-    .tech-table td { padding: 12px 15px; font-size: 0.95rem; vertical-align: middle; }
-    .tech-table td:first-child { width: 40%; font-weight: 600; color: #666; }
-
-    /* Thumbnails ảnh */
-    .thumb-img { width: 70px; height: 70px; object-fit: cover; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
-    .thumb-img:hover, .thumb-img.active { border-color: #d70018; border-width: 2px; }
+    .btn-disabled { background: #ccc !important; border-color: #ccc !important; cursor: not-allowed; box-shadow: none !important; color: #666 !important; }
 </style>
 
 <!-- Breadcrumb -->
 <nav aria-label="breadcrumb" class="my-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-dark fw-bold"><i class="fas fa-home"></i> Trang chủ</a></li>
+        <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-dark fw-bold">Trang chủ</a></li>
         <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-dark">{{ product.brand }}</a></li>
         <li class="breadcrumb-item active text-danger fw-bold" aria-current="page">{{ product.name }}</li>
     </ol>
@@ -100,34 +46,27 @@
     <div class="col-lg-5 col-md-12 mb-4">
         <div class="text-center mb-3 position-relative">
             <img id="mainImage" src="{{ product.image_url }}" class="img-fluid rounded-4 shadow-sm border" alt="{{ product.name }}" style="max-height: 450px; width: 100%; object-fit: contain; padding: 20px;">
-            {% if product.is_sale %}
-            <div class="position-absolute top-0 start-0 m-3 badge bg-danger fs-6 shadow">Giảm sốc</div>
-            {% endif %}
+            {% if product.is_sale %}<div class="position-absolute top-0 start-0 m-3 badge bg-danger fs-6 shadow">Giảm sốc</div>{% endif %}
         </div>
-
-        {% if product.category == 'phone' %}
-        <!-- Nút xem cấu hình (Chỉ cho điện thoại) -->
-        <div class="mt-4 text-center">
-            <button class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#techSpecsModal">
-                <i class="fas fa-cogs me-2"></i> Xem cấu hình chi tiết
-            </button>
-        </div>
-        {% endif %}
     </div>
 
     <!-- Cột PHẢI: Thông tin & Mua hàng -->
     <div class="col-lg-7 col-md-12">
         <h1 class="product-title">{{ product.name }} <span class="badge bg-warning text-dark fs-6 align-middle ms-2">Chính hãng</span></h1>
 
-        <!-- Đánh giá -->
-        <div class="d-flex align-items-center mb-3">
-            <div class="text-warning me-2" style="font-size: 0.9rem;">
-                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-            </div>
-            <span class="text-muted small border-start ps-2 ms-2">15 đánh giá</span>
+        <!-- [NEW] Hiển thị trạng thái Tồn kho -->
+        <div class="mb-3">
+            {% if product.stock_quantity > 0 %}
+                <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill">
+                    <i class="fas fa-check-circle me-1"></i> Còn hàng ({{ product.stock_quantity }})
+                </span>
+            {% else %}
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary px-3 py-2 rounded-pill">
+                    <i class="fas fa-times-circle me-1"></i> Tạm hết hàng
+                </span>
+            {% endif %}
         </div>
 
-        <!-- Giá hiển thị -->
         <div class="mb-4 bg-light p-3 rounded-3 d-inline-block w-100">
             {% if product.is_sale %}
                 <span id="priceDisplay" class="price-current me-3">{{ product.sale_price | vnd }}</span>
@@ -137,35 +76,27 @@
             {% endif %}
         </div>
 
-        <!-- CHỈ HIỂN THỊ CHỌN BIẾN THỂ NẾU LÀ PHONE -->
         {% if product.category == 'phone' %}
-
             {% if product.versions_list %}
             <div class="mb-3">
                 <label class="fw-bold mb-2 d-block text-muted small text-uppercase">Chọn phiên bản:</label>
                 <div class="variant-group">
                     {% for ver in product.versions_list %}
-                    <div class="btn-variant {% if loop.first %}active{% endif %}"
-                         onclick="updatePrice(this, '{{ ver.price }}')">
-                        <span>{{ ver.name }}</span>
-                        <small class="text-muted">{{ ver.price | vnd }}</small>
+                    <div class="btn-variant {% if loop.first %}active{% endif %}" onclick="updatePrice(this, '{{ ver.price }}')">
+                        <span>{{ ver.name }}</span><small class="text-muted">{{ ver.price | vnd }}</small>
                     </div>
                     {% endfor %}
                 </div>
             </div>
             {% endif %}
-
             {% if product.colors_list %}
             <div class="mb-4">
                 <label class="fw-bold mb-2 d-block text-muted small text-uppercase">Chọn màu sắc:</label>
                 <div class="variant-group">
                     {% for col in product.colors_list %}
-                    <div class="btn-variant {% if loop.first %}active{% endif %}"
-                         onclick="updateImage(this, '{{ col.image }}')">
+                    <div class="btn-variant {% if loop.first %}active{% endif %}" onclick="updateImage(this, '{{ col.image }}')">
                         <div class="d-flex align-items-center">
-                            {% if col.image and col.image != 'None' and col.image != '' %}
-                            <img src="{{ col.image }}" style="width: 25px; height: 25px; border-radius: 50%; object-fit: cover; margin-right: 5px; border: 1px solid #ddd;">
-                            {% endif %}
+                            {% if col.image and col.image != 'None' %}<img src="{{ col.image }}" style="width: 25px; height: 25px; border-radius: 50%; object-fit: cover; margin-right: 5px; border: 1px solid #ddd;">{% endif %}
                             {{ col.name }}
                         </div>
                     </div>
@@ -173,88 +104,42 @@
                 </div>
             </div>
             {% endif %}
-
         {% endif %}
 
-        <!-- Box Khuyến mãi màu hồng -->
-        <div class="promo-box">
-            <div class="promo-header">
-                <i class="fas fa-gift"></i> ƯU ĐÃI & TÍNH NĂNG NỔI BẬT
+        <!-- Nút Mua (Disabled nếu hết hàng) -->
+        {% if product.stock_quantity > 0 %}
+            <div class="row g-2">
+                <div class="col-9">
+                    <form action="/cart/add/{{ product.id }}" method="POST">
+                        <button type="submit" class="btn btn-buy-now">MUA NGAY</button>
+                    </form>
+                </div>
+                <div class="col-3">
+                    <form action="/cart/add/{{ product.id }}" method="POST" class="h-100">
+                        <button type="submit" class="btn btn-add-cart"><i class="fas fa-cart-plus fs-3 mb-1"></i><span style="font-size: 0.7rem;">Thêm vào giỏ</span></button>
+                    </form>
+                </div>
             </div>
-            <ul class="promo-list">
-                <li><i class="fas fa-check-circle"></i> Sản phẩm chính hãng, chất lượng đảm bảo.</li>
-                <li><i class="fas fa-check-circle"></i> Giao hàng toàn quốc, thanh toán khi nhận hàng.</li>
-                {% if product.category == 'phone' %}
-                <li><i class="fas fa-check-circle"></i> Bảo hành chính hãng 12 tháng.</li>
-                <li><i class="fas fa-gift"></i> Tặng gói bảo hành vàng rơi vỡ (tùy model).</li>
-                {% else %}
-                <li><i class="fas fa-check-circle"></i> Bảo hành 1 đổi 1 trong 30 ngày nếu lỗi.</li>
-                {% endif %}
-            </ul>
-        </div>
-
-        <!-- Nút Mua -->
-        <div class="row g-2">
-            <div class="col-9">
-                <form action="/cart/add/{{ product.id }}" method="POST">
-                    <button type="submit" class="btn btn-buy-now">
-                        MUA NGAY
-                        <div style="font-size: 0.75rem; font-weight: normal; text-transform: none; margin-top: 2px;">(Giao tận nơi hoặc nhận tại cửa hàng)</div>
-                    </button>
-                </form>
-            </div>
-            <div class="col-3">
-                <form action="/cart/add/{{ product.id }}" method="POST" class="h-100">
-                    <button type="submit" class="btn btn-add-cart">
-                        <i class="fas fa-cart-plus fs-3 mb-1"></i>
-                        <span style="font-size: 0.7rem;">Thêm vào giỏ</span>
-                    </button>
-                </form>
-            </div>
-        </div>
+        {% else %}
+            <button class="btn btn-buy-now btn-disabled" disabled>HẾT HÀNG</button>
+            <p class="text-danger mt-2 small"><i class="fas fa-bell"></i> Vui lòng quay lại sau.</p>
+        {% endif %}
     </div>
 </div>
 
-<!-- Gợi ý phụ kiện -->
+<!-- Gợi ý (Giữ nguyên) -->
 <div class="mt-5 mb-5">
-    <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
-        <h4 class="fw-bold text-uppercase m-0 text-danger border-start border-4 border-danger ps-3">
-            {% if product.category == 'phone' %}
-                Phụ kiện nên mua kèm
-            {% else %}
-                Sản phẩm tương tự
-            {% endif %}
-        </h4>
-    </div>
-
+    <h4 class="fw-bold text-uppercase border-start border-4 border-danger ps-3 mb-4">Gợi ý khác</h4>
     <div class="row row-cols-1 row-cols-md-4 g-3">
         {% for item in recommendations %}
         <div class="col">
             <div class="card h-100 card-product shadow-sm border-0">
-                {% if item.is_sale %}
-                <span class="position-absolute top-0 end-0 m-2 badge bg-danger rounded-pill shadow-sm">-Sale</span>
-                {% endif %}
-
                 <a href="/product/{{ item.id }}" class="text-center pt-3 px-3">
                     <img src="{{ item.image_url }}" class="card-img-top" style="height: 160px; object-fit: contain;">
                 </a>
                 <div class="card-body">
-                    <h6 class="card-title text-truncate mb-1" style="font-size: 0.95rem;">
-                        <a href="/product/{{ item.id }}" class="text-decoration-none text-dark fw-bold">{{ item.name }}</a>
-                    </h6>
-
-                    <div class="mb-2">
-                        {% if item.is_sale %}
-                            <span class="text-danger fw-bold">{{ item.sale_price | vnd }}</span>
-                            <span class="text-muted small text-decoration-line-through ms-1">{{ item.price | vnd }}</span>
-                        {% else %}
-                            <span class="text-danger fw-bold">{{ item.price | vnd }}</span>
-                        {% endif %}
-                    </div>
-
-                    <form action="/cart/add/{{ item.id }}" method="POST">
-                        <button class="btn btn-outline-danger btn-sm w-100 rounded-pill fw-bold"><i class="fas fa-cart-plus me-1"></i> Chọn mua</button>
-                    </form>
+                    <h6 class="card-title text-truncate mb-1"><a href="/product/{{ item.id }}" class="text-decoration-none text-dark fw-bold">{{ item.name }}</a></h6>
+                    <div class="text-danger fw-bold">{{ item.price | vnd }}</div>
                 </div>
             </div>
         </div>
@@ -262,63 +147,18 @@
     </div>
 </div>
 
-<!-- Modal Thông số kỹ thuật (Chỉ hiện cho Phone) -->
-{% if product.category == 'phone' %}
-<div class="modal fade" id="techSpecsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content rounded-4 border-0">
-            <div class="modal-header border-bottom-0 bg-light rounded-top-4">
-                <h5 class="modal-title fw-bold text-uppercase"><i class="fas fa-list-alt me-2"></i> Thông số kỹ thuật</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-0">
-                <table class="table table-striped tech-table mb-0">
-                    <tbody>
-                        <tr><td>Màn hình</td><td>6.7 inches, 120Hz</td></tr>
-                        <tr><td>Camera sau</td><td>48MP + 12MP + 12MP</td></tr>
-                        <tr><td>Chipset</td><td>Apple A17 Pro / Snapdragon 8 Gen 3</td></tr>
-                        <tr><td>Pin</td><td>5000 mAh, Sạc nhanh</td></tr>
-                        <tr><td>Hệ điều hành</td><td>iOS / Android mới nhất</td></tr>
-                    </tbody>
-                </table>
-                <div class="p-3 text-center bg-light rounded-bottom-4">
-                    <small class="text-muted fst-italic">* Thông số tham khảo.</small>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<!-- Script xử lý Logic Động (Đổi ảnh, Đổi giá) -->
 <script>
-    // Hàm đổi định dạng tiền tệ VNĐ
-    function formatVND(n) {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n).replace('₫', 'đ');
-    }
-
-    // Đổi ảnh khi click Màu
+    function formatVND(n) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n).replace('₫', 'đ'); }
     function updateImage(el, imageUrl) {
-        // Active class
         el.parentElement.querySelectorAll('.btn-variant').forEach(btn => btn.classList.remove('active'));
         el.classList.add('active');
-
-        // Change Image source (Nếu có link ảnh hợp lệ)
-        if(imageUrl && imageUrl != 'None' && imageUrl != '') {
-            document.getElementById('mainImage').src = imageUrl;
-        }
+        if(imageUrl && imageUrl != 'None' && imageUrl != '') document.getElementById('mainImage').src = imageUrl;
     }
-
-    // Đổi giá khi click Phiên bản
     function updatePrice(el, price) {
-        // Active class
         el.parentElement.querySelectorAll('.btn-variant').forEach(btn => btn.classList.remove('active'));
         el.classList.add('active');
-
-        // Change Price Text
         if(price) {
             document.getElementById('priceDisplay').innerText = formatVND(price);
-            // Ẩn giá cũ nếu có (vì giá phiên bản thường là giá chuẩn mới)
             const oldPrice = document.getElementById('oldPriceDisplay');
             if(oldPrice) oldPrice.style.display = 'none';
         }

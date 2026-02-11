@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-header bg-success text-white p-4">
+                <h3 class="mb-0 fw-bold"><i class="fas fa-recycle me-2"></i> Thu Cũ Đổi Mới - Lên Đời Siêu Phẩm</h3>
+                <p class="mb-0 opacity-75">Gửi thông tin máy cũ của bạn để nhận định giá tốt nhất thị trường.</p>
+            </div>
+            <div class="card-body p-5">
+                <!-- Lưu ý enctype multipart để gửi file -->
+                <form method="POST" enctype="multipart/form-data">
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Tên thiết bị của bạn</label>
+                        <input type="text" name="device_name" class="form-control form-control-lg" placeholder="VD: iPhone 11 Pro Max 256GB..." required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Tình trạng máy</label>
+                        <textarea name="condition" class="form-control" rows="4" placeholder="Mô tả chi tiết: Trầy xước, vỡ kính, pin chai, hay còn mới 99%..." required></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Ảnh thực tế sản phẩm</label>
+                        <input type="file" name="image" class="form-control" accept="image/*" required onchange="previewImage(this)">
+                        <div class="form-text text-muted">Chấp nhận định dạng: JPG, PNG. Tối đa 2MB.</div>
+                        
+                        <!-- Preview ảnh -->
+                        <div class="mt-3 text-center d-none" id="imgPreviewBox">
+                            <img id="imgPreview" src="#" alt="Ảnh xem trước" class="img-fluid rounded border shadow-sm" style="max-height: 200px;">
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg rounded-pill fw-bold">
+                            <i class="fas fa-paper-plane me-2"></i> Gửi Yêu Cầu Định Giá
+                        </button>
+                        <a href="/" class="btn btn-outline-secondary rounded-pill">Quay lại trang chủ</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imgPreview').src = e.target.result;
+                document.getElementById('imgPreviewBox').classList.remove('d-none');
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+{% endblock %}

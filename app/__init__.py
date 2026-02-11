@@ -25,6 +25,13 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mobilestore.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+    # [NEW] Cấu hình Upload File
+    # Tạo thư mục static/uploads nếu chưa có
+    upload_folder = os.path.join(app.root_path, 'static', 'uploads')
+    os.makedirs(upload_folder, exist_ok=True)
+    app.config['UPLOAD_FOLDER'] = upload_folder
+    app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # Giới hạn file tối đa 2MB
+
     # 2. Khởi tạo Extensions
     db.init_app(app)
     login_manager.init_app(app)

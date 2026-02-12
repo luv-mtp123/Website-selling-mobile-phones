@@ -206,7 +206,7 @@
 
 # 
 
-# **7. 📂 Cấu Trúc Dự Án (Modular MVC)**
+# **📂 Cấu Trúc Dự Án (Modular MVC)**
 
 # 
 
@@ -222,7 +222,7 @@
 
 #### **├── test\_\*.py               # Các kịch bản kiểm thử tự động**
 
-#### **├──test\_security.py         # Kiểm thử bảo mật chuyên biệt** 
+#### **├──test\_security.py         # Kiểm thử bảo mật chuyên biệt**
 
 ### **├── .env                    # Cấu hình bảo mật**
 

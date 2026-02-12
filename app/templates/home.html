@@ -1,116 +1,353 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<!-- Banner Tết -->
-<div class="card mb-4 border-0 rounded-4 overflow-hidden shadow position-relative">
-    <img src="https://img.freepik.com/free-vector/gradient-lunar-new-year-background_23-2149945037.jpg" class="card-img" alt="Tet Banner" style="height: 350px; object-fit: cover;">
-    <div class="card-img-overlay d-flex flex-column justify-content-center align-items-center text-center text-white" style="background: rgba(0,0,0,0.3);">
-        <h1 class="display-3 fw-bold text-warning mb-3" style="text-shadow: 2px 2px 4px #d32f2f;">XUÂN BÍNH NGỌ</h1>
-        <p class="lead fw-bold mb-4">Lì Xì Công Nghệ - Rước Lộc Đầu Năm</p>
-        <a href="#products" class="btn btn-warning btn-lg rounded-pill px-5 fw-bold text-danger shadow">
-            <i class="fas fa-gift me-2"></i> SĂN SALE NGAY
-        </a>
+<style>
+    /* --- Banner Animation --- */
+    .banner-container {
+        overflow: hidden;
+        border-radius: 20px;
+        position: relative;
+    }
+    .banner-img {
+        transition: transform 0.5s ease;
+        height: 400px;
+        object-fit: cover;
+        width: 100%;
+    }
+    .banner-container:hover .banner-img {
+        transform: scale(1.02); /* Zoom nhẹ khi hover */
+    }
+    .banner-overlay {
+        background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.4));
+    }
+
+    /* --- Feature Icons --- */
+    .feature-box {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.05);
+        height: 100%;
+    }
+    .feature-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        border-color: #0d6efd;
+    }
+    .feature-icon-circle {
+        width: 60px; height: 60px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem;
+        margin: 0 auto 15px;
+        background: #f8f9fa;
+        color: #555;
+        transition: all 0.3s;
+    }
+    .feature-box:hover .feature-icon-circle {
+        background: #0d6efd;
+        color: white;
+    }
+
+    /* --- Smart Search Section --- */
+    .search-section {
+        background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%);
+        border: 1px solid #e1e4e8;
+    }
+
+    /* --- Product Card --- */
+    .card-product {
+        border: none;
+        border-radius: 16px;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        background: #fff;
+        overflow: hidden;
+    }
+    .card-product:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+    .product-img-wrapper {
+        padding: 20px;
+        background: #fff;
+        height: 220px;
+        display: flex; align-items: center; justify-content: center;
+        position: relative;
+    }
+    .product-img-wrapper img {
+        max-height: 100%;
+        max-width: 100%;
+        transition: transform 0.3s;
+    }
+    .card-product:hover .product-img-wrapper img {
+        transform: scale(1.08);
+    }
+
+    /* --- Flash Sale Timer --- */
+    .flash-sale-box {
+        background: linear-gradient(45deg, #fff0f0, #fff);
+        border: 2px dashed #dc3545;
+    }
+    .timer-digit {
+        background: #dc3545;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 700;
+        min-width: 32px;
+        display: inline-block;
+        text-align: center;
+    }
+
+    /* --- Category Pills --- */
+    .cat-pill {
+        border: 1px solid #dee2e6;
+        color: #555;
+        background: white;
+        padding: 6px 16px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: 0.2s;
+        text-decoration: none;
+    }
+    .cat-pill:hover, .cat-pill.active {
+        background: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+    }
+</style>
+
+<!-- 1. Banner Tết (Original Style Updated) -->
+<div class="card mb-5 border-0 shadow-lg banner-container">
+    <img src="https://img.freepik.com/free-vector/gradient-lunar-new-year-background_23-2149945037.jpg" class="card-img banner-img" alt="Tet Banner">
+    <div class="card-img-overlay d-flex flex-column justify-content-center align-items-center text-center text-white banner-overlay">
+        <div style="background: rgba(0,0,0,0.2); padding: 30px; border-radius: 20px; backdrop-filter: blur(2px);">
+            <h1 class="display-3 fw-bold text-warning mb-2" style="text-shadow: 3px 3px 6px rgba(0,0,0,0.8); letter-spacing: 2px;">XUÂN BÍNH NGỌ</h1>
+            <p class="fs-4 fw-bold mb-4 text-white" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">Lì Xì Công Nghệ - Rước Lộc Đầu Năm</p>
+            <a href="#products" class="btn btn-warning btn-lg rounded-pill px-5 fw-bold text-danger shadow-lg pulse-anim">
+                <i class="fas fa-gift me-2"></i> SĂN SALE NGAY
+            </a>
+        </div>
     </div>
 </div>
 
-<!-- Bộ lọc Smart Search -->
-<div class="card shadow-sm p-4 mb-5 rounded-4 border-0" id="products" style="border-top: 5px solid #d32f2f !important;">
-    <div class="d-flex align-items-center mb-3">
-        <i class="fas fa-robot fs-3 text-danger me-2"></i>
-        <h4 class="mb-0 fw-bold text-danger">AI Smart Search</h4>
+<!-- 2. Feature Icons (Clean Design) -->
+<div class="row text-center mb-5 g-3">
+    <div class="col-6 col-md-3">
+        <div class="feature-box">
+            <div class="feature-icon-circle"><i class="fas fa-truck-fast"></i></div>
+            <h6 class="fw-bold mb-1">Giao Hỏa Tốc 2H</h6>
+            <p class="small text-muted mb-0">Miễn phí ship nội thành</p>
+        </div>
     </div>
-    <form action="/" method="GET" class="row g-3">
-        <div class="col-md-6">
+    <div class="col-6 col-md-3">
+        <div class="feature-box">
+            <div class="feature-icon-circle"><i class="fas fa-shield-alt"></i></div>
+            <h6 class="fw-bold mb-1">Bảo Hành Vàng</h6>
+            <p class="small text-muted mb-0">Lỗi 1 đổi 1 trong 30 ngày</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="feature-box">
+            <div class="feature-icon-circle"><i class="fas fa-credit-card"></i></div>
+            <h6 class="fw-bold mb-1">Trả Góp 0%</h6>
+            <p class="small text-muted mb-0">Duyệt hồ sơ online 5 phút</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="feature-box">
+            <div class="feature-icon-circle"><i class="fas fa-headset"></i></div>
+            <h6 class="fw-bold mb-1">Hỗ Trợ 24/7</h6>
+            <p class="small text-muted mb-0">Hotline: 1900.100.Có</p>
+        </div>
+    </div>
+</div>
+
+<!-- 3. AI Smart Search -->
+<div class="card shadow p-4 mb-5 rounded-4 search-section" id="products">
+    <div class="d-flex align-items-center mb-3">
+        <div class="bg-primary text-white rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div>
+            <h4 class="mb-0 fw-bold text-primary">Trợ Lý Tìm Kiếm AI</h4>
+            <small class="text-muted">Nhập nhu cầu của bạn, AI sẽ tìm sản phẩm phù hợp nhất</small>
+        </div>
+    </div>
+    <form action="/" method="GET" class="row g-2">
+        <div class="col-lg-6">
             <div class="input-group">
-                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
-                <input type="text" name="q" class="form-control border-start-0 ps-0" placeholder="VD: Tìm iPhone chơi game giá dưới 20 triệu..." value="{{ search_query }}">
+                <span class="input-group-text bg-white border-end-0 text-muted ps-3"><i class="fas fa-search"></i></span>
+                <input type="text" name="q" class="form-control border-start-0 py-2 shadow-none"
+                       placeholder="VD: Tìm điện thoại Samsung chụp ảnh đẹp dưới 15 triệu..."
+                       value="{{ search_query }}">
             </div>
         </div>
-        <div class="col-md-2">
-            <select name="brand" class="form-select">
+        <div class="col-lg-2 col-6">
+            <select name="brand" class="form-select py-2 shadow-none">
                 <option value="">Tất cả hãng</option>
                 {% for b in brands %}
                 <option value="{{ b }}" {% if request.args.get('brand') == b %}selected{% endif %}>{{ b }}</option>
                 {% endfor %}
             </select>
         </div>
-        <div class="col-md-2">
-            <select name="sort" class="form-select">
+        <div class="col-lg-2 col-6">
+            <select name="sort" class="form-select py-2 shadow-none">
                 <option value="">Sắp xếp</option>
                 <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Giá rẻ trước</option>
                 <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Giá cao trước</option>
             </select>
         </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-danger w-100 fw-bold">Tìm Kiếm</button>
+        <div class="col-lg-2">
+            <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow-sm">Tìm Kiếm</button>
         </div>
     </form>
 </div>
 
-<!-- Thông báo AI -->
 {% if ai_message %}
-<div class="alert alert-warning border-2 border-warning d-flex align-items-center shadow-sm mb-4 rounded-3" role="alert">
-    <i class="fas fa-sparkles fs-4 me-3 text-warning"></i>
-    <div class="text-dark">
+<div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-5 rounded-3" style="background-color: #e3f2fd;" role="alert">
+    <i class="fas fa-sparkles fs-4 me-3 text-primary animate__animated animate__pulse animate__infinite"></i>
+    <div class="text-dark fw-medium">
         {{ ai_message }}
     </div>
 </div>
 {% endif %}
 
-<!-- Danh sách sản phẩm -->
-<div class="d-flex align-items-center mb-4">
-    <h3 class="fw-bold text-danger border-start border-4 border-warning ps-3 mb-0">SẢN PHẨM NỔI BẬT</h3>
-    <img src="https://cdn-icons-png.flaticon.com/512/4256/4256900.png" width="40" class="ms-2">
+<!-- 4. Flash Sale -->
+<div class="d-flex align-items-center justify-content-between mb-4 flash-sale-box p-3 rounded-4">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-bolt text-danger fs-3 me-2 animate__animated animate__flash animate__infinite"></i>
+        <h3 class="fw-bold text-danger mb-0 fst-italic">FLASH SALE</h3>
+    </div>
+    <div class="d-flex align-items-center gap-1">
+        <span class="text-muted small fw-bold text-uppercase me-2 d-none d-md-inline">Kết thúc sau:</span>
+        <span class="timer-digit" id="hour">02</span><span class="fw-bold text-danger">:</span>
+        <span class="timer-digit" id="min">45</span><span class="fw-bold text-danger">:</span>
+        <span class="timer-digit" id="sec">12</span>
+    </div>
 </div>
 
-<div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+{% if hot_products %}
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4 mb-5">
+    {% for product in hot_products %}
+    <div class="col">
+        <div class="card h-100 card-product">
+            <div class="position-absolute top-0 end-0 m-2 badge bg-danger rounded-pill shadow-sm z-3">-15%</div>
+            <a href="/product/{{ product.id }}" class="product-img-wrapper">
+                <img src="{{ product.image_url }}" alt="{{ product.name }}">
+            </a>
+            <div class="card-body pt-0">
+                <h6 class="card-title fw-bold text-truncate mb-2">
+                    <a href="/product/{{ product.id }}" class="text-dark text-decoration-none">{{ product.name }}</a>
+                </h6>
+                <div class="d-flex justify-content-between align-items-end mb-2">
+                    <div>
+                        <div class="text-danger fw-bold fs-5">{{ product.sale_price | vnd }}</div>
+                        <small class="text-decoration-line-through text-muted small">{{ product.price | vnd }}</small>
+                    </div>
+                </div>
+                <div class="progress mb-2" style="height: 6px; border-radius: 10px;">
+                    <div class="progress-bar bg-danger progress-bar-striped progress-bar-animated" style="width: 85%"></div>
+                </div>
+                <small class="text-danger fw-bold"><i class="fas fa-fire me-1"></i>Đang bán chạy</small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- 5. All Products -->
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <h3 class="fw-bold text-dark border-start border-4 border-primary ps-3 mb-0">TẤT CẢ SẢN PHẨM</h3>
+    <div class="d-flex gap-2 overflow-auto pb-2 pb-md-0">
+        <a href="#" class="cat-pill active">Tất cả</a>
+        <a href="#" class="cat-pill">Apple</a>
+        <a href="#" class="cat-pill">Samsung</a>
+        <a href="#" class="cat-pill">Xiaomi</a>
+        <a href="#" class="cat-pill">Phụ kiện</a>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
     {% for product in products %}
     <div class="col">
-        <div class="card h-100 card-product shadow-sm border-0">
+        <div class="card h-100 card-product position-relative">
             {% if product.is_sale %}
-            <div class="position-absolute top-0 start-0 m-2 badge bg-warning text-danger fw-bold shadow-sm p-2">
-                <i class="fas fa-tag"></i> GIẢM SỐC
+            <div class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark fw-bold shadow-sm p-2 z-2">
+                <i class="fas fa-tag me-1"></i> SALE
             </div>
             {% endif %}
 
-            <a href="/product/{{ product.id }}" class="text-center p-3">
-                <img src="{{ product.image_url }}" class="card-img-top rounded" alt="{{ product.name }}" style="height: 180px; object-fit: contain;" onerror="this.src='https://via.placeholder.com/300x200?text=MobileStore'">
+            <a href="/product/{{ product.id }}" class="product-img-wrapper">
+                <img src="{{ product.image_url }}" alt="{{ product.name }}" onerror="this.src='https://via.placeholder.com/300x200?text=MobileStore'">
             </a>
 
             <div class="card-body d-flex flex-column pt-0">
                 <div class="mb-2">
-                    <span class="badge bg-light text-muted border">{{ product.brand }}</span>
+                    <span class="badge bg-light text-secondary border rounded-pill px-2">{{ product.brand }}</span>
                 </div>
-                <h6 class="card-title fw-bold text-dark text-truncate mb-3">
-                    <a href="/product/{{ product.id }}" class="text-decoration-none text-dark">{{ product.name }}</a>
+                <h6 class="card-title fw-bold text-dark text-truncate mb-auto">
+                    <a href="/product/{{ product.id }}" class="text-decoration-none text-dark stretched-link">{{ product.name }}</a>
                 </h6>
 
-                <div class="mt-auto">
+                <div class="mt-3">
                     {% if product.is_sale %}
-                        <div class="d-flex align-items-center mb-2">
+                        <div class="d-flex align-items-center mb-3">
                             <span class="h5 text-danger fw-bold mb-0 me-2">{{ product.sale_price | vnd }}</span>
                             <span class="text-muted small text-decoration-line-through">{{ product.price | vnd }}</span>
                         </div>
                     {% else %}
-                        <div class="h5 text-danger fw-bold mb-2">{{ product.price | vnd }}</div>
+                        <div class="h5 text-danger fw-bold mb-3">{{ product.price | vnd }}</div>
                     {% endif %}
 
-                    <div class="d-grid gap-2">
-                        <form action="/cart/add/{{ product.id }}" method="POST">
-                             <button type="submit" class="btn btn-outline-danger w-100 rounded-pill fw-bold">
-                                 <i class="fas fa-cart-plus"></i> Thêm Vào Giỏ
-                             </button>
-                        </form>
-                    </div>
+                    <!-- Nút thêm vào giỏ nằm trên cùng layer để không bị stretched-link che mất -->
+                    <form action="/cart/add/{{ product.id }}" method="POST" class="d-grid position-relative z-3">
+                         <button type="submit" class="btn btn-outline-primary rounded-pill fw-bold btn-sm py-2">
+                             <i class="fas fa-cart-plus me-1"></i> Thêm Vào Giỏ
+                         </button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
     {% else %}
     <div class="col-12 text-center py-5">
-        <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="100" class="mb-3 opacity-50">
-        <p class="text-muted fs-5">Không tìm thấy sản phẩm nào phù hợp.</p>
+        <div class="opacity-50 mb-3">
+            <i class="fas fa-search fa-4x text-muted"></i>
+        </div>
+        <h5 class="text-muted">Không tìm thấy sản phẩm nào phù hợp.</h5>
+        <a href="/" class="btn btn-link text-decoration-none">Xóa bộ lọc</a>
     </div>
     {% endfor %}
 </div>
+
+<!-- Countdown Script -->
+<script>
+    function startTimer(duration) {
+        var timer = duration, hours, minutes, seconds;
+        var hEl = document.getElementById('hour');
+        var mEl = document.getElementById('min');
+        var sEl = document.getElementById('sec');
+
+        setInterval(function () {
+            hours = parseInt(timer / 3600, 10);
+            minutes = parseInt((timer % 3600) / 60, 10);
+            seconds = parseInt(timer % 60, 10);
+
+            hEl.textContent = hours < 10 ? "0" + hours : hours;
+            mEl.textContent = minutes < 10 ? "0" + minutes : minutes;
+            sEl.textContent = seconds < 10 ? "0" + seconds : seconds;
+
+            if (--timer < 0) timer = duration;
+        }, 1000);
+    }
+
+    window.onload = function () {
+        var fiveHours = 60 * 60 * 5;
+        startTimer(fiveHours);
+    };
+</script>
 {% endblock %}

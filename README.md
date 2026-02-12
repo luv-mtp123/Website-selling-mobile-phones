@@ -2,11 +2,11 @@
 
 # 
 
-## **Chào mừng bạn đến với MobileStore! Đây là dự án throng mại điện tử hiện đại được xây dựng bằng Python Flask, tích hợp sâu Google Gemini AI.**
+#### **Chào mừng bạn đến với MobileStore! Đây là dự án thương mại điện tử hiện đại được xây dựng bằng Python Flask, tích hợp sâu Google Gemini AI.**
 
-## 
+#### 
 
-## **Phiên bản này đã được Tái cấu trúc (Refactor) toàn diện sang mô hình Modular MVC (Model-View-Controller) sử dụng Flask Blueprints, giúp mã nguồn chuyên nghiệp, dễ bảo trì và mở rộng hơn.**
+#### **Phiên bản này đã được Tái cấu trúc (Refactor) toàn diện sang mô hình Modular MVC và cập nhật giao diện Tết Bính Ngọ 2026.**
 
 # 
 
@@ -14,173 +14,131 @@
 
 # 
 
-## **1. 📦 Quản Lý Tồn Kho Thực Tế (Inventory Management)**
+## **1. 🛠️ Fix Lỗi Logic \& Bảo Mật (Critical Fixes)**
 
 # 
 
-### **Tồn kho tự động: Hệ thống tự động trừ số lượng sản phẩm trong kho ngay khi khách hàng đặt hàng thành công.**
-
-### 
-
-### **Hoàn kho thông minh: Tự động cộng lại số lượng vào kho khi khách hàng hoặc Admin thực hiện lệnh "Hủy đơn" (chỉ áp dụng cho đơn chưa xử lý).**
-
-### 
-
-### **Cảnh báo hết hàng: Ngăn chặn khách hàng thêm sản phẩm vào giỏ hoặc thanh toán nếu số lượng trong kho không đủ.**
-
-### 
-
-### **Quản trị: Admin có thể theo dõi và chỉnh sửa số lượng tồn kho trực tiếp trong phần chỉnh sửa sản phẩm.**
+### **✅ Fix Lỗi Giá Giỏ Hàng (Pricing Logic Security):**
 
 # 
 
-## **2. 📊 Bộ Lọc Sắp Xếp Động (Dynamic Sorting)**
+#### **Vấn đề: Trước đây, giá sản phẩm được lưu trong session giỏ hàng. Nếu Admin tăng giá sản phẩm trong lúc khách đang chọn mua, khách vẫn thanh toán với giá cũ.**
+
+#### 
+
+#### **Giải pháp: Tại bước thanh toán (checkout), hệ thống hiện truy vấn lại giá thực tế từ Database để tính tổng tiền, đảm bảo tính chính xác và bảo mật doanh thu.**
 
 # 
 
-### **Sắp xếp tại Admin: Tại Dashboard, Admin có thể nhấp vào tiêu đề các cột: ID, Tên sản phẩm, Giá bán, Tồn kho để sắp xếp tăng/giảm dần ngay lập tức mà không cần tải lại trang.**
-
-### 
-
-### **Giao diện trực quan: Hiển thị icon mũi tên (sort-up/sort-down) để nhận biết cột đang được sắp xếp.**
+## **✅ Fix Lỗi Toàn Vẹn Dữ Liệu (Cascade Delete):**
 
 # 
 
-## **3. 👥 Quản Lý Người Dùng \& Hồ Sơ (User \& Profile)**
+#### **Vấn đề: Khi xóa một sản phẩm, các dữ liệu liên quan (như bình luận) còn sót lại gây lỗi Foreign Key hoặc rác dữ liệu.**
+
+#### 
+
+#### **Giải pháp: Thêm cấu hình cascade="all, delete-orphan" vào Model. Khi xóa sản phẩm, toàn bộ bình luận liên quan sẽ tự động được dọn dẹp.**
 
 # 
 
-### **Danh sách thành viên: Admin có thêm tab "Người dùng" để xem toàn bộ danh sách khách hàng, bao gồm ảnh đại diện, email và vai trò (Admin/User).**
-
-### 
-
-### **Tùy biến cá nhân: Người dùng có thể tự thay đổi Họ tên và Ảnh đại diện (Avatar). Hệ thống hỗ trợ upload file ảnh thực tế và lưu trữ an toàn trong thư mục static/uploads.**
-
-### 
-
-## **4. 🔒 Bảo Mật \& Phục Hồi Mật Khẩu (Security)**
+# **2. ✨ Tính Năng Mới: Bình Luận \& Đánh Giá (Reviews)**
 
 # 
 
-### **Quên mật khẩu: Tích hợp quy trình phục hồi mật khẩu qua Email (Simulation). Hệ thống tạo Token an toàn có thời hạn 15 phút.**
-
-### 
-
-### **Đặt lại mật khẩu: Link reset được gửi (hiển thị tại Server Console) cho phép người dùng thiết lập mật khẩu mới khi lỡ quên.**
+## **⭐ Hệ thống đánh giá 5 sao:**
 
 # 
 
-### **Google OAuth: Đăng nhập nhanh bằng tài khoản Google, tự động khởi tạo tài khoản nếu email chưa tồn tại trên hệ thống.**
+#### **Cho phép người dùng đăng nhập gửi đánh giá chất lượng sản phẩm từ 1 đến 5 sao.**
 
+#### 
 
+#### **Giao diện nhập liệu trực quan với các ngôi sao tương tác.**
 
-# **✨ Cập Nhật Kiến Trúc Phần Mềm (New Architecture)**
+#### 
 
-# 
+#### **💬 Bình luận thời gian thực:**
 
-### **Dự án đã chuyển từ cấu trúc Monolithic (tất cả trong 1 file app.py) sang cấu trúc Modular MVC:**
+#### 
 
-# 
+#### **Hiển thị danh sách bình luận mới nhất ngay dưới trang chi tiết sản phẩm.**
 
-## **1. 🏗️ Mô Hình Modular MVC:**
+#### 
 
-# 
-
-### **Model (M): File app/models.py - Quản lý dữ liệu và cấu trúc Database (User, Product, Order...).**
-
-### 
-
-### **View (V): Thư mục app/templates/ - Giao diện HTML hiển thị cho người dùng.**
-
-### 
-
-### **Controller (C): Thư mục app/routes/ - Xử lý logic nghiệp vụ và điều hướng request.**
-
-### 
-
-### **auth.py: Xử lý Đăng nhập, Đăng ký, Google OAuth.**
-
-### 
-
-### **admin.py: Xử lý Dashboard quản trị, CRUD sản phẩm.**
-
-### 
-
-### **main.py: Xử lý Trang chủ, Giỏ hàng, Chatbot, So sánh AI.**
+#### **Hiển thị thông tin người dùng (Avatar, Tên) và thời gian gửi.**
 
 # 
 
-## **2. 🔌 Application Factory Pattern:**
+# **3. 🎨 Nâng Cấp Giao Diện (UI/UX Optimization)**
 
 # 
 
-### **Sử dụng app/\_\_init\_\_.py để khởi tạo ứng dụng, giúp quản lý cấu hình và extensions (DB, Login) tập trung, tránh lỗi vòng lặp (circular imports).**
+## **🏠 Trang Chủ (Homepage) - Giao diện Tết:**
 
 # 
 
-## **3. 🚀 Entry Point Mới:**
+#### **Banner Tết Bính Ngọ: Banner tĩnh khổ lớn với hiệu ứng zoom nhẹ (hover) sang trọng.**
+
+#### 
+
+#### **Flash Sale: Khu vực khuyến mãi với đồng hồ đếm ngược (Countdown Timer) sống động.**
+
+#### 
+
+#### **Smart Search: Thanh tìm kiếm AI thiết kế dạng nổi (floating), đẹp mắt và dễ sử dụng.**
+
+#### 
+
+#### **Tiện ích: Các icon cam kết (Giao hỏa tốc, Bảo hành vàng...) được thiết kế lại hiện đại.**
 
 # 
 
-### **File run.py ở thư mục gốc đóng vai trò là điểm khởi chạy duy nhất của ứng dụng.**
+## **📱 Trang Chi Tiết (Product Detail):**
 
 # 
 
-# **✨ Các Tính Năng Nghiệp Vụ (Features)**
+#### **Image Gallery: Khung hiển thị ảnh sản phẩm gọn gàng, hỗ trợ zoom khi di chuột.**
+
+#### 
+
+#### **Variant Selection: Nút chọn Màu sắc/Phiên bản có chỉ báo "active" (dấu tick) rõ ràng.**
+
+#### 
+
+#### **Sticky Actions: Nút "Mua ngay" và "Thêm giỏ" được thiết kế nổi bật, đổ bóng 3D.**
 
 # 
 
-## **1. 🤖 Trí Tuệ Nhân Tạo (Gemini AI Integration)**
+## **4. 📦 Quản Lý Tồn Kho Thực Tế (Inventory)**
 
 # 
 
-### **Tìm Kiếm Thông Minh (Smart Search): Hiểu ngôn ngữ tự nhiên (VD: "iPhone giá rẻ dưới 10 triệu").**
+#### **Tồn kho tự động: Trừ kho ngay khi đặt hàng, hoàn kho khi hủy đơn (nếu đơn chưa xử lý).**
 
-### 
+#### 
 
-### **So Sánh Sản Phẩm (AI Comparison): Kẻ bảng so sánh thông số và đưa ra lời khuyên mua sắm.**
-
-### 
-
-### **Gợi Ý Phụ Kiện: Tự động đề xuất phụ kiện phù hợp khi xem điện thoại.**
-
-### 
-
-### **Chatbot Hybrid: Kết hợp trả lời kịch bản và AI, có cơ chế Caching để tiết kiệm quota API.**
+#### **Cảnh báo: Chặn mua nếu số lượng chọn lớn hơn tồn kho thực tế.**
 
 # 
 
-## **2. 🎨 Quản Lý Biến Thể Sản Phẩm**
+## **5. 🤖 Trí Tuệ Nhân Tạo (Gemini AI)**
 
 # 
 
-### **Hệ thống Màu sắc \& Phiên bản: Admin có thể thêm tùy chọn màu/dung lượng không giới hạn.**
+#### **Tìm Kiếm Thông Minh: Hiểu ngôn ngữ tự nhiên (VD: "iPhone giá rẻ dưới 10 triệu").**
 
-### 
+#### 
 
-### **Ảnh \& Giá Động: Khách chọn màu -> Đổi ảnh; Chọn dung lượng -> Đổi giá tiền.**
+#### **So Sánh Sản Phẩm: Kẻ bảng so sánh thông số chi tiết.**
 
-# 
+#### 
 
-## **3. ♻️ Nghiệp Vụ Thu Cũ Đổi Mới (Trade-in)**
-
-## 
-
-## **Khách hàng gửi ảnh và mô tả tình trạng máy cũ.**
-
-## 
-
-## **Admin nhận yêu cầu, xem ảnh thực tế và thực hiện Định giá thu mua.**
-
-## 
-
-## **Khách hàng theo dõi kết quả định giá ngay tại trang cá nhân.**
-
-
+#### **Chatbot: Trả lời tự động các câu hỏi thường gặp.**
 
 # 
 
-# **📂 Cấu Trúc Thư Mục Mới (Project Structure)**
+# **📂 Cấu Trúc Dự Án (Modular MVC)**
 
 # 
 
@@ -188,195 +146,141 @@
 
 ### **│**
 
-### **├── run.py                  # (ENTRY POINT) File chạy chính của ứng dụng**
+### **├── run.py                  # (ENTRY POINT) File chạy chính**
 
-### **├── .env                    # Cấu hình bảo mật (API Key, Secret Key)**
+### **├── .env                    # Cấu hình bảo mật**
 
-### **├── requirements.txt        # Danh sách thư viện**
-
-### **├── mobilestore.db          # Database SQLite**
+### **├── requirements.txt        # Thư viện**
 
 ### **│**
 
-### **└── app/                    # (PACKAGE) Thư mục chứa Source Code**
+### **└── app/                    # (PACKAGE) Source Code**
 
-### **├── \_\_init\_\_.py         # Khởi tạo App, DB, Login, đăng ký Blueprints**
+###     **├── \_\_init\_\_.py         # App Factory**
 
-### **├── extensions.py       # Khởi tạo các công cụ (SQLAlchemy, LoginManager, OAuth)**
+###     **├── extensions.py       # DB, Login, OAuth**
 
-### **├── models.py           # Định nghĩa Database (User, Product, Order, AICache)**
+###     **├── models.py           # Database (User, Product, Order, Comment...)**
 
-### **├── utils.py            # Logic gọi AI và xử lý dữ liệu**
+###     **├── utils.py            # AI Logic**
 
-### **│**
+###     **│**
 
-### **├── templates/          # (VIEW) Giao diện HTML**
+###     **├── templates/          # (VIEW) Giao diện HTML**
 
-### **│   ├── base.html       # Layout chung**
+###     **│   ├── base.html       # Layout chung**
 
-### **│   ├── home.html       # Trang chủ**
+###     **│   ├── home.html       # Trang chủ (New UI)**
 
-### **│   ├── admin\_\*.html    # Giao diện Admin**
+###     **│   ├── detail.html     # Chi tiết (Reviews added)**
 
-### **│   └── ...             # Các file HTML khác**
+###     **│   └── ...**
 
-### **│**
+###     **│**
 
-### **└── routes/             # (CONTROLLER) Các bộ điều khiển**
+###     **└── routes/             # (CONTROLLER)**
 
-### **├── main.py         # Xử lý: Home, Cart, Chatbot, So sánh**
+###         **├── main.py         # Xử lý chính (Home, Cart, Comment)**
 
-### **├── auth.py         # Xử lý: Login, Register, Logout, Google**
+###         **├── auth.py         # Xác thực**
 
-### **└── admin.py        # Xử lý: Dashboard, Thêm/Sửa/Xóa sản phẩm**
-
-# 
-
-# 
-
-# **🛠 Cài Đặt \& Chạy Dự Án**
-
-# 
-
-## **Bước 1: Cài đặt thư viện**
-
-# 
-
-### **Mở Terminal tại thư mục dự án và chạy:**
-
-### 
-
-### **pip install -r requirements.txt**
+###         **└── admin.py        # Quản trị**
 
 # 
 
 # 
 
-## **Bước 2: Cấu hình Môi trường (.env)**
+# **🛠 Cài Đặt \& Chạy**
 
 # 
 
-### **Tạo file .env và điền các thông tin sau:**
+## **Bước 1: Cài đặt**
 
-### 
+# 
 
-### **SECRET\_KEY=chuoi-bi-mat-bao-mat-flask-123**
-
-### **GEMINI\_API\_KEY=Dien\_API\_Key\_Gemini\_Cua\_Ban\_Vao\_Day**
-
-### **GOOGLE\_CLIENT\_ID=Dien\_Client\_ID\_Google**
-
-### **GOOGLE\_CLIENT\_SECRET=Dien\_Client\_Secret\_Google**
+#### **pip install -r requirements.txt**
 
 # 
 
 # 
 
-## **Bước 3: Khởi tạo Database (Quan Trọng)**
+## **Bước 2: Cấu hình .env**
 
 # 
 
-### **Nếu bạn gặp lỗi hiển thị hoặc muốn nạp lại dữ liệu mẫu theo cấu trúc mới:**
+#### **Tạo file .env và điền API Key (Gemini, Google OAuth, Secret Key).**
 
-### 
+# 
 
-### **Xóa file mobilestore.db cũ (nếu có) để hệ thống tự tạo cấu hình bảng mới nhất (có cột stock\_quantity và avatar\_url).**
+## **Bước 3: Khởi tạo Database (BẮT BUỘC)**
 
+# 
 
+#### **Do có thêm bảng Comment và các quan hệ mới, hãy:**
 
+#### 
 
+#### **Xóa file mobilestore.db cũ.**
 
+#### 
 
+#### **Chạy lại server để hệ thống tự tạo DB mới.**
+
+# 
 
 ## **Bước 4: Chạy Website**
 
 # 
 
-### **Lưu ý: Không chạy python app.py nữa mà chạy file run.py.**
-
-### 
-
-### **python run.py**
+#### **python run.py**
 
 # 
 
 # 
 
-## **👉 Truy cập: http://127.0.0.1:5000**
-
-## 
-
-## **🔑 Tài Khoản Demo (Seed Data)**
-
-## 
-
-## **Khi khởi chạy lần đầu (sau khi xóa DB cũ), hệ thống tạo sẵn:**
-
-## 
-
-## **Vai trò**
-
-## 
-
-## **Username**
-
-## 
-
-## **Password**
-
-## 
-
-## **Admin**
-
-## 
-
-## **admin**
-
-## 
-
-## **123456**
-
-## 
-
-## **Khách**
-
-## 
-
-## **khach**
-
-## 
-
-## **123456**
+# **👉 Truy cập: http://127.0.0.1:5000**
 
 # 
 
-# **📝 Ghi Chú Khắc Phục Lỗi (Troubleshooting)**
+# **🔑 Tài Khoản Demo**
 
 # 
 
-* ## **Lỗi ModuleNotFoundError: No module named 'extensions':**
+#### **Vai trò**
 
-## 
+#### 
 
-## **Do import sai đường dẫn tương đối. Trong gói app, hãy dùng from .extensions import db.**
+#### **Username**
 
-## 
+#### 
 
-* ## **Lỗi sqlite3.OperationalError: no such column...:**
+#### **Password**
 
-## 
+#### 
 
-## **Do cấu trúc bảng thay đổi. Hãy xóa file .db và chạy lại python run.py.**
+#### **Admin**
 
-## 
+#### 
 
-* ## **Lỗi SyntaxError: Unexpected token (JSON Parse):**
+#### **admin**
 
-## 
+#### 
 
-## **Đã được khắc phục bằng cách xử lý JSON tại Backend (Python) thay vì Frontend.**
+#### **123456**
+
+#### 
+
+#### **Khách**
+
+#### 
+
+#### **khach**
+
+#### 
+
+#### **123456**
 
 # 
 
-# **Chúc bạn thành công với kiến trúc Modular MVC chuyên nghiệp này! 🚀**
+# **Chúc bạn có trải nghiệm tuyệt vời với MobileStore phiên bản Tết 2026! 🚀🌸**
 

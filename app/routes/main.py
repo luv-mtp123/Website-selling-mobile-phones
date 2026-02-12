@@ -6,7 +6,8 @@ from flask import Blueprint, render_template, request, session, redirect, url_fo
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app.extensions import db
-from app.models import Product, Order, OrderDetail, AICache, TradeInRequest
+# [UPDATE] Import thêm Comment
+from app.models import Product, Order, OrderDetail, AICache, TradeInRequest, Comment
 from app.utils import analyze_search_intents, get_comparison_result, call_gemini_api, validate_image_file
 
 main_bp = Blueprint('main', __name__)
@@ -14,35 +15,23 @@ main_bp = Blueprint('main', __name__)
 
 # --- AI Cache Helper ---
 def cached_ai_call(func, *args):
-    """
-    Hàm wrapper để cache kết quả gọi AI vào Database.
-    Giúp tiết kiệm chi phí API và tăng tốc độ phản hồi cho các câu hỏi trùng lặp.
-    """
     try:
-        # Tạo key duy nhất dựa trên tham số đầu vào
         key = hashlib.md5(str(args).encode()).hexdigest()
         cached = AICache.query.filter_by(prompt_hash=key).first()
-
         if cached:
-            # Nếu đã có trong cache -> trả về ngay
             return json.loads(cached.response_text) if '{' in cached.response_text else cached.response_text
     except Exception as e:
         print(f"Cache Error: {e}")
 
-    # Nếu chưa có -> Gọi hàm thực thi (API Gemini)
     res = func(*args)
-
     if res:
         try:
-            # Lưu kết quả mới vào cache
             val = json.dumps(res) if isinstance(res, (dict, list)) else str(res)
-            # Kiểm tra lại lần cuối để tránh race condition
             if not AICache.query.filter_by(prompt_hash=key).first():
                 db.session.add(AICache(prompt_hash=key, response_text=val))
                 db.session.commit()
         except Exception as e:
             print(f"Save Cache Error: {e}")
-
     return res
 
 
@@ -55,12 +44,10 @@ def home():
     sort = request.args.get('sort', '')
     ai_msg = ""
 
-    # Chỉ hiện sản phẩm đang Active (đang kinh doanh)
     query = Product.query.filter_by(is_active=True)
 
     # Logic tìm kiếm thông minh
     if q and len(q.split()) > 2 and not brand:
-        # Nếu query dài > 2 từ, dùng AI để phân tích ý định (tìm hãng, tìm giá...)
         ai_data = cached_ai_call(analyze_search_intents, q)
         if ai_data:
             if ai_data.get('brand'):
@@ -82,7 +69,6 @@ def home():
     if brand:
         query = query.filter(Product.brand == brand)
 
-    # Sắp xếp
     if sort == 'price_asc':
         query = query.order_by(Product.price.asc())
     elif sort == 'price_desc':
@@ -91,10 +77,13 @@ def home():
         query = query.order_by(Product.id.desc())
 
     products = query.all()
-    # Lấy danh sách các hãng để hiển thị bộ lọc
     brands = [b[0] for b in db.session.query(Product.brand).distinct().all()]
 
-    return render_template('home.html', products=products, brands=brands, search_query=q, ai_message=ai_msg)
+    # [NEW] Lấy Top sản phẩm bán chạy (Demo logic: lấy sp có ID chẵn)
+    hot_products = Product.query.filter_by(is_active=True, is_sale=True).limit(4).all()
+
+    return render_template('home.html', products=products, brands=brands, search_query=q, ai_message=ai_msg,
+                           hot_products=hot_products)
 
 
 @main_bp.route('/product/<int:id>')
@@ -108,10 +97,35 @@ def product_detail(id):
 
     # Gợi ý phụ kiện
     recs = Product.query.filter(Product.category == 'accessory', Product.is_active == True).limit(4).all()
-    return render_template('detail.html', product=p, recommendations=recs)
+
+    # [NEW] Lấy danh sách bình luận (Sắp xếp mới nhất)
+    comments = Comment.query.filter_by(product_id=id).order_by(Comment.created_at.desc()).all()
+
+    return render_template('detail.html', product=p, recommendations=recs, comments=comments)
 
 
-# --- CART & CHECKOUT (LOGIC TỒN KHO) ---
+# [NEW] Route xử lý bình luận
+@main_bp.route('/product/<int:id>/comment', methods=['POST'])
+@login_required
+def add_comment(id):
+    content = request.form.get('content')
+    rating = int(request.form.get('rating', 5))
+
+    if not content:
+        flash('Vui lòng nhập nội dung bình luận', 'warning')
+        return redirect(url_for('main.product_detail', id=id))
+
+    comment = Comment(
+        user_id=current_user.id,
+        product_id=id,
+        content=content,
+        rating=rating
+    )
+    db.session.add(comment)
+    db.session.commit()
+    flash('Cảm ơn bạn đã đánh giá sản phẩm!', 'success')
+    return redirect(url_for('main.product_detail', id=id))
+
 
 @main_bp.route('/cart')
 def view_cart():
@@ -124,7 +138,6 @@ def view_cart():
 def add_to_cart(id):
     p = Product.query.filter_by(id=id, is_active=True).first_or_404()
 
-    # 1. Check Tồn kho cơ bản
     if p.stock_quantity <= 0:
         flash(f'Rất tiếc, {p.name} hiện đã hết hàng.', 'danger')
         return redirect(request.referrer)
@@ -133,7 +146,6 @@ def add_to_cart(id):
     sid = str(id)
     current_qty = cart[sid]['quantity'] if sid in cart else 0
 
-    # 2. Check Tồn kho khi cộng thêm số lượng
     if current_qty + 1 > p.stock_quantity:
         flash(f'Kho chỉ còn {p.stock_quantity} sản phẩm. Không thể thêm tiếp.', 'warning')
         return redirect(request.referrer)
@@ -156,7 +168,6 @@ def update_cart(id, action):
 
     if sid in cart:
         if action == 'increase':
-            # Check tồn kho lại trước khi tăng
             p = Product.query.get(id)
             if p and cart[sid]['quantity'] + 1 <= p.stock_quantity:
                 cart[sid]['quantity'] += 1
@@ -180,25 +191,26 @@ def checkout():
     if not cart:
         return redirect(url_for('main.home'))
 
-    total = sum(i['price'] * i['quantity'] for i in cart.values())
+    # [FIX LOGIC] Tính lại tổng tiền dựa trên giá thực tế từ Database thay vì Session
+    # Để tránh trường hợp giá sản phẩm thay đổi trong lúc user đang mua
+    total = 0
+    final_cart_items = []
+
+    for pid, item in cart.items():
+        p = Product.query.get(int(pid))
+        if p and p.is_active:
+            real_price = p.sale_price if p.is_sale else p.price
+            total += real_price * item['quantity']
+            final_cart_items.append({'product': p, 'qty': item['quantity'], 'price': real_price})
+        # Có thể thêm xử lý nếu sản phẩm bị xóa khỏi DB tại đây
 
     if request.method == 'POST':
-        # 1. Final Stock Check & Deduction (Kiểm tra và Trừ kho lần cuối)
-        for pid, item in cart.items():
-            product = Product.query.get(int(pid))
-
-            # Check nếu sản phẩm bị xóa hoặc ẩn trong lúc đang mua
-            if not product or not product.is_active:
-                flash(f"Sản phẩm {item['name']} đã ngừng kinh doanh.", "danger")
+        for item in final_cart_items:
+            product = item['product']
+            if product.stock_quantity < item['qty']:
+                flash(f"Sản phẩm {product.name} không đủ hàng (Còn: {product.stock_quantity}).", "danger")
                 return redirect(url_for('main.view_cart'))
 
-            # Check số lượng
-            if product.stock_quantity < item['quantity']:
-                flash(f"Sản phẩm {item['name']} không đủ hàng (Còn: {product.stock_quantity}). Vui lòng cập nhật giỏ.",
-                      "danger")
-                return redirect(url_for('main.view_cart'))
-
-        # 2. Tạo đơn hàng
         order = Order(
             user_id=current_user.id,
             total_price=total,
@@ -207,30 +219,26 @@ def checkout():
             status='Pending'
         )
         db.session.add(order)
-        db.session.flush()  # Lấy order ID trước khi commit
+        db.session.flush()
 
-        # 3. Trừ kho & Tạo chi tiết đơn
-        for pid, item in cart.items():
-            product = Product.query.get(int(pid))
-            product.stock_quantity -= item['quantity']  # TRỪ KHO THỰC TẾ
-
+        for item in final_cart_items:
+            product = item['product']
+            product.stock_quantity -= item['qty']
             db.session.add(OrderDetail(
                 order_id=order.id,
-                product_id=int(pid),
-                product_name=item['name'],
-                quantity=item['quantity'],
+                product_id=product.id,
+                product_name=product.name,
+                quantity=item['qty'],
                 price=item['price']
             ))
 
         db.session.commit()
-        session.pop('cart', None)  # Xóa giỏ hàng
+        session.pop('cart', None)
         flash('Đặt hàng thành công! Đơn hàng đang chờ xử lý.', 'success')
         return redirect(url_for('main.dashboard'))
 
     return render_template('checkout.html', cart=cart, total=total)
 
-
-# --- TRADE-IN & CANCELLATION ---
 
 @main_bp.route('/trade-in', methods=['GET', 'POST'])
 @login_required
@@ -239,7 +247,6 @@ def trade_in():
         device_name = request.form.get('device_name')
         condition = request.form.get('condition')
 
-        # Validate Upload File
         if 'image' not in request.files:
             flash('Vui lòng chọn ảnh!', 'danger')
             return redirect(request.url)
@@ -251,7 +258,6 @@ def trade_in():
             flash(error_msg, 'danger')
             return redirect(request.url)
 
-        # Save File
         filename = secure_filename(f"tradein_{int(time.time())}_{file.filename}")
         filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
@@ -277,7 +283,6 @@ def cancel_order_user(id):
     order = Order.query.filter_by(id=id, user_id=current_user.id).first_or_404()
 
     if order.status == 'Pending':
-        # HOÀN KHO KHI HỦY
         for detail in order.details:
             product = Product.query.get(detail.product_id)
             if product:
@@ -292,7 +297,6 @@ def cancel_order_user(id):
     return redirect(url_for('main.dashboard'))
 
 
-# --- Compare Page ---
 @main_bp.route('/compare', methods=['GET', 'POST'])
 def compare_page():
     products = Product.query.filter_by(is_active=True).all()
@@ -308,13 +312,9 @@ def compare_page():
     return render_template('compare.html', products=products, result=result, p1=p1, p2=p2)
 
 
-# --- API & Dashboard ---
-
 @main_bp.route('/api/chatbot', methods=['POST'])
 def chatbot_api():
     msg = request.json.get('message', '').lower()
-
-    # Rule-based simple responses
     keywords = {
         "xin chào": "Chào bạn! Chúc mừng năm mới!",
         "địa chỉ": "123 Đường Tết, Q1, TP.HCM",
@@ -323,7 +323,6 @@ def chatbot_api():
     for k, v in keywords.items():
         if k in msg: return jsonify({'response': v})
 
-    # AI Fallback
     def chat_wrapper(m):
         return call_gemini_api(f"Khách hỏi: '{m}'. Trả lời ngắn gọn dưới 50 từ.")
 
@@ -346,26 +345,20 @@ def update_profile():
     full_name = request.form.get('full_name')
     email = request.form.get('email')
 
-    # Xử lý Upload Avatar
     if 'avatar' in request.files:
         file = request.files['avatar']
         if file.filename != '':
             is_valid, err = validate_image_file(file)
             if is_valid:
-                # Tạo tên file độc nhất để tránh trùng lặp
                 filename = secure_filename(f"avatar_{current_user.id}_{int(time.time())}_{file.filename}")
                 filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
                 file.save(filepath)
-
-                # Lưu đường dẫn vào DB
                 current_user.avatar_url = f"/static/uploads/{filename}"
             else:
                 flash(err, 'warning')
 
     if full_name:
         current_user.full_name = full_name
-
-    # Lưu ý: Cập nhật email cần cẩn thận hơn (check trùng), ở đây làm đơn giản
     if email:
         current_user.email = email
 

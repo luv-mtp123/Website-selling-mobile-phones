@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 # [FIX] Import đúng từ 'flask_client' thay vì 'base_client' để tương thích tốt nhất với Flask
 from authlib.integrations.flask_client import OAuth
+from flask_wtf.csrf import CSRFProtect
 
 # 1. Khởi tạo Database SQLAlchemy
 db = SQLAlchemy()
@@ -15,3 +16,5 @@ login_manager.login_message_category = "warning" # Loại thông báo (info, suc
 
 # 3. Khởi tạo OAuth (Dùng cho Google Login)
 oauth = OAuth()
+
+csrf = CSRFProtect() # Thêm dòng này

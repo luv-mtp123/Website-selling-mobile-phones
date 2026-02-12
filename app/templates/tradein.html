@@ -11,6 +11,7 @@
             <div class="card-body p-5">
                 <!-- Lưu ý enctype multipart để gửi file -->
                 <form method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     
                     <div class="mb-4">
                         <label class="form-label fw-bold">Tên thiết bị của bạn</label>

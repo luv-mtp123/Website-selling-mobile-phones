@@ -206,7 +206,7 @@
 
 # 
 
-# **📂 Cấu Trúc Dự Án (Modular MVC)**
+# **7. 📂 Cấu Trúc Dự Án (Modular MVC)**
 
 # 
 
@@ -221,6 +221,8 @@
 #### **├── Procfile                # Cấu hình Web Server (Gunicorn)**
 
 #### **├── test\_\*.py               # Các kịch bản kiểm thử tự động**
+
+#### **├──test\_security.py         # Kiểm thử bảo mật chuyên biệt** 
 
 ### **├── .env                    # Cấu hình bảo mật**
 
@@ -361,6 +363,52 @@
 #### 
 
 #### **123456**
+
+# 
+
+# **8. 🛡️ Cập Nhật Bảo Mật Nâng Cao \& Tối Ưu Hóa (Vừa Cập Nhật)**
+
+# 
+
+#### **Dự án vừa trải qua đợt đánh giá bảo mật (Security Audit) và đã khắc phục triệt để các rủi ro:**
+
+# 
+
+## **✅ Ngăn Chặn Race Condition (Tranh chấp tài nguyên):**
+
+#### 
+
+* #### **Áp dụng kỹ thuật khóa dòng bi quan (Pessimistic Locking - with\_for\_update()) vào logic thanh toán (checkout). Khắc phục hoàn toàn lỗi âm kho khi có nhiều khách hàng cùng bấm thanh toán một sản phẩm tại cùng một thời điểm.**
+
+# 
+
+## **✅ Củng Cố Bảo Mật CSRF (Cross-Site Request Forgery):**
+
+#### 
+
+* #### **Tích hợp thư viện Flask-WTF giúp tự động sinh và kiểm chứng CSRF Token cho toàn bộ các Form trên hệ thống (Login, Register, Checkout, Admin), ngăn chặn hacker đánh cắp phiên và giả mạo thao tác.**
+
+# 
+
+## **✅ Phòng Chống Tấn Công DDoS Upload:**
+
+* #### **Khẳng định tính an toàn trước các thủ đoạn DDoS thông qua việc cố tình tải lên file rác cực lớn nhờ cấu hình MAX\_CONTENT\_LENGTH chặt chẽ.**
+
+# 
+
+## **✅ Fix Cảnh Báo Deprecation Python:**
+
+#### 
+
+* #### **Cập nhật code import đối tượng thời gian theo chuẩn mới nhất của Python (from datetime import datetime, timezone), làm sạch hoàn toàn terminal khỏi các dòng cảnh báo cũ.**
+
+# 
+
+## **✅ Tích Hợp Kịch Bản Penetration Testing:**
+
+#### 
+
+* #### **Bổ sung thêm script kiểm thử bảo mật chuyên biệt test\_security.py giúp tự động quét và ngăn chặn lỗ hổng IDOR (Insecure Direct Object Reference).**
 
 # 
 

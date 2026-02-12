@@ -1,7 +1,6 @@
 from flask_login import UserMixin
 from .extensions import db
-from datetime import datetime
-
+from datetime import datetime, timezone
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -47,13 +46,13 @@ class Comment(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
     rating = db.Column(db.Integer, default=5)  # 1 đến 5 sao
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    date_created = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     total_price = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(50), default='Pending')
     address = db.Column(db.String(200), nullable=False)
@@ -75,7 +74,7 @@ class AICache(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     prompt_hash = db.Column(db.String(500), unique=True, nullable=False)
     response_text = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class TradeInRequest(db.Model):
@@ -87,4 +86,4 @@ class TradeInRequest(db.Model):
     status = db.Column(db.String(50), default='Pending')
     valuation_price = db.Column(db.Integer, default=0)
     admin_note = db.Column(db.String(500), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))

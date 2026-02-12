@@ -24,6 +24,7 @@
 
                 <form method="POST">
                     <div class="form-floating mb-3">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <input type="text" name="username" class="form-control" id="floatingInput" placeholder="username" required>
                         <label for="floatingInput">Tên đăng nhập</label>
                     </div>

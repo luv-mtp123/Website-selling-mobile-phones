@@ -179,34 +179,46 @@ def checkout():
             final_cart_items.append({'product': p, 'qty': item['quantity'], 'price': real_price})
 
     if request.method == 'POST':
-        for item in final_cart_items:
-            product = item['product']
-            if product.stock_quantity < item['qty']:
-                flash(f"Sản phẩm {product.name} không đủ hàng (Còn: {product.stock_quantity}).", "danger")
-                return redirect(url_for('main.view_cart'))
+        # Mở một khối try-except để bắt lỗi DB
+        try:
+            for item in final_cart_items:
+                # Kỹ thuật quan trọng: KHÓA DÒNG SẢN PHẨM NÀY CHO ĐẾN KHI COMMIT XONG
+                product = db.session.query(Product).filter_by(id=item['product'].id).with_for_update().first()
 
-        order = Order(
-            user_id=current_user.id,
-            total_price=total,
-            address=request.form.get('address', '').strip(),
-            phone=request.form.get('phone', '').strip(),
-            status='Pending'
-        )
-        db.session.add(order)
-        db.session.flush()
+                if product.stock_quantity < item['qty']:
+                    flash(f"Rất tiếc, {product.name} vừa hết hàng hoặc không đủ số lượng.", "danger")
+                    db.session.rollback()  # Hoàn tác mọi thứ
+                    return redirect(url_for('main.view_cart'))
 
-        for item in final_cart_items:
-            product = item['product']
-            product.stock_quantity -= item['qty']
-            db.session.add(OrderDetail(
-                order_id=order.id, product_id=product.id,
-                product_name=product.name, quantity=item['qty'], price=item['price']
-            ))
+                # Trừ kho an toàn
+                product.stock_quantity -= item['qty']
 
-        db.session.commit()
-        session.pop('cart', None)
-        flash('Đặt hàng thành công! Đơn hàng đang chờ xử lý.', 'success')
-        return redirect(url_for('main.dashboard'))
+            # Tạo Order và OrderDetail như cũ...
+            order = Order(
+                user_id=current_user.id,
+                total_price=total,
+                address=request.form.get('address', '').strip(),
+                phone=request.form.get('phone', '').strip(),
+                status='Pending'
+            )
+            db.session.add(order)
+            db.session.flush()
+
+            for item in final_cart_items:
+                db.session.add(OrderDetail(
+                    order_id=order.id, product_id=item['product'].id,
+                    product_name=item['product'].name, quantity=item['qty'], price=item['price']
+                ))
+
+            db.session.commit()
+            session.pop('cart', None)
+            flash('Đặt hàng thành công! Đơn hàng đang chờ xử lý.', 'success')
+            return redirect(url_for('main.dashboard'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash('Đã xảy ra lỗi trong quá trình xử lý đơn hàng. Vui lòng thử lại.', 'danger')
+            return redirect(url_for('main.view_cart'))
 
     return render_template('checkout.html', cart=cart, total=total)
 

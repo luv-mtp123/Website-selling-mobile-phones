@@ -4,7 +4,7 @@ from flask import Flask
 from werkzeug.security import generate_password_hash
 from .extensions import db, login_manager, oauth
 from .models import User, Product, AICache
-
+from .extensions import db, login_manager, oauth, csrf # Thêm csrf
 
 def create_app():
     app = Flask(__name__)
@@ -34,6 +34,7 @@ def create_app():
 
     # 2. Khởi tạo Extensions
     db.init_app(app)
+    csrf.init_app(app)  # Khởi tạo CSRF bảo vệ toàn cục
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'  # Chuyển hướng về route login của blueprint auth
     oauth.init_app(app)

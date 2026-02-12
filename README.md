@@ -42,6 +42,16 @@
 
 # 
 
+## **✅ Tối ưu Cấu trúc Database (SQLAlchemy 2.0): (MỚI)**
+
+
+
+# 
+
+#### **Cập nhật: Thay thế toàn bộ cú pháp truy vấn cũ (Model.query.get) bằng chuẩn mới của SQLAlchemy 2.0 (db.session.get()) giúp tối ưu hiệu suất và loại bỏ hoàn toàn các cảnh báo (LegacyAPIWarning).**
+
+# 
+
 # **2. ✨ Tính Năng Mới: Bình Luận \& Đánh Giá (Reviews)**
 
 # 
@@ -110,6 +120,18 @@
 
 # 
 
+## **🔔 Hệ thống Thông báo Thông minh (SweetAlert2): (MỚI)**
+
+#### 
+
+#### **Thay thế hoàn toàn Bootstrap Toasts mặc định.**
+
+#### 
+
+#### **Các thông báo (Thêm giỏ hàng thành công, Lỗi đăng nhập, Cảnh báo kho hàng) giờ đây hiển thị dưới dạng Pop-up góc màn hình cực kỳ mượt mà, có thanh thời gian tự động ẩn.**
+
+# 
+
 ## **4. 📦 Quản Lý Tồn Kho Thực Tế (Inventory)**
 
 # 
@@ -138,6 +160,52 @@
 
 # 
 
+## **6. 🧪 Kiểm Thử Tự Động (Automated Testing) (MỚI)**
+
+# 
+
+
+
+#### **Dự án đã được tích hợp hệ thống kiểm thử tự động, sử dụng DB ảo trên RAM (sqlite:///:memory:) đảm bảo không ảnh hưởng dữ liệu thật:**
+
+#### 
+
+#### **Unit Testing: Kiểm tra luồng Đăng nhập, Giỏ hàng, Phân quyền bảo mật Admin.**
+
+#### 
+
+#### **Integration Testing: Đảm bảo toàn vẹn dữ liệu (xóa sản phẩm tự động xóa bình luận).**
+
+#### 
+
+#### **System Testing (E2E): Giả lập vòng đời đơn hàng hoàn chỉnh (Khách mua hàng -> Trừ kho -> Admin hủy đơn -> Hoàn lại kho an toàn).**
+
+# 
+
+
+
+## **7. 🌐 Sẵn Sàng Triển Khai (Production Ready) (MỚI)**
+
+# 
+
+
+
+#### **Dự án đã được cấu hình sẵn sàng để đẩy lên các máy chủ thực tế (VPS, Render, Heroku...):**
+
+#### 
+
+#### **Tích hợp wsgi.py làm Entry Point độc lập.**
+
+#### 
+
+#### **Cấu hình sẵn Procfile cho Gunicorn (môi trường Linux).**
+
+#### 
+
+#### **Hỗ trợ chạy máy chủ ảo hóa bằng Waitress trên môi trường Windows.**
+
+# 
+
 # **📂 Cấu Trúc Dự Án (Modular MVC)**
 
 # 
@@ -148,6 +216,12 @@
 
 ### **├── run.py                  # (ENTRY POINT) File chạy chính**
 
+#### **├── wsgi.py                 # (PROD ENTRY) File chạy cho máy chủ thực tế**
+
+#### **├── Procfile                # Cấu hình Web Server (Gunicorn)**
+
+#### **├── test\_\*.py               # Các kịch bản kiểm thử tự động**
+
 ### **├── .env                    # Cấu hình bảo mật**
 
 ### **├── requirements.txt        # Thư viện**
@@ -156,35 +230,35 @@
 
 ### **└── app/                    # (PACKAGE) Source Code**
 
-###     **├── \_\_init\_\_.py         # App Factory**
+### **├── \_\_init\_\_.py         # App Factory**
 
-###     **├── extensions.py       # DB, Login, OAuth**
+### **├── extensions.py       # DB, Login, OAuth**
 
-###     **├── models.py           # Database (User, Product, Order, Comment...)**
+### **├── models.py           # Database (User, Product, Order, Comment...)**
 
-###     **├── utils.py            # AI Logic**
+### **├── utils.py            # AI Logic**
 
-###     **│**
+### **│**
 
-###     **├── templates/          # (VIEW) Giao diện HTML**
+### **├── templates/          # (VIEW) Giao diện HTML**
 
-###     **│   ├── base.html       # Layout chung**
+### **│   ├── base.html       # Layout chung**
 
-###     **│   ├── home.html       # Trang chủ (New UI)**
+### **│   ├── home.html       # Trang chủ (New UI)**
 
-###     **│   ├── detail.html     # Chi tiết (Reviews added)**
+### **│   ├── detail.html     # Chi tiết (Reviews added)**
 
-###     **│   └── ...**
+### **│   └── ...**
 
-###     **│**
+### **│**
 
-###     **└── routes/             # (CONTROLLER)**
+### **└── routes/             # (CONTROLLER)**
 
-###         **├── main.py         # Xử lý chính (Home, Cart, Comment)**
+### **├── main.py         # Xử lý chính (Home, Cart, Comment)**
 
-###         **├── auth.py         # Xác thực**
+### **├── auth.py         # Xác thực**
 
-###         **└── admin.py        # Quản trị**
+### **└── admin.py        # Quản trị**
 
 # 
 
@@ -228,19 +302,27 @@
 
 # 
 
-## **Bước 4: Chạy Website**
+## **Bước 4: Chạy Website (Môi trường Phát triển)**
 
 # 
 
 #### **python run.py**
 
-# 
+#### **👉 Truy cập: http://127.0.0.1:5000**
 
 # 
 
-# **👉 Truy cập: http://127.0.0.1:5000**
+## **Bước 5: Chạy Website (Môi trường Thực tế - Windows)**
+
+## 
+
+#### **pip install waitress**
+
+#### **waitress-serve --port=5000 wsgi:app**
 
 # 
+
+
 
 # **🔑 Tài Khoản Demo**
 

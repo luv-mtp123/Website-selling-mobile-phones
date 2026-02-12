@@ -5,188 +5,206 @@
     /* --- Banner Animation --- */
     .banner-container {
         overflow: hidden;
-        border-radius: 20px;
+        border-radius: 24px;
         position: relative;
+        box-shadow: 0 15px 40px rgba(215, 0, 24, 0.2);
+        border: 2px solid #ffc107;
     }
     .banner-img {
-        transition: transform 0.5s ease;
-        height: 400px;
+        transition: transform 0.8s ease-out;
+        height: 420px;
         object-fit: cover;
         width: 100%;
     }
     .banner-container:hover .banner-img {
-        transform: scale(1.02); /* Zoom nhẹ khi hover */
+        transform: scale(1.05);
     }
     .banner-overlay {
-        background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.4));
+        background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(215, 0, 24, 0.8) 100%);
     }
 
     /* --- Feature Icons --- */
     .feature-box {
         background: white;
-        padding: 20px;
-        border-radius: 15px;
-        transition: all 0.3s ease;
-        border: 1px solid rgba(0,0,0,0.05);
+        padding: 25px 15px;
+        border-radius: 18px;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 1px solid rgba(215, 0, 24, 0.1);
         height: 100%;
     }
     .feature-box:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-        border-color: #0d6efd;
+        transform: translateY(-8px);
+        box-shadow: 0 12px 25px rgba(215, 0, 24, 0.15);
+        border-color: #d70018;
     }
     .feature-icon-circle {
-        width: 60px; height: 60px;
+        width: 65px; height: 65px;
         border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
-        font-size: 1.5rem;
+        font-size: 1.8rem;
         margin: 0 auto 15px;
-        background: #f8f9fa;
-        color: #555;
+        background: #fff5f5;
+        color: #d70018;
         transition: all 0.3s;
+        border: 2px dashed #ffc107;
     }
     .feature-box:hover .feature-icon-circle {
-        background: #0d6efd;
-        color: white;
+        background: #d70018;
+        color: #ffc107;
+        border-style: solid;
+        transform: rotate(360deg);
     }
 
     /* --- Smart Search Section --- */
     .search-section {
-        background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%);
-        border: 1px solid #e1e4e8;
+        background: white;
+        border: 2px solid #ffc107;
+        box-shadow: 0 10px 30px rgba(255, 193, 7, 0.15);
     }
 
-    /* --- Product Card --- */
+    /* --- Product Card (Glow Effect) --- */
     .card-product {
-        border: none;
-        border-radius: 16px;
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 20px;
+        transition: all 0.4s ease;
         background: #fff;
         overflow: hidden;
     }
     .card-product:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        transform: translateY(-10px);
+        box-shadow: 0 15px 35px rgba(215, 0, 24, 0.15);
+        border-color: #ffc107;
     }
     .product-img-wrapper {
-        padding: 20px;
-        background: #fff;
-        height: 220px;
+        padding: 25px;
+        background: radial-gradient(circle, #fff 0%, #fcfcfc 100%);
+        height: 240px;
         display: flex; align-items: center; justify-content: center;
         position: relative;
     }
     .product-img-wrapper img {
         max-height: 100%;
         max-width: 100%;
-        transition: transform 0.3s;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     .card-product:hover .product-img-wrapper img {
-        transform: scale(1.08);
+        transform: scale(1.15);
     }
 
     /* --- Flash Sale Timer --- */
     .flash-sale-box {
-        background: linear-gradient(45deg, #fff0f0, #fff);
-        border: 2px dashed #dc3545;
+        background: linear-gradient(45deg, #d70018 0%, #b30014 100%);
+        border: 2px solid #ffc107;
+        color: white;
     }
     .timer-digit {
-        background: #dc3545;
-        color: white;
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-weight: 700;
-        min-width: 32px;
+        background: #ffc107;
+        color: #d70018;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-weight: 900;
+        min-width: 38px;
         display: inline-block;
         text-align: center;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
     }
 
     /* --- Category Pills --- */
     .cat-pill {
-        border: 1px solid #dee2e6;
+        border: 2px solid #ffeeba;
         color: #555;
         background: white;
-        padding: 6px 16px;
+        padding: 8px 20px;
         border-radius: 50px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        transition: 0.2s;
+        font-weight: 700;
+        transition: 0.3s;
         text-decoration: none;
     }
     .cat-pill:hover, .cat-pill.active {
-        background: #0d6efd;
-        color: white;
-        border-color: #0d6efd;
+        background: #d70018;
+        color: #ffc107;
+        border-color: #d70018;
+        box-shadow: 0 4px 10px rgba(215, 0, 24, 0.3);
+    }
+
+    /* Thêm nút add-cart đẹp */
+    .btn-add-cart-hover {
+        background: white; color: #d70018; border: 2px solid #d70018; font-weight: bold; transition: 0.3s;
+    }
+    .btn-add-cart-hover:hover {
+        background: #d70018; color: white;
     }
 </style>
 
-<!-- 1. Banner Tết (Original Style Updated) -->
-<div class="card mb-5 border-0 shadow-lg banner-container">
-    <img src="https://img.freepik.com/free-vector/gradient-lunar-new-year-background_23-2149945037.jpg" class="card-img banner-img" alt="Tet Banner">
-    <div class="card-img-overlay d-flex flex-column justify-content-center align-items-center text-center text-white banner-overlay">
-        <div style="background: rgba(0,0,0,0.2); padding: 30px; border-radius: 20px; backdrop-filter: blur(2px);">
-            <h1 class="display-3 fw-bold text-warning mb-2" style="text-shadow: 3px 3px 6px rgba(0,0,0,0.8); letter-spacing: 2px;">XUÂN BÍNH NGỌ</h1>
-            <p class="fs-4 fw-bold mb-4 text-white" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">Lì Xì Công Nghệ - Rước Lộc Đầu Năm</p>
-            <a href="#products" class="btn btn-warning btn-lg rounded-pill px-5 fw-bold text-danger shadow-lg pulse-anim">
-                <i class="fas fa-gift me-2"></i> SĂN SALE NGAY
-            </a>
-        </div>
+<!-- 1. Banner Tết -->
+<div class="banner-container mb-5">
+    <img src="https://brocanvas.vn/wp-content/uploads/2025/11/Anh-chuc-mung-nam-moi-Binh-Ngo-2026.jpg" class="banner-img" alt="Tet Banner">
+    <div class="card-img-overlay d-flex flex-column justify-content-end align-items-center text-center pb-5 banner-overlay">
+        <h1 class="display-3 fw-bold text-warning mb-2" style="text-shadow: 2px 4px 8px rgba(0,0,0,0.8); font-family: 'Times New Roman', serif;">XUÂN BÍNH NGỌ 2026</h1>
+        <p class="fs-4 fw-bold mb-4 text-white" style="text-shadow: 1px 2px 4px rgba(0,0,0,0.8);">Sắm Dế Yêu - Rước Nhiều Tài Lộc 🧧</p>
+        <a href="#products" class="btn btn-warning btn-lg rounded-pill px-5 py-3 fw-bold text-danger shadow-lg" style="border: 2px solid white;">
+            <i class="fas fa-gift me-2"></i> KHÁM PHÁ NGAY
+        </a>
     </div>
 </div>
 
-<!-- 2. Feature Icons (Clean Design) -->
-<div class="row text-center mb-5 g-3">
+<!-- 2. Feature Icons -->
+<div class="row text-center mb-5 g-4">
     <div class="col-6 col-md-3">
         <div class="feature-box">
-            <div class="feature-icon-circle"><i class="fas fa-truck-fast"></i></div>
-            <h6 class="fw-bold mb-1">Giao Hỏa Tốc 2H</h6>
-            <p class="small text-muted mb-0">Miễn phí ship nội thành</p>
+            <div class="feature-icon-circle"><i class="fas fa-rocket"></i></div>
+            <h6 class="fw-bold text-danger mb-1">Giao Hỏa Tốc 2H</h6>
+            <p class="small text-muted mb-0">Xuyên suốt mùng 1 đến mùng 3</p>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="feature-box">
-            <div class="feature-icon-circle"><i class="fas fa-shield-alt"></i></div>
-            <h6 class="fw-bold mb-1">Bảo Hành Vàng</h6>
-            <p class="small text-muted mb-0">Lỗi 1 đổi 1 trong 30 ngày</p>
+            <div class="feature-icon-circle"><i class="fas fa-gem"></i></div>
+            <h6 class="fw-bold text-danger mb-1">Bảo Hành Vàng</h6>
+            <p class="small text-muted mb-0">Rơi vỡ, vào nước vẫn đổi mới</p>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="feature-box">
-            <div class="feature-icon-circle"><i class="fas fa-credit-card"></i></div>
-            <h6 class="fw-bold mb-1">Trả Góp 0%</h6>
-            <p class="small text-muted mb-0">Duyệt hồ sơ online 5 phút</p>
+            <div class="feature-icon-circle"><i class="fas fa-hand-holding-usd"></i></div>
+            <h6 class="fw-bold text-danger mb-1">Trả Góp 0 Lãi</h6>
+            <p class="small text-muted mb-0">Không cần trả trước - Lấy máy ngay</p>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="feature-box">
-            <div class="feature-icon-circle"><i class="fas fa-headset"></i></div>
-            <h6 class="fw-bold mb-1">Hỗ Trợ 24/7</h6>
-            <p class="small text-muted mb-0">Hotline: 1900.100.Có</p>
+            <div class="feature-icon-circle"><i class="fas fa-gift"></i></div>
+            <h6 class="fw-bold text-danger mb-1">100% Trúng Lì Xì</h6>
+            <p class="small text-muted mb-0">Quay vòng quay - Trúng vàng 9999</p>
         </div>
     </div>
 </div>
 
 <!-- 3. AI Smart Search -->
-<div class="card shadow p-4 mb-5 rounded-4 search-section" id="products">
-    <div class="d-flex align-items-center mb-3">
-        <div class="bg-primary text-white rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-            <i class="fas fa-robot"></i>
+<div class="card p-4 mb-5 rounded-4 search-section position-relative" id="products">
+    <div class="position-absolute top-0 end-0 p-3 opacity-25 d-none d-md-block">
+        <i class="fas fa-brain fa-4x text-danger"></i>
+    </div>
+    <div class="d-flex align-items-center mb-4">
+        <div class="bg-danger text-warning rounded-circle p-2 me-3 d-flex align-items-center justify-content-center shadow" style="width: 50px; height: 50px; font-size: 1.5rem;">
+            <i class="fas fa-magic"></i>
         </div>
         <div>
-            <h4 class="mb-0 fw-bold text-primary">Trợ Lý Tìm Kiếm AI</h4>
-            <small class="text-muted">Nhập nhu cầu của bạn, AI sẽ tìm sản phẩm phù hợp nhất</small>
+            <h4 class="mb-0 fw-bold text-danger">Tìm Kiếm AI Thông Minh</h4>
+            <small class="text-muted fw-bold">Nhập "Tôi muốn mua điện thoại Samsung chơi game tốt giá 10 triệu"</small>
         </div>
     </div>
-    <form action="/" method="GET" class="row g-2">
+    <form action="/" method="GET" class="row g-3">
         <div class="col-lg-6">
-            <div class="input-group">
-                <span class="input-group-text bg-white border-end-0 text-muted ps-3"><i class="fas fa-search"></i></span>
-                <input type="text" name="q" class="form-control border-start-0 py-2 shadow-none"
-                       placeholder="VD: Tìm điện thoại Samsung chụp ảnh đẹp dưới 15 triệu..."
+            <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border border-danger">
+                <span class="input-group-text bg-white border-0 text-danger ps-4"><i class="fas fa-search"></i></span>
+                <input type="text" name="q" class="form-control border-0 shadow-none"
+                       placeholder="Nhập nhu cầu của bạn..."
                        value="{{ search_query }}">
             </div>
         </div>
         <div class="col-lg-2 col-6">
-            <select name="brand" class="form-select py-2 shadow-none">
+            <select name="brand" class="form-select form-select-lg rounded-pill shadow-sm border-danger text-center fw-bold">
                 <option value="">Tất cả hãng</option>
                 {% for b in brands %}
                 <option value="{{ b }}" {% if request.args.get('brand') == b %}selected{% endif %}>{{ b }}</option>
@@ -194,38 +212,41 @@
             </select>
         </div>
         <div class="col-lg-2 col-6">
-            <select name="sort" class="form-select py-2 shadow-none">
-                <option value="">Sắp xếp</option>
-                <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Giá rẻ trước</option>
-                <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Giá cao trước</option>
+            <select name="sort" class="form-select form-select-lg rounded-pill shadow-sm border-danger text-center fw-bold">
+                <option value="">Mặc định</option>
+                <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Giá rẻ nhất</option>
+                <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Từ cao xuống</option>
             </select>
         </div>
         <div class="col-lg-2">
-            <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow-sm">Tìm Kiếm</button>
+            <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold rounded-pill shadow">Tìm Lộc</button>
         </div>
     </form>
 </div>
 
 {% if ai_message %}
-<div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-5 rounded-3" style="background-color: #e3f2fd;" role="alert">
-    <i class="fas fa-sparkles fs-4 me-3 text-primary animate__animated animate__pulse animate__infinite"></i>
-    <div class="text-dark fw-medium">
+<div class="alert alert-warning border-0 shadow d-flex align-items-center mb-5 rounded-4 p-4" role="alert">
+    <i class="fas fa-robot fa-2x me-3 text-danger animate__animated animate__tada animate__infinite"></i>
+    <div class="text-dark fw-bold fs-5">
         {{ ai_message }}
     </div>
 </div>
 {% endif %}
 
 <!-- 4. Flash Sale -->
-<div class="d-flex align-items-center justify-content-between mb-4 flash-sale-box p-3 rounded-4">
+<div class="d-flex align-items-center justify-content-between mb-4 flash-sale-box p-4 rounded-4 shadow">
     <div class="d-flex align-items-center">
-        <i class="fas fa-bolt text-danger fs-3 me-2 animate__animated animate__flash animate__infinite"></i>
-        <h3 class="fw-bold text-danger mb-0 fst-italic">FLASH SALE</h3>
+        <i class="fas fa-bolt text-warning fs-1 me-3 animate__animated animate__flash animate__infinite"></i>
+        <div>
+            <h2 class="fw-bold text-warning mb-0" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">GIỜ VÀNG GIÁ SỐC</h2>
+            <small class="text-white fw-bold">Chốt deal ngay - Bay sạch kho</small>
+        </div>
     </div>
-    <div class="d-flex align-items-center gap-1">
-        <span class="text-muted small fw-bold text-uppercase me-2 d-none d-md-inline">Kết thúc sau:</span>
-        <span class="timer-digit" id="hour">02</span><span class="fw-bold text-danger">:</span>
-        <span class="timer-digit" id="min">45</span><span class="fw-bold text-danger">:</span>
-        <span class="timer-digit" id="sec">12</span>
+    <div class="d-flex align-items-center gap-2">
+        <span class="text-white fw-bold text-uppercase d-none d-md-inline">Kết thúc sau:</span>
+        <span class="timer-digit fs-4" id="hour">02</span><span class="fw-bold text-warning fs-4">:</span>
+        <span class="timer-digit fs-4" id="min">45</span><span class="fw-bold text-warning fs-4">:</span>
+        <span class="timer-digit fs-4" id="sec">12</span>
     </div>
 </div>
 
@@ -238,20 +259,25 @@
             <a href="/product/{{ product.id }}" class="product-img-wrapper">
                 <img src="{{ product.image_url }}" alt="{{ product.name }}">
             </a>
-            <div class="card-body pt-0">
-                <h6 class="card-title fw-bold text-truncate mb-2">
+            <div class="card-body d-flex flex-column pt-3">
+                <h6 class="card-title fw-bold text-truncate mb-1">
                     <a href="/product/{{ product.id }}" class="text-dark text-decoration-none">{{ product.name }}</a>
                 </h6>
-                <div class="d-flex justify-content-between align-items-end mb-2">
-                    <div>
-                        <div class="text-danger fw-bold fs-5">{{ product.sale_price | vnd }}</div>
-                        <small class="text-decoration-line-through text-muted small">{{ product.price | vnd }}</small>
+                <div class="mb-3">
+                    <span class="text-danger fw-bold fs-5 me-2">{{ product.sale_price | vnd }}</span>
+                    <small class="text-decoration-line-through text-muted">{{ product.price | vnd }}</small>
+                </div>
+                <div class="mt-auto">
+                    <div class="progress mb-2" style="height: 6px; border-radius: 10px;">
+                        <div class="progress-bar bg-danger progress-bar-striped progress-bar-animated" style="width: 85%"></div>
                     </div>
+                    <small class="text-danger fw-bold d-block mb-3"><i class="fas fa-fire me-1"></i>Đang bán chạy</small>
+                    <form action="/cart/add/{{ product.id }}" method="POST" class="d-grid position-relative z-3">
+                        <button type="submit" class="btn btn-outline-danger rounded-pill fw-bold py-2">
+                            MUA NGAY
+                        </button>
+                    </form>
                 </div>
-                <div class="progress mb-2" style="height: 6px; border-radius: 10px;">
-                    <div class="progress-bar bg-danger progress-bar-striped progress-bar-animated" style="width: 85%"></div>
-                </div>
-                <small class="text-danger fw-bold"><i class="fas fa-fire me-1"></i>Đang bán chạy</small>
             </div>
         </div>
     </div>
@@ -261,13 +287,12 @@
 
 <!-- 5. All Products -->
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-    <h3 class="fw-bold text-dark border-start border-4 border-primary ps-3 mb-0">TẤT CẢ SẢN PHẨM</h3>
-    <div class="d-flex gap-2 overflow-auto pb-2 pb-md-0">
-        <a href="#" class="cat-pill active">Tất cả</a>
-        <a href="#" class="cat-pill">Apple</a>
-        <a href="#" class="cat-pill">Samsung</a>
-        <a href="#" class="cat-pill">Xiaomi</a>
-        <a href="#" class="cat-pill">Phụ kiện</a>
+    <h3 class="fw-bold text-danger border-start border-5 border-warning ps-3 mb-0" style="text-shadow: 1px 1px 1px rgba(0,0,0,0.1);">TẤT CẢ SẢN PHẨM</h3>
+    <div class="d-flex gap-2 overflow-auto pb-2 pb-md-0 px-2">
+        <a href="/" class="cat-pill active">Tất cả</a>
+        <a href="/?brand=Apple" class="cat-pill">Apple</a>
+        <a href="/?brand=Samsung" class="cat-pill">Samsung</a>
+        <a href="/?brand=Xiaomi" class="cat-pill">Xiaomi</a>
     </div>
 </div>
 
@@ -285,24 +310,26 @@
                 <img src="{{ product.image_url }}" alt="{{ product.name }}" onerror="this.src='https://via.placeholder.com/300x200?text=MobileStore'">
             </a>
 
-            <div class="card-body d-flex flex-column pt-0">
+            <div class="card-body d-flex flex-column pt-3">
                 <div class="mb-2">
                     <span class="badge bg-light text-secondary border rounded-pill px-2">{{ product.brand }}</span>
                 </div>
-                <h6 class="card-title fw-bold text-dark text-truncate mb-auto">
+                <h6 class="card-title fw-bold text-dark text-truncate mb-1">
                     <a href="/product/{{ product.id }}" class="text-decoration-none text-dark stretched-link">{{ product.name }}</a>
                 </h6>
 
-                <div class="mt-3">
+                <div class="mb-3">
                     {% if product.is_sale %}
-                        <div class="d-flex align-items-center mb-3">
+                        <div class="d-flex align-items-center">
                             <span class="h5 text-danger fw-bold mb-0 me-2">{{ product.sale_price | vnd }}</span>
                             <span class="text-muted small text-decoration-line-through">{{ product.price | vnd }}</span>
                         </div>
                     {% else %}
-                        <div class="h5 text-danger fw-bold mb-3">{{ product.price | vnd }}</div>
+                        <div class="h5 text-danger fw-bold mb-0">{{ product.price | vnd }}</div>
                     {% endif %}
+                </div>
 
+                <div class="mt-auto">
                     <!-- Nút thêm vào giỏ nằm trên cùng layer để không bị stretched-link che mất -->
                     <form action="/cart/add/{{ product.id }}" method="POST" class="d-grid position-relative z-3">
                          <button type="submit" class="btn btn-outline-primary rounded-pill fw-bold btn-sm py-2">
@@ -315,11 +342,9 @@
     </div>
     {% else %}
     <div class="col-12 text-center py-5">
-        <div class="opacity-50 mb-3">
-            <i class="fas fa-search fa-4x text-muted"></i>
         </div>
-        <h5 class="text-muted">Không tìm thấy sản phẩm nào phù hợp.</h5>
-        <a href="/" class="btn btn-link text-decoration-none">Xóa bộ lọc</a>
+        <h5 class="text-muted fw-bold">Trống trơn... Không tìm thấy sản phẩm nào!</h5>
+        <a href="/" class="btn btn-danger rounded-pill px-4 mt-3 fw-bold">Quay Lại Trang Chủ</a>
     </div>
     {% endfor %}
 </div>
@@ -331,6 +356,8 @@
         var hEl = document.getElementById('hour');
         var mEl = document.getElementById('min');
         var sEl = document.getElementById('sec');
+
+        if (!hEl || !mEl || !sEl) return;
 
         setInterval(function () {
             hours = parseInt(timer / 3600, 10);
@@ -345,9 +372,9 @@
         }, 1000);
     }
 
-    window.onload = function () {
+    document.addEventListener("DOMContentLoaded", function () {
         var fiveHours = 60 * 60 * 5;
         startTimer(fiveHours);
-    };
+    });
 </script>
 {% endblock %}

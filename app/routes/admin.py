@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
+from sqlalchemy.orm import joinedload
 from app.extensions import db
 from app.models import Product, User, Order, TradeInRequest
 import json
@@ -19,15 +20,19 @@ def check_admin():
 def dashboard():
     products = Product.query.order_by(Product.id.desc()).all()
     users = User.query.all()
-    orders = Order.query.order_by(Order.date_created.desc()).all()
-    tradeins = TradeInRequest.query.order_by(TradeInRequest.created_at.desc()).all()
+
+    # [TỐI ƯU] Sử dụng joinedload để tránh lỗi truy vấn N+1 làm chậm hệ thống
+    orders = Order.query.options(joinedload(Order.user)).order_by(Order.date_created.desc()).all()
+    tradeins = TradeInRequest.query.options(joinedload(TradeInRequest.user)).order_by(
+        TradeInRequest.created_at.desc()).all()
+
     return render_template('admin_dashboard.html', products=products, users=users, orders=orders, tradeins=tradeins)
 
 
 # --- Xử Lý Trạng Thái Đơn Hàng ---
 @admin_bp.route('/admin/order/update/<int:id>/<status>')
 def update_order_status(id, status):
-    order = Order.query.get_or_404(id)
+    order = Order.query.options(joinedload(Order.details)).get_or_404(id)
     old_status = order.status
     valid_statuses = ['Pending', 'Confirmed', 'Shipping', 'Completed', 'Cancelled']
 
@@ -39,10 +44,10 @@ def update_order_status(id, status):
         flash('Đơn hàng đã kết thúc, không thể thay đổi.', 'warning')
         return redirect(url_for('admin.dashboard'))
 
-    # LOGIC HOÀN KHO: Nếu đơn bị hủy, cộng lại tồn kho cho sản phẩm
+    # LOGIC HOÀN KHO an toàn
     if status == 'Cancelled' and old_status != 'Cancelled':
         for detail in order.details:
-            product = Product.query.get(detail.product_id)
+            product = db.session.get(Product, detail.product_id)
             if product:
                 product.stock_quantity += detail.quantity
         flash('Đã hủy đơn và hoàn trả số lượng về kho.', 'info')
@@ -57,18 +62,17 @@ def update_order_status(id, status):
 @admin_bp.route('/admin/product/add', methods=['POST'])
 def add_product():
     try:
+        # [FIX] Dùng type=int của Flask để tránh lỗi Crash Web (ValueError) khi Form rỗng
         name = request.form.get('name')
         brand = request.form.get('brand')
-        price = int(request.form.get('price', 0))
+        price = request.form.get('price', default=0, type=int)
         desc = request.form.get('description')
         img = request.form.get('image_url')
         cat = request.form.get('category', 'phone')
         is_sale = 'is_sale' in request.form
-        sale_price = int(request.form.get('sale_price') or 0)
+        sale_price = request.form.get('sale_price', default=0, type=int)
         is_active = 'is_active' in request.form
-
-        # [FIX] Đảm bảo lấy stock_quantity từ form chính xác
-        stock = int(request.form.get('stock_quantity', 10))
+        stock = request.form.get('stock_quantity', default=10, type=int)
 
         new_product = Product(
             name=name, brand=brand, price=price, description=desc,
@@ -95,17 +99,16 @@ def edit_product(id):
         try:
             product.name = request.form.get('name')
             product.brand = request.form.get('brand')
-            product.price = int(request.form.get('price', 0))
+            product.price = request.form.get('price', default=0, type=int)
             product.description = request.form.get('description')
             product.image_url = request.form.get('image_url')
             product.is_sale = 'is_sale' in request.form
-            product.sale_price = int(request.form.get('sale_price') or 0)
+            product.sale_price = request.form.get('sale_price', default=0, type=int)
             product.is_active = 'is_active' in request.form
 
-            # [FIX] Cập nhật tồn kho từ form
-            stock_val = request.form.get('stock_quantity')
+            stock_val = request.form.get('stock_quantity', type=int)
             if stock_val is not None:
-                product.stock_quantity = int(stock_val)
+                product.stock_quantity = stock_val
 
             # Cập nhật biến thể JSON
             colors_json = request.form.get('colors_json')
@@ -114,7 +117,7 @@ def edit_product(id):
             if versions_json: product.versions = versions_json
 
             db.session.commit()
-            flash('Cập nhật thông tin và tồn kho thành công!', 'success')
+            flash('Cập nhật thông tin thành công!', 'success')
             return redirect(url_for('admin.dashboard'))
         except Exception as e:
             db.session.rollback()
@@ -139,13 +142,13 @@ def delete_product(id):
 def update_tradein():
     req_id = request.form.get('id')
     action = request.form.get('action')
-    price = request.form.get('valuation_price', 0)
-    note = request.form.get('admin_note', '')
+    price = request.form.get('valuation_price', default=0, type=int)
+    note = request.form.get('admin_note', '').strip()
 
     req = TradeInRequest.query.get_or_404(req_id)
     if action == 'approve':
         req.status = 'Approved'
-        req.valuation_price = int(price)
+        req.valuation_price = price
         req.admin_note = note or "Đã định giá."
     elif action == 'reject':
         req.status = 'Rejected'

@@ -18,8 +18,9 @@ main_bp = Blueprint('main', __name__)
 # --- AI Cache Helper ---
 def cached_ai_call(func, *args):
     try:
-        # [UPDATE] Đổi sang key v3 để xóa cache cũ bị sai logic
-        cache_key_content = str(args) + "_v3_smart_search_keyword"
+        # [UPDATE] Đổi sang key v4 (thay vì v3) để xóa cache lỗi cũ
+        # Điều này ép hệ thống phải gọi lại Gemini để lấy bản HTML đầy đủ
+        cache_key_content = str(args) + "_v4_comparison_fix"
         key = hashlib.md5(cache_key_content.encode()).hexdigest()
 
         cached = AICache.query.filter_by(prompt_hash=key).first()
@@ -32,6 +33,7 @@ def cached_ai_call(func, *args):
     if res:
         try:
             val = json.dumps(res) if isinstance(res, (dict, list)) else str(res)
+            # Chỉ lưu vào DB nếu chưa tồn tại
             if not AICache.query.filter_by(prompt_hash=key).first():
                 db.session.add(AICache(prompt_hash=key, response_text=val))
                 db.session.commit()

@@ -76,8 +76,9 @@ def call_gemini_api(prompt, system_instruction=None):
         "contents": [{"parts": [{"text": prompt}]}],
         "systemInstruction": {"parts": [{"text": system_instruction}]},
         "generationConfig": {
-            "temperature": 0.3, # Giảm nhiệt độ để AI bớt "ảo giác"
-            "maxOutputTokens": 1000
+            "temperature": 0.3,
+            # [FIX] Tăng maxOutputTokens lên 4000 để tránh bị cắt cụt HTML khi bảng quá dài
+            "maxOutputTokens": 4000
         }
     }
 
@@ -209,7 +210,7 @@ def get_comparison_result(p1_name, p1_price, p1_desc, p2_name, p2_price, p2_desc
         "Màn hình, Camera, Hiệu năng, Pin, Đáng mua hơn?. "
         "Cột 1: Tiêu chí, Cột 2: {p1_name}, Cột 3: {p2_name}. "
         "Cuối cùng thêm 1 đoạn văn ngắn kết luận <b>Ai nên mua máy nào</b>. "
-        "Chỉ trả về HTML, không markdown, không lời dẫn thừa."
+        "Chỉ trả về HTML hợp lệ, ĐẢM BẢO ĐÓNG TẤT CẢ CÁC THẺ (</table>, </div>). Không markdown, không lời dẫn thừa."
     )
 
     result = call_gemini_api(prompt)

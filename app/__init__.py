@@ -13,7 +13,8 @@ def create_app():
     # (Load thủ công vì file này nằm trong thư mục con app/)
     env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
     if os.path.exists(env_path):
-        with open(env_path, 'r') as f:
+        # [FIX] Thêm encoding='utf-8' để đọc được tiếng Việt trong file .env
+        with open(env_path, 'r', encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith('#') or '=' not in line: continue

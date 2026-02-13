@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-5">
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+            <div class="card-header bg-success text-white text-center py-3">
+                <h4 class="mb-0 fw-bold"><i class="fas fa-qrcode me-2"></i> Thanh Toán Qua QR Code</h4>
+            </div>
+            <div class="card-body p-4 text-center">
+                <!-- Vùng hiển thị thời gian đếm ngược -->
+                <div class="mb-4">
+                    <div class="text-muted small mb-1 text-uppercase fw-bold">Giao dịch sẽ hết hạn sau</div>
+                    <span class="badge bg-danger fs-4 rounded-pill px-4 py-2 shadow-sm">
+                        <i class="fas fa-clock me-2"></i>
+                        <span id="timer">03:00</span>
+                    </span>
+                </div>
+
+                <p class="text-muted mb-3">Vui lòng quét mã bên dưới để hoàn tất đơn hàng</p>
+
+                <!-- Khu vực hiển thị QR và Trạng thái -->
+                <div class="p-3 border rounded-4 bg-light d-inline-block mb-4 position-relative shadow-sm">
+                    <img src="{{ qr_url }}" alt="VietQR" class="img-fluid" style="max-width: 280px; border-radius: 10px;">
+                    <div class="mt-3 fw-bold text-primary fs-3">{{ order.total_price | vnd }}</div>
+
+                    <hr class="my-3">
+
+                    <!-- Trạng thái chờ xử lý -->
+                    <div id="payment-status" class="text-warning fw-bold animate__animated animate__pulse animate__infinite">
+                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                        Đang chờ hệ thống ghi nhận...
+                    </div>
+                </div>
+
+                <!-- Thông tin hướng dẫn -->
+                <div class="alert alert-warning text-start small border-0 shadow-sm mb-4">
+                    <i class="fas fa-exclamation-triangle me-2"></i> <strong>Lưu ý quan trọng:</strong>
+                    <ul class="mb-0 mt-2 ps-3">
+                        <li>Hệ thống sẽ tự động xác nhận sau khi bạn chuyển khoản thành công.</li>
+                        <li>Vui lòng giữ nguyên nội dung chuyển khoản để AI nhận diện đơn hàng.</li>
+                        <li><strong>Không</strong> tự ý thoát trang này cho đến khi nhận được thông báo thành công.</li>
+                    </ul>
+                </div>
+
+                <!-- Link giả lập dành cho môi trường Test -->
+                <div class="p-3 bg-light rounded-3 mb-4 text-start border">
+                    <div class="fw-bold text-danger mb-1 small"><i class="fas fa-vial me-1"></i> CHẾ ĐỘ THỬ NGHIỆM (LOCAL):</div>
+                    <div class="small text-muted">Vì không có ngân hàng thật, hãy mở link dưới đây ở tab khác để giả lập thanh toán thành công:</div>
+                    <a href="/test/simulate-bank-success/{{ order.id }}" target="_blank" class="btn btn-sm btn-dark mt-2 w-100 rounded-pill">
+                        Gửi tín hiệu "ĐÃ NHẬN TIỀN" <i class="fas fa-external-link-alt ms-1"></i>
+                    </a>
+                </div>
+
+                <a href="/dashboard" class="text-decoration-none text-muted small"><i class="fas fa-arrow-left me-1"></i> Để lại đơn hàng và thanh toán sau</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Khởi tạo biến thời gian từ Server
+    let timeLeft = {{ remaining_seconds }};
+    const timerElem = document.getElementById('timer');
+    const statusElem = document.getElementById('payment-status');
+
+    // 2. Hàm đếm ngược (Countdown)
+    const countdown = setInterval(() => {
+        if (timeLeft <= 0) {
+            clearInterval(countdown);
+            clearInterval(checkPayment); // Dừng luôn việc check API
+            timerElem.innerText = "Hết giờ!";
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Giao dịch hết hạn!',
+                text: 'Đã quá 3 phút kể từ khi tạo mã. Vui lòng tạo đơn hàng mới.',
+                confirmButtonText: 'Quay lại cửa hàng',
+                confirmButtonColor: '#d33',
+                allowOutsideClick: false
+            }).then(() => {
+                window.location.href = "/";
+            });
+        } else {
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElem.innerText = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+    }, 1000);
+
+    // 3. Hàm kiểm tra trạng thái tự động (Polling)
+    const checkPayment = setInterval(async () => {
+        try {
+            // Gọi API kiểm tra trạng thái đơn hàng
+            const response = await fetch('/api/payment/check/{{ order.id }}');
+            const data = await response.json();
+
+            // Nếu trạng thái chuyển sang 'Confirmed' (do link giả lập kích hoạt)
+            if (data.status === 'Confirmed' || data.status === 'Paid' || data.status === 'Completed') {
+                clearInterval(checkPayment);
+                clearInterval(countdown);
+
+                // Cập nhật UI ngay lập tức
+                statusElem.innerHTML = '<i class="fas fa-check-circle me-2 text-success"></i><span class="text-success">Thanh toán thành công!</span>';
+                statusElem.classList.remove('text-warning', 'animate__infinite');
+
+                // Hiện Pop-up chúc mừng bằng SweetAlert2
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Sắm Tết Thành Công! 🧧',
+                    text: 'Hệ thống đã nhận được tiền. Đơn hàng của bạn đang được chuẩn bị.',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    allowOutsideClick: false
+                }).then(() => {
+                    window.location.href = "/dashboard";
+                });
+            } else if (data.status === 'Cancelled' || data.status === 'Expired') {
+                window.location.href = "/dashboard";
+            }
+        } catch (error) {
+            console.error("Lỗi đồng bộ thanh toán:", error);
+        }
+    }, 3000); // Kiểm tra mỗi 3 giây một lần
+</script>
+
+<style>
+    /* Hiệu ứng nhịp tim cho phần trạng thái đang chờ */
+    .animate__pulse {
+        animation-duration: 2s;
+    }
+</style>
+{% endblock %}

@@ -17,7 +17,7 @@
                     <h5 class="mb-3 border-bottom pb-2">Thông tin giao hàng</h5>
                     <div class="mb-3">
                         <label class="form-label">Người nhận</label>
-                        <input type="text" class="form-control" value="{{ current_user.full_name }}" readonly>
+                        <input type="text" class="form-control" value="{{ current_user.full_name or current_user.username }}" readonly>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
@@ -29,17 +29,26 @@
                     </div>
 
                     <h5 class="mb-3 mt-4 border-bottom pb-2">Phương thức thanh toán</h5>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" name="payment" id="cod" checked>
-                        <label class="form-check-label" for="cod">
-                            Thanh toán khi nhận hàng (COD)
-                        </label>
-                    </div>
-                    <div class="form-check mb-4">
-                        <input class="form-check-input" type="radio" name="payment" id="banking" disabled>
-                        <label class="form-check-label text-muted" for="banking">
-                            Chuyển khoản ngân hàng (Đang bảo trì)
-                        </label>
+
+                    <!-- [UPDATE] Cho phép chọn Banking -->
+                    <div class="card bg-light border-0 mb-3">
+                        <div class="card-body">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment" id="cod" value="cod" checked>
+                                <label class="form-check-label fw-bold" for="cod">
+                                    <i class="fas fa-truck me-2 text-primary"></i>Thanh toán khi nhận hàng (COD)
+                                </label>
+                                <div class="small text-muted ms-4">Bạn sẽ thanh toán tiền mặt cho shipper khi nhận được hàng.</div>
+                            </div>
+                            <hr>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment" id="banking" value="banking">
+                                <label class="form-check-label fw-bold text-success" for="banking">
+                                    <i class="fas fa-qrcode me-2"></i>Chuyển khoản Ngân hàng (QR Code)
+                                </label>
+                                <div class="small text-muted ms-4">Quét mã VietQR để thanh toán nhanh chóng, an toàn.</div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="d-grid">

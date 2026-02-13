@@ -57,6 +57,8 @@ class Order(db.Model):
     status = db.Column(db.String(50), default='Pending')
     address = db.Column(db.String(200), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
+    # [NEW] Thêm phương thức thanh toán
+    payment_method = db.Column(db.String(50), default='COD')  # COD hoặc Banking
     details = db.relationship('OrderDetail', backref='order', lazy=True)
 
 

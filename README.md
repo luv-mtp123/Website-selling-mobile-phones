@@ -88,6 +88,18 @@
 
 # 
 
+## **✅ Fix Lỗi Xung Đột Thời Gian (Timezone TypeError): (MỚI)**
+
+# 
+
+#### **Vấn đề: Lỗi TypeError: can't subtract offset-naive and offset-aware datetimes khi tính toán thời gian hết hạn đơn hàng.**
+
+#### 
+
+#### **Giải pháp: Đồng bộ toàn bộ dữ liệu thời gian về dạng naive UTC (sử dụng .replace(tzinfo=None)) để tương thích hoàn toàn với cơ sở dữ liệu SQLite.**
+
+# 
+
 # **2. ✨ Tính Năng Mới: Bình Luận \& Đánh Giá (Reviews)**
 
 # 
@@ -298,7 +310,7 @@
 
 ### **└── admin.py        # Quản trị**
 
-# 
+### **└── test/             # Các bản test hệ thống** 
 
 # 
 
@@ -557,6 +569,78 @@
 #### 
 
 #### **Kiểm tra logic phản hồi theo từ khóa (Rule-based) và phản hồi từ AI.**
+
+# 
+
+# **11. 💳 Tính Năng Mới: Thanh Toán Online Tự Động (MỚI NHẤT)**
+
+# 
+
+#### **Hệ thống thanh toán đã được nâng cấp lên chuẩn chuyên nghiệp, mô phỏng các sàn TMĐT lớn:**
+
+#### 
+
+## **✅ Cổng Thanh Toán VietQR Động:**
+
+# 
+
+#### **Tự động tạo mã QR chứa chính xác số tiền đơn hàng và nội dung chuyển khoản định danh.**
+
+#### 
+
+#### **Tích hợp API VietQR giúp khách hàng quét mã nhanh trên tất cả các App ngân hàng.**
+
+# 
+
+## **✅ Cơ Chế Tự Động Nhận Diện (Real-time Polling):**
+
+# 
+
+#### **Website sử dụng kỹ thuật Polling (AJAX) để kiểm tra trạng thái đơn hàng mỗi 3 giây.**
+
+#### 
+
+#### **Khi tiền về tài khoản (hoặc kích hoạt giả lập), hệ thống tự động hiển thị thông báo "Thanh toán thành công" và chuyển trang mà không cần tải lại.**
+
+# 
+
+## **✅ Giới Hạn Thời Gian Thanh Toán (Countdown Timer):**
+
+# 
+
+#### **Mỗi giao dịch chỉ có hiệu lực trong vòng 3 phút.**
+
+#### 
+
+#### **Đồng hồ đếm ngược hiển thị trực quan. Khi hết giờ, mã QR sẽ bị vô hiệu hóa và đơn hàng bị hủy để bảo mật tồn kho.**
+
+#### 
+
+## **✅ Hệ Thống Khóa Bảo Mật:**
+
+# 
+
+#### **Loại bỏ hoàn toàn nút "Xác nhận thủ công". Cả người dùng và Admin đều không thể can thiệp bằng cách nhấn nút ảo.**
+
+#### 
+
+#### **Trạng thái đơn hàng chỉ chuyển sang "Đã thanh toán" dựa trên dữ liệu thực tế từ Database.**
+
+# 
+
+## **🧪 Chế Độ Thử Nghiệm \& Kiểm Thử (Testing \& Simulation)**
+
+# 
+
+### **🛠️ Giả Lập Webhook Ngân Hàng:**
+
+# 
+
+#### **Do chạy ở môi trường Local (không có kết nối ngân hàng thật), hệ thống cung cấp một Endpoint bí mật để giả lập tín hiệu thanh toán thành công:**
+
+#### 
+
+#### **Nút "Gửi tín hiệu ĐÃ NHẬN TIỀN" giúp lập trình viên kiểm tra luồng tự động nhận diện của Frontend.**
 
 # 
 

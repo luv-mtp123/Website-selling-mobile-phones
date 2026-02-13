@@ -2,6 +2,7 @@ import os
 import time
 import json
 import hashlib
+from datetime import datetime, timedelta, timezone # [UPDATE] Import time handling
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
@@ -203,66 +204,130 @@ def update_cart(id, action):
     session['cart'] = cart
     return redirect(url_for('main.view_cart'))
 
+
 @main_bp.route('/checkout', methods=['GET', 'POST'])
 @login_required
 def checkout():
     cart = session.get('cart', {})
-    if not cart:
-        return redirect(url_for('main.home'))
+    if not cart: return redirect(url_for('main.home'))
 
     total = 0
-    final_cart_items = []
-
+    final_items = []
     for pid, item in cart.items():
         p = db.session.get(Product, int(pid))
         if p and p.is_active:
-            real_price = p.sale_price if p.is_sale else p.price
-            total += real_price * item['quantity']
-            final_cart_items.append({'product': p, 'qty': item['quantity'], 'price': real_price})
+            price = p.sale_price if p.is_sale else p.price
+            total += price * item['quantity']
+            final_items.append({'p': p, 'qty': item['quantity'], 'price': price})
 
     if request.method == 'POST':
-        # Mở một khối try-except để bắt lỗi DB
         try:
-            for item in final_cart_items:
-                # Kỹ thuật quan trọng: KHÓA DÒNG SẢN PHẨM NÀY CHO ĐẾN KHI COMMIT XONG
-                product = db.session.query(Product).filter_by(id=item['product'].id).with_for_update().first()
+            payment_method = request.form.get('payment', 'cod')
 
-                if product.stock_quantity < item['qty']:
-                    flash(f"Rất tiếc, {product.name} vừa hết hàng hoặc không đủ số lượng.", "danger")
-                    db.session.rollback()  # Hoàn tác mọi thứ
+            for i in final_items:
+                prod = db.session.query(Product).filter_by(id=i['p'].id).with_for_update().first()
+                if prod.stock_quantity < i['qty']:
+                    flash(f"{prod.name} không đủ hàng.", 'danger')
+                    db.session.rollback()
                     return redirect(url_for('main.view_cart'))
+                prod.stock_quantity -= i['qty']
 
-                # Trừ kho an toàn
-                product.stock_quantity -= item['qty']
-
-            # Tạo Order và OrderDetail như cũ...
             order = Order(
                 user_id=current_user.id,
                 total_price=total,
-                address=request.form.get('address', '').strip(),
-                phone=request.form.get('phone', '').strip(),
+                address=request.form.get('address'),
+                phone=request.form.get('phone'),
+                payment_method=payment_method,
                 status='Pending'
             )
             db.session.add(order)
             db.session.flush()
 
-            for item in final_cart_items:
-                db.session.add(OrderDetail(
-                    order_id=order.id, product_id=item['product'].id,
-                    product_name=item['product'].name, quantity=item['qty'], price=item['price']
-                ))
+            for i in final_items:
+                db.session.add(
+                    OrderDetail(order_id=order.id, product_id=i['p'].id, product_name=i['p'].name, quantity=i['qty'],
+                                price=i['price']))
 
             db.session.commit()
             session.pop('cart', None)
-            flash('Đặt hàng thành công! Đơn hàng đang chờ xử lý.', 'success')
-            return redirect(url_for('main.dashboard'))
 
+            # Nếu chọn Banking, chuyển hướng sang trang QR
+            if payment_method == 'banking':
+                return redirect(url_for('main.payment_qr', order_id=order.id))
+
+            flash('Đặt hàng thành công!', 'success')
+            return redirect(url_for('main.dashboard'))
         except Exception as e:
             db.session.rollback()
-            flash('Đã xảy ra lỗi trong quá trình xử lý đơn hàng. Vui lòng thử lại.', 'danger')
+            print(e)
+            flash('Lỗi xử lý đơn hàng.', 'danger')
             return redirect(url_for('main.view_cart'))
 
     return render_template('checkout.html', cart=cart, total=total)
+
+
+# --- [FIXED] TRANG THANH TOÁN QR VỚI XỬ LÝ TIMEZONE ---
+@main_bp.route('/payment/qr/<int:order_id>')
+@login_required
+def payment_qr(order_id):
+    order = Order.query.filter_by(id=order_id, user_id=current_user.id).first_or_404()
+
+    if order.status != 'Pending':
+        flash('Đơn hàng này đã được xử lý hoặc hết hạn.', 'info')
+        return redirect(url_for('main.dashboard'))
+
+    # Tính thời gian hết hạn (3 phút từ lúc tạo đơn)
+    expiration_time = order.date_created + timedelta(minutes=3)
+
+    # [FIX] Đồng bộ kiểu dữ liệu naive để trừ được cho nhau trong SQLite
+    now_naive = datetime.now(timezone.utc).replace(tzinfo=None)
+    remaining_seconds = (expiration_time - now_naive).total_seconds()
+
+    if remaining_seconds <= 0:
+        flash('Giao dịch đã hết hạn vui lòng đặt lại.', 'warning')
+        return redirect(url_for('main.dashboard'))
+
+    bank_id = "MB"
+    account_no = "9999999999"
+    account_name = "MOBILE STORE"
+    content = f"THANHTOAN DONHANG {order.id}"
+    qr_url = f"https://img.vietqr.io/image/{bank_id}-{account_no}-compact2.png?amount={order.total_price}&addInfo={content}&accountName={account_name}"
+
+    return render_template('payment_qr.html', order=order, qr_url=qr_url, remaining_seconds=int(remaining_seconds))
+
+
+# --- [FIXED] API CHECK TRẠNG THÁI VỚI XỬ LÝ TIMEZONE ---
+@main_bp.route('/api/payment/check/<int:order_id>')
+@login_required
+def check_payment_status(order_id):
+    order = db.session.get(Order, order_id)
+    if not order or order.user_id != current_user.id:
+        return jsonify({'status': 'error'})
+
+    # Kiểm tra hết hạn
+    expiration_time = order.date_created + timedelta(minutes=3)
+    now_naive = datetime.now(timezone.utc).replace(tzinfo=None)
+    is_expired = now_naive > expiration_time
+
+    if is_expired and order.status == 'Pending':
+        return jsonify({'status': 'Expired'})
+
+    return jsonify({'status': order.status})
+
+
+# --- [NEW] GIẢ LẬP WEBHOOK NGÂN HÀNG (DÀNH CHO TEST) ---
+# Bạn truy cập link này trên tab khác để giả vờ tiền đã vào tài khoản
+@main_bp.route('/test/simulate-bank-success/<int:order_id>')
+def simulate_bank_success(order_id):
+    if not current_user.is_authenticated:
+        return "Vui lòng đăng nhập để test"
+
+    order = db.session.get(Order, order_id)
+    if order and order.status == 'Pending':
+        order.status = 'Confirmed'  # Đánh dấu đã thanh toán
+        db.session.commit()
+        return f"<h1>[SIMULATION] Đã nhận tiền thành công cho đơn {order_id}!</h1><p>Quay lại tab thanh toán để xem kết quả.</p>"
+    return "Đơn hàng không tồn tại hoặc đã xử lý."
 
 @main_bp.route('/trade-in', methods=['GET', 'POST'])
 @login_required

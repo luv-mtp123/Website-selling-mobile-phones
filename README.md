@@ -18,6 +18,42 @@
 
 # 
 
+### **✅ Fix Lỗi API Chatbot (CSRF Error): (MỚI)**
+
+# 
+
+#### **Vấn đề: API Chatbot gặp lỗi 400 Bad Request do bị chặn bởi cơ chế bảo vệ CSRF khi gọi từ AJAX.**
+
+#### 
+
+#### **Giải pháp: Sử dụng decorator @csrf.exempt cho endpoint /api/chatbot để cho phép giao tiếp API mượt mà mà vẫn giữ bảo mật cho các form khác.**
+
+# 
+
+### **✅ Fix Lỗi AI Smart Search (Bộ lọc thông minh): (MỚI)**
+
+# 
+
+#### **Vấn đề: Trước đây tìm kiếm "ốp lưng", "sạc" vẫn hiển thị cả điện thoại do AI chỉ lọc theo Hãng.**
+
+#### 
+
+#### **Giải pháp:**
+
+#### 
+
+#### **1. Cập nhật Prompt Engineering: Bắt buộc AI phân loại rõ ràng category: 'phone' hoặc category: 'accessory' dựa trên từ khóa.**
+
+#### 
+
+#### **2. Trích xuất Keyword chuyên sâu: AI tự động lấy từ khóa chính (VD: "ốp", "tai nghe") để lọc chính xác tên sản phẩm.**
+
+#### 
+
+#### **3. Cache Versioning: Đổi key cache (v3) để xóa bỏ các kết quả phân tích cũ sai lệch, buộc hệ thống chạy lại logic mới.**
+
+# 
+
 ### **✅ Fix Lỗi Giá Giỏ Hàng (Pricing Logic Security):**
 
 # 

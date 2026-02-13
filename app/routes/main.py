@@ -8,14 +8,20 @@ from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 from app.extensions import db
 from app.models import Product, Order, OrderDetail, AICache, TradeInRequest, Comment
-from app.utils import analyze_search_intents, get_comparison_result, call_gemini_api, validate_image_file
+# [UPDATE] Import thêm hàm build_product_context
+from app.utils import analyze_search_intents, get_comparison_result, call_gemini_api, validate_image_file, build_product_context
+# [FIX] Import thêm csrf để tắt bảo mật cho API Chatbot
+from app.extensions import db, csrf
 
 main_bp = Blueprint('main', __name__)
 
 # --- AI Cache Helper ---
 def cached_ai_call(func, *args):
     try:
-        key = hashlib.md5(str(args).encode()).hexdigest()
+        # [UPDATE] Đổi sang key v3 để xóa cache cũ bị sai logic
+        cache_key_content = str(args) + "_v3_smart_search_keyword"
+        key = hashlib.md5(cache_key_content.encode()).hexdigest()
+
         cached = AICache.query.filter_by(prompt_hash=key).first()
         if cached:
             return json.loads(cached.response_text) if '{' in cached.response_text else cached.response_text
@@ -43,27 +49,53 @@ def home():
 
     query = Product.query.filter_by(is_active=True)
 
+    # Logic tìm kiếm thông minh
     if q and len(q.split()) > 2 and not brand:
         ai_data = cached_ai_call(analyze_search_intents, q)
         if ai_data:
+            # 1. Lọc theo Hãng
             if ai_data.get('brand'):
                 query = query.filter(Product.brand.contains(ai_data['brand']))
-                ai_msg += f"Hãng: {ai_data['brand']} "
+                ai_msg += f"Hãng: {ai_data['brand']}"
+
+            # 2. [FIX QUAN TRỌNG] Lọc theo Loại sản phẩm (Category)
+            # Phần này trước đây bị thiếu nên tìm điện thoại vẫn ra phụ kiện
+            if ai_data.get('category'):
+                query = query.filter(Product.category == ai_data['category'])
+                cat_vn = "Điện thoại" if ai_data['category'] == 'phone' else "Phụ kiện"
+                sep = " | " if ai_msg else ""
+                ai_msg += f"{sep}Loại: {cat_vn}"
+
+            # 3. [QUAN TRỌNG] Lọc theo Keyword cụ thể (ốp, sạc, tai nghe...)
+            # Đây là phần sửa lỗi: tìm chính xác tên sản phẩm chứa từ khóa
+            if ai_data.get('keyword'):
+                kw = ai_data['keyword']
+                query = query.filter(Product.name.ilike(f"%{kw}%"))
+                sep = " | " if ai_msg else ""
+                ai_msg += f"{sep}Tìm: '{kw}'"
+
+            # 3. Lọc theo Giá
             if ai_data.get('min_price'):
                 query = query.filter(Product.price >= ai_data['min_price'])
             if ai_data.get('max_price'):
                 query = query.filter(Product.price <= ai_data['max_price'])
+
+            # 4. Sắp xếp
             if ai_data.get('sort'):
                 sort = ai_data['sort']
+
             if ai_msg:
                 ai_msg = f"🔍 AI Smart Filter: {ai_msg}"
         else:
+            # Fallback nếu AI không nhận diện được: Tìm theo tên thông thường
             query = query.filter(Product.name.contains(q))
     elif q:
         query = query.filter(Product.name.contains(q))
 
+    # Bộ lọc thủ công (nếu user click chọn hãng trên menu)
     if brand: query = query.filter(Product.brand == brand)
 
+    # Sắp xếp
     if sort == 'price_asc': query = query.order_by(Product.price.asc())
     elif sort == 'price_desc': query = query.order_by(Product.price.desc())
     else: query = query.order_by(Product.id.desc())
@@ -286,16 +318,48 @@ def compare_page():
             flash("Vui lòng chọn 2 sản phẩm khác nhau!", "warning")
     return render_template('compare.html', products=products, result=result, p1=p1, p2=p2)
 
-@main_bp.route('/api/chatbot', methods=['POST'])
-def chatbot_api():
-    msg = request.json.get('message', '').lower()
-    keywords = {"xin chào": "Chào bạn! Chúc mừng năm mới!", "địa chỉ": "123 Đường Tết, Q1, TP.HCM", "giao hàng": "Giao hỏa tốc 2H."}
-    for k, v in keywords.items():
-        if k in msg: return jsonify({'response': v})
 
-    def chat_wrapper(m): return call_gemini_api(f"Khách hỏi: '{m}'. Trả lời ngắn gọn dưới 50 từ.")
-    res = cached_ai_call(chat_wrapper, msg)
-    return jsonify({'response': res or "Hệ thống đang bận."})
+# --- [UPDATE] API CHATBOT THÔNG MINH (CONTEXT AWARE) ---
+@main_bp.route('/api/chatbot', methods=['POST'])
+@csrf.exempt # [QUAN TRỌNG] Tắt kiểm tra CSRF cho API này vì gọi từ JS
+def chatbot_api():
+    msg = request.json.get('message', '').strip()
+    if not msg:
+        return jsonify({'response': "Bạn cần hỏi gì nào?"})
+
+    # 1. Trả lời rule-based nhanh (Keyword)
+    keywords = {
+        "xin chào": "Chào bạn! Chúc mừng năm mới! 🧧 Shop đang có nhiều lì xì lắm đó!",
+        "địa chỉ": "123 Đường Tết, Q1, TP.HCM - Mở cửa xuyên Tết nha!",
+        "giao hàng": "Shop giao hỏa tốc 2H nội thành, Freeship toàn quốc.",
+        "bảo hành": "Bảo hành 12 tháng chính hãng, lỗi 1 đổi 1 trong 30 ngày."
+    }
+    for k, v in keywords.items():
+        if k in msg.lower(): return jsonify({'response': v})
+
+    # 2. Xử lý AI thông minh có Context (RAG)
+    try:
+        # A. Lấy dữ liệu sản phẩm từ DB liên quan câu hỏi
+        product_context = build_product_context(msg)
+
+        # B. Tạo Prompt kẹp dữ liệu
+        final_prompt = (
+            f"Người dùng hỏi: '{msg}'\n\n"
+            f"{product_context}\n\n"
+            "Yêu cầu: Đóng vai nhân viên MobileStore tư vấn nhiệt tình. "
+            "Dựa vào DỮ LIỆU CỬA HÀNG ở trên để trả lời. "
+            "Nếu có giá, hãy báo giá chính xác. Nếu hết hàng, hãy gợi ý mẫu khác. "
+            "Giữ câu trả lời ngắn gọn dưới 80 từ."
+        )
+
+        # C. Gọi AI (Không cache để luôn update tồn kho mới nhất)
+        ai_response = call_gemini_api(final_prompt)
+
+        return jsonify({'response': ai_response or "Hệ thống AI đang bận rộn sắm Tết, bạn hỏi lại sau nhé!"})
+
+    except Exception as e:
+        print(f"Chatbot Error: {e}")
+        return jsonify({'response': "Có lỗi xảy ra, vui lòng thử lại."})
 
 @main_bp.route('/dashboard')
 @login_required

@@ -5,6 +5,11 @@ import time
 import re
 from flask import current_app, url_for
 from itsdangerous import URLSafeTimedSerializer
+# [FIX] Import or_ từ sqlalchemy để dùng cho tìm kiếm
+from sqlalchemy import or_
+# --- IMPORT MODEL ĐỂ AI ĐỌC DỮ LIỆU ---
+from app.extensions import db
+from app.models import Product
 
 # --- CẤU HÌNH ---
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -54,27 +59,25 @@ def send_reset_email_simulation(to_email, token):
     print("=" * 30)
     return reset_link
 
-def call_gemini_api(prompt):
-    """Hàm gọi API chung"""
+def call_gemini_api(prompt, system_instruction=None):
+    """Hàm gọi API Gemini cơ bản"""
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         return None
 
     target_model = "gemini-2.5-flash"
-    # [FIXED] Sửa lại URL chuẩn (bỏ các ký tự thừa do lỗi copy paste cũ)
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_model}:generateContent?key={api_key}"
-
     headers = {"Content-Type": "application/json"}
 
-    # Thêm hướng dẫn hệ thống để AI trả lời ngắn gọn, đúng trọng tâm
-    system_instruction = "Bạn là trợ lý ảo chuyên về điện thoại của MobileStore. Trả lời ngắn gọn, thân thiện, format HTML nếu cần."
+    if not system_instruction:
+        system_instruction = "Bạn là trợ lý ảo của MobileStore. Trả lời ngắn gọn, thân thiện."
 
     data = {
         "contents": [{"parts": [{"text": prompt}]}],
         "systemInstruction": {"parts": [{"text": system_instruction}]},
         "generationConfig": {
-            "temperature": 0.1,  # Giảm nhiệt độ để AI trả lời chính xác
-            "maxOutputTokens": 2000  # Tăng token để bảng so sánh dài không bị cắt
+            "temperature": 0.3, # Giảm nhiệt độ để AI bớt "ảo giác"
+            "maxOutputTokens": 1000
         }
     }
 
@@ -94,6 +97,53 @@ def call_gemini_api(prompt):
         return None
 
 
+# --- [NEW] RAG: TẠO NGỮ CẢNH DỮ LIỆU CHO AI ---
+def build_product_context(user_query):
+    """
+    Tìm các sản phẩm trong DB khớp với câu hỏi của user
+    để nạp kiến thức cho AI.
+    """
+    # [FIX] Lazy Import: Import Product TẠI ĐÂY để tránh lỗi Circular Import
+    # Khi hàm này được gọi, app đã khởi tạo xong nên không bị lỗi vòng lặp
+    from app.models import Product
+
+    user_query = user_query.lower()
+
+    # 1. Tìm kiếm cơ bản: Tên hoặc Hãng chứa từ khóa (dùng ilike cho không phân biệt hoa thường)
+    products = Product.query.filter(
+        or_(
+            Product.name.ilike(f"%{user_query}%"),
+            Product.brand.ilike(f"%{user_query}%")
+        ),
+        Product.is_active == True
+    ).limit(5).all()
+
+    # 2. Nếu không tìm thấy, thử tách từ khóa (VD: "ip 15" -> tìm "15")
+    if not products:
+        words = user_query.split()
+        for word in words:
+            if len(word) > 2:  # Bỏ qua từ quá ngắn
+                found = Product.query.filter(Product.name.ilike(f"%{word}%"), Product.is_active == True).limit(3).all()
+                products.extend(found)
+                if products: break  # Tìm thấy thì dừng để tiết kiệm
+
+    # 3. Tạo đoạn văn bản ngữ cảnh
+    if not products:
+        return "Không tìm thấy sản phẩm cụ thể nào trong kho dữ liệu khớp với câu hỏi."
+
+    context_text = "DỮ LIỆU CỬA HÀNG HIỆN TẠI (Sử dụng thông tin này để trả lời):\n"
+    for p in products:
+        price_str = "{:,.0f} đ".format(p.sale_price if p.is_sale else p.price)
+        status = f"Sẵn hàng (SL: {p.stock_quantity})" if p.stock_quantity > 0 else "HẾT HÀNG"
+        context_text += f"- Tên: {p.name} | Hãng: {p.brand} | Giá: {price_str} | Trạng thái: {status}\n"
+        if p.description:
+            # Lấy 50 ký tự đầu của mô tả để tiết kiệm token
+            short_desc = p.description[:50] + "..." if len(p.description) > 50 else p.description
+            context_text += f"  Mô tả: {short_desc}\n"
+
+    return context_text
+
+
 def get_gemini_suggestions(product_name):
     """Gợi ý phụ kiện"""
     prompt = (
@@ -107,35 +157,39 @@ def get_gemini_suggestions(product_name):
 def analyze_search_intents(query):
     """
     SMART SEARCH: Phân tích intent người dùng
+    [UPDATE v3] Thêm trường 'keyword' để lọc tên sản phẩm chính xác hơn
     """
+    # Đảm bảo biến prompt được định nghĩa trước khi gọi API
     prompt = (
-        f"Phân tích query: '{query}'. "
-        "Trả về 1 JSON duy nhất. Cấu trúc bắt buộc:\n"
+        f"Phân tích query tìm kiếm: '{query}'.\n"
+        "Nhiệm vụ: Trích xuất thông tin lọc Database.\n"
+        "Trả về JSON duy nhất (không Markdown). Cấu trúc:\n"
         "{\n"
         "  \"brand\": \"Apple\" | \"Samsung\" | \"Xiaomi\" | \"Oppo\" | null,\n"
-        "  \"min_price\": int (VNĐ) | null,\n"
-        "  \"max_price\": int (VNĐ) | null,\n"
+        "  \"category\": \"phone\" | \"accessory\" | null,\n"
+        "  \"keyword\": string | null,\n"
+        "  \"min_price\": int | null,\n"
+        "  \"max_price\": int | null,\n"
         "  \"sort\": \"price_asc\" | \"price_desc\" | null\n"
         "}\n"
-        "Lưu ý: 'dưới 10 triệu' -> max_price: 10000000. 'trên 5 củ' -> min_price: 5000000."
+        "QUY TẮC:\n"
+        "1. 'điện thoại' -> category: 'phone'.\n"
+        "2. 'sạc', 'cáp', 'tai nghe', 'ốp', 'kính', 'loa' -> category: 'accessory'.\n"
+        "3. keyword: Là từ khóa quan trọng nhất để tìm trong tên sản phẩm. \n"
+        "   - Ví dụ: 'ốp lưng iphone' -> keyword: 'ốp'.\n"
+        "   - Ví dụ: 'sạc samsung' -> keyword: 'sạc'.\n"
+        "   - Ví dụ: 'tai nghe' -> keyword: 'tai nghe'.\n"
+        "   - Nếu user tìm chung chung 'điện thoại samsung' -> keyword: null."
     )
 
     response_text = call_gemini_api(prompt)
     if not response_text: return None
 
-    # print(f"DEBUG AI Raw: {response_text}")
-
     try:
-        # 1. Thử làm sạch Markdown
         clean_text = re.sub(r"```json|```", "", response_text).strip()
-
-        # 2. Dùng Regex tìm chuỗi JSON nằm giữa dấu { và } ngoài cùng
         match = re.search(r"\{.*\}", clean_text, re.DOTALL)
         if match:
-            clean_json = match.group(0)
-            data = json.loads(clean_json)
-            return data
-
+            return json.loads(match.group(0))
         return None
     except Exception as e:
         print(f"JSON Parse Error: {e}")

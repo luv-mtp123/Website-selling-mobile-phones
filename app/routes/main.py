@@ -13,6 +13,14 @@ from app.utils import analyze_search_intents, get_comparison_result, call_gemini
 # [FIX] Import thêm csrf để tắt bảo mật cho API Chatbot
 from app.extensions import db, csrf
 
+# [UPDATE] Import hàm xử lý Chatbot mới từ utils
+from app.utils import (
+    analyze_search_intents,
+    get_comparison_result,
+    validate_image_file,
+    generate_chatbot_response # Hàm mới
+)
+
 main_bp = Blueprint('main', __name__)
 
 # --- AI Cache Helper ---
@@ -321,48 +329,6 @@ def compare_page():
     return render_template('compare.html', products=products, result=result, p1=p1, p2=p2)
 
 
-# --- [UPDATE] API CHATBOT THÔNG MINH (CONTEXT AWARE) ---
-@main_bp.route('/api/chatbot', methods=['POST'])
-@csrf.exempt # [QUAN TRỌNG] Tắt kiểm tra CSRF cho API này vì gọi từ JS
-def chatbot_api():
-    msg = request.json.get('message', '').strip()
-    if not msg:
-        return jsonify({'response': "Bạn cần hỏi gì nào?"})
-
-    # 1. Trả lời rule-based nhanh (Keyword)
-    keywords = {
-        "xin chào": "Chào bạn! Chúc mừng năm mới! 🧧 Shop đang có nhiều lì xì lắm đó!",
-        "địa chỉ": "123 Đường Tết, Q1, TP.HCM - Mở cửa xuyên Tết nha!",
-        "giao hàng": "Shop giao hỏa tốc 2H nội thành, Freeship toàn quốc.",
-        "bảo hành": "Bảo hành 12 tháng chính hãng, lỗi 1 đổi 1 trong 30 ngày."
-    }
-    for k, v in keywords.items():
-        if k in msg.lower(): return jsonify({'response': v})
-
-    # 2. Xử lý AI thông minh có Context (RAG)
-    try:
-        # A. Lấy dữ liệu sản phẩm từ DB liên quan câu hỏi
-        product_context = build_product_context(msg)
-
-        # B. Tạo Prompt kẹp dữ liệu
-        final_prompt = (
-            f"Người dùng hỏi: '{msg}'\n\n"
-            f"{product_context}\n\n"
-            "Yêu cầu: Đóng vai nhân viên MobileStore tư vấn nhiệt tình. "
-            "Dựa vào DỮ LIỆU CỬA HÀNG ở trên để trả lời. "
-            "Nếu có giá, hãy báo giá chính xác. Nếu hết hàng, hãy gợi ý mẫu khác. "
-            "Giữ câu trả lời ngắn gọn dưới 80 từ."
-        )
-
-        # C. Gọi AI (Không cache để luôn update tồn kho mới nhất)
-        ai_response = call_gemini_api(final_prompt)
-
-        return jsonify({'response': ai_response or "Hệ thống AI đang bận rộn sắm Tết, bạn hỏi lại sau nhé!"})
-
-    except Exception as e:
-        print(f"Chatbot Error: {e}")
-        return jsonify({'response': "Có lỗi xảy ra, vui lòng thử lại."})
-
 @main_bp.route('/dashboard')
 @login_required
 def dashboard():
@@ -394,3 +360,29 @@ def update_profile():
     db.session.commit()
     flash('Cập nhật hồ sơ thành công!', 'success')
     return redirect(url_for('main.dashboard'))
+
+# --- [UPDATE] API CHATBOT SỬ DỤNG HÀM MỚI TỪ UTILS ---
+@main_bp.route('/api/chatbot', methods=['POST'])
+@csrf.exempt
+def chatbot_api():
+    msg = request.json.get('message', '').strip()
+    if not msg:
+        return jsonify({'response': "Mời bạn hỏi về điện thoại ạ! 📱"})
+
+    # 1. Rule-based (Ưu tiên tốc độ)
+    keywords = {
+        "xin chào": "Chào bạn! Năm mới phát tài! 🧧 Shop có iPhone, Samsung giá tốt lắm, bạn cần tìm máy gì?",
+        "địa chỉ": "📍 123 Đường Tết, Q1, TP.HCM (Mở xuyên Tết nha!)",
+        "bảo hành": "🛡️ Máy chính hãng bảo hành 12 tháng, 1 đổi 1 trong 30 ngày đầu.",
+        "giao hàng": "🚀 Giao hỏa tốc 2H nội thành, Freeship toàn quốc!"
+    }
+    for k, v in keywords.items():
+        if k in msg.lower(): return jsonify({'response': v})
+
+    # 2. AI Processing (Sử dụng hàm mới trong utils.py)
+    try:
+        response = generate_chatbot_response(msg)
+        return jsonify({'response': response})
+    except Exception as e:
+        print(f"Chat Error: {e}")
+        return jsonify({'response': "AI đang bận ăn Tết, bạn thử lại sau xíu nha!"})

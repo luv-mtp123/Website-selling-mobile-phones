@@ -496,5 +496,69 @@
 
 # 
 
+# **10. 🧠 Tối Ưu Hóa AI \& Kiểm Thử Nâng Cao (Mới Nhất)**
+
+# 
+
+## **✅ Nâng Cấp Trí Tuệ Nhân Tạo (AI Persona \& RAG):**
+
+# 
+
+#### **Tối ưu hóa utils.py để "thổi hồn" cho Chatbot:**
+
+#### 
+
+#### **System Persona (Nhân cách hệ thống): Thiết lập tính cách cho AI là một nhân viên bán hàng thân thiện, vui vẻ, mang đậm không khí Tết Bính Ngọ (sử dụng emoji 🧧, 🌸).**
+
+#### 
+
+#### **Prompt Engineering: Cải thiện câu lệnh (prompt) để AI trả lời ngắn gọn, biết in đậm giá tiền và luôn gợi ý khách mua thêm (Upsell).**
+
+#### 
+
+#### **RAG Optimization: Cấu trúc lại dữ liệu sản phẩm nạp vào ngữ cảnh (Context) giúp AI hiểu rõ tình trạng "Sẵn hàng" hay "Hết hàng" để tư vấn chính xác hơn.**
+
+# 
+
+## **✅ Refactor Code (Tái cấu trúc):**
+
+# 
+
+#### **Cleaner Architecture: Chuyển toàn bộ logic xử lý AI từ main.py sang utils.py (generate\_chatbot\_response), giúp code gọn gàng và dễ bảo trì hơn.**
+
+# 
+
+## **✅ Bổ Sung Unit Test Chuyên Sâu (test\_new\_features.py):**
+
+# 
+
+### **1. Kiểm thử tính năng Thu Cũ Đổi Mới (Trade-In):**
+
+# 
+
+#### **Kiểm tra bắt buộc đăng nhập.**
+
+#### 
+
+#### **Kiểm tra luồng gửi yêu cầu thành công.**
+
+#### 
+
+#### **Security Test: Ngăn chặn upload file không hợp lệ (ví dụ: file .txt giả danh ảnh).**
+
+#### 
+
+### **2. Kiểm thử Chatbot (Mocking Technique):**
+
+# 
+
+#### **Mocking API: Sử dụng kỹ thuật unittest.mock để giả lập phản hồi từ Google Gemini. Điều này giúp chạy test siêu tốc, không cần mạng và không tốn quota API Key.**
+
+#### 
+
+#### **Kiểm tra logic phản hồi theo từ khóa (Rule-based) và phản hồi từ AI.**
+
+# 
+
 # **Chúc bạn có trải nghiệm tuyệt vời với MobileStore phiên bản Tết 2026! 🚀🌸**
 

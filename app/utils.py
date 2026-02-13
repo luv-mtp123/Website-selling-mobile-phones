@@ -9,7 +9,8 @@ from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy import or_
 # --- IMPORT MODEL ĐỂ AI ĐỌC DỮ LIỆU ---
 from app.extensions import db
-from app.models import Product
+# Lưu ý: Product được import lazy bên trong hàm để tránh circular import
+
 
 # --- CẤU HÌNH ---
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -59,31 +60,35 @@ def send_reset_email_simulation(to_email, token):
     print("=" * 30)
     return reset_link
 
+# --- AI CORE FUNCTIONS ---
+
 def call_gemini_api(prompt, system_instruction=None):
     """Hàm gọi API Gemini cơ bản"""
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
+        print("Lỗi: Chưa cấu hình GEMINI_API_KEY")
         return None
 
+    # Sử dụng model flash để phản hồi nhanh cho Chatbot
     target_model = "gemini-2.5-flash"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_model}:generateContent?key={api_key}"
     headers = {"Content-Type": "application/json"}
 
-    if not system_instruction:
-        system_instruction = "Bạn là trợ lý ảo của MobileStore. Trả lời ngắn gọn, thân thiện."
-
+    # Cấu trúc payload chuẩn
     data = {
         "contents": [{"parts": [{"text": prompt}]}],
-        "systemInstruction": {"parts": [{"text": system_instruction}]},
         "generationConfig": {
-            "temperature": 0.3,
-            # [FIX] Tăng maxOutputTokens lên 4000 để tránh bị cắt cụt HTML khi bảng quá dài
-            "maxOutputTokens": 4000
+            "temperature": 0.7, # Tăng nhẹ sự sáng tạo cho lời thoại tự nhiên
+            "maxOutputTokens": 1000
         }
     }
 
+    # Thêm System Instruction nếu có (Giúp định hình nhân cách AI tốt hơn)
+    if system_instruction:
+        data["systemInstruction"] = {"parts": [{"text": system_instruction}]}
+
     try:
-        response = requests.post(url, headers=headers, json=data, timeout=30)
+        response = requests.post(url, headers=headers, json=data, timeout=10)
         if response.status_code == 200:
             result = response.json()
             try:
@@ -101,130 +106,111 @@ def call_gemini_api(prompt, system_instruction=None):
 # --- [NEW] RAG: TẠO NGỮ CẢNH DỮ LIỆU CHO AI ---
 def build_product_context(user_query):
     """
-    Tìm các sản phẩm trong DB khớp với câu hỏi của user
-    để nạp kiến thức cho AI.
+    RAG LITE: Tìm sản phẩm trong DB khớp với query để nạp kiến thức cho AI.
+    [OPTIMIZED] Trả về định dạng rõ ràng hơn để AI dễ đọc.
     """
-    # [FIX] Lazy Import: Import Product TẠI ĐÂY để tránh lỗi Circular Import
-    # Khi hàm này được gọi, app đã khởi tạo xong nên không bị lỗi vòng lặp
     from app.models import Product
 
     user_query = user_query.lower()
 
-    # 1. Tìm kiếm cơ bản: Tên hoặc Hãng chứa từ khóa (dùng ilike cho không phân biệt hoa thường)
+    # Logic tìm kiếm mờ (Fuzzy search simulation)
     products = Product.query.filter(
         or_(
             Product.name.ilike(f"%{user_query}%"),
-            Product.brand.ilike(f"%{user_query}%")
+            Product.brand.ilike(f"%{user_query}%"),
+            Product.category.ilike(f"%{user_query}%")
         ),
         Product.is_active == True
-    ).limit(5).all()
+    ).limit(6).all()
 
-    # 2. Nếu không tìm thấy, thử tách từ khóa (VD: "ip 15" -> tìm "15")
+    # Nếu không tìm thấy chính xác, thử tìm theo từ đơn
     if not products:
         words = user_query.split()
         for word in words:
-            if len(word) > 2:  # Bỏ qua từ quá ngắn
+            if len(word) > 2:
                 found = Product.query.filter(Product.name.ilike(f"%{word}%"), Product.is_active == True).limit(3).all()
                 products.extend(found)
-                if products: break  # Tìm thấy thì dừng để tiết kiệm
+                if len(products) >= 3: break
 
-    # 3. Tạo đoạn văn bản ngữ cảnh
+    # Loại bỏ trùng lặp
+    products = list({p.id: p for p in products}.values())
+
     if not products:
-        return "Không tìm thấy sản phẩm cụ thể nào trong kho dữ liệu khớp với câu hỏi."
+        return "Hiện tại hệ thống không tìm thấy sản phẩm nào khớp chính xác với yêu cầu này trong kho."
 
-    context_text = "DỮ LIỆU CỬA HÀNG HIỆN TẠI (Sử dụng thông tin này để trả lời):\n"
+    # [OPTIMIZED] Tạo bảng dữ liệu ngữ cảnh
+    context_text = "--- DANH SÁCH SẢN PHẨM CÓ SẴN TẠI SHOP ---\n"
     for p in products:
-        price_str = "{:,.0f} đ".format(p.sale_price if p.is_sale else p.price)
-        status = f"Sẵn hàng (SL: {p.stock_quantity})" if p.stock_quantity > 0 else "HẾT HÀNG"
-        context_text += f"- Tên: {p.name} | Hãng: {p.brand} | Giá: {price_str} | Trạng thái: {status}\n"
-        if p.description:
-            # Lấy 50 ký tự đầu của mô tả để tiết kiệm token
-            short_desc = p.description[:50] + "..." if len(p.description) > 50 else p.description
-            context_text += f"  Mô tả: {short_desc}\n"
+        price = "{:,.0f} đ".format(p.sale_price if p.is_sale else p.price)
+        status = f"Sẵn hàng ({p.stock_quantity})" if p.stock_quantity > 0 else "Tạm hết"
+        is_sale = "🔥 Đang giảm giá!" if p.is_sale else ""
 
+        context_text += f"ID: {p.id} | Tên: {p.name} | Giá: {price} | Tình trạng: {status} {is_sale}\n"
+        if p.description:
+            clean_desc = p.description.replace('\n', ' ').strip()[:80]
+            context_text += f"   Mô tả: {clean_desc}...\n"
+
+    context_text += "--------------------------------------------"
     return context_text
+
+def generate_chatbot_response(user_msg):
+    """
+    [NEW] Hàm xử lý tập trung cho Chatbot
+    Kết hợp RAG + Persona + Prompt Engineering
+    """
+    # 1. Lấy ngữ cảnh dữ liệu
+    product_context = build_product_context(user_msg)
+
+    # 2. Xây dựng System Persona (Nhân cách)
+    system_instruction = (
+        "Bạn là Trợ lý ảo AI của 'MobileStore' trong dịp Tết Bính Ngọ 2026. 🐍🌸\n"
+        "TÍNH CÁCH: Thân thiện, vui vẻ, nhiệt tình, hay dùng emoji Tết (🧧, 🌸, 💰).\n"
+        "NHIỆM VỤ:\n"
+        "1. Tư vấn bán hàng dựa trên dữ liệu được cung cấp.\n"
+        "2. Nếu có giá tiền, hãy in đậm (ví dụ: **10.000.000 đ**).\n"
+        "3. Luôn gợi ý khách mua thêm phụ kiện hoặc chốt đơn nếu khách tỏ ý thích.\n"
+        "4. Nếu khách hỏi ngoài lề (thời tiết, chính trị...), hãy khéo léo lái về mua điện thoại chơi Tết.\n"
+        "GIỚI HẠN: Trả lời ngắn gọn dưới 100 từ. Không bịa đặt thông tin sản phẩm không có trong ngữ cảnh."
+    )
+
+    # 3. Tạo User Prompt kèm Context
+    final_prompt = (
+        f"Câu hỏi của khách: '{user_msg}'\n\n"
+        f"Dữ liệu kho hàng thực tế:\n{product_context}\n\n"
+        "Hãy trả lời khách hàng ngay:"
+    )
+
+    # 4. Gọi AI
+    response = call_gemini_api(final_prompt, system_instruction)
+    return response if response else "Hệ thống AI đang quá tải vì khách sắm Tết đông quá! Bạn đợi xíu nha 🧧"
 
 
 def get_gemini_suggestions(product_name):
-    """Gợi ý phụ kiện"""
     prompt = (
-        f"Tôi đang xem điện thoại {product_name}. "
-        "Hãy gợi ý 3 phụ kiện cần thiết nhất (chỉ tên phụ kiện và lý do ngắn 5 từ). "
-        "Trả về định dạng HTML danh sách không thứ tự <ul><li>...</li></ul>. Không thêm lời dẫn."
+        f"Gợi ý 3 phụ kiện cần thiết nhất cho {product_name}. "
+        "Trả về định dạng HTML <ul><li>...</li></ul> ngắn gọn."
     )
     return call_gemini_api(prompt)
 
-
 def analyze_search_intents(query):
-    """
-    SMART SEARCH: Phân tích intent người dùng
-    [UPDATE v3] Thêm trường 'keyword' để lọc tên sản phẩm chính xác hơn
-    """
-    # Đảm bảo biến prompt được định nghĩa trước khi gọi API
+    # Prompt cũ của bạn vẫn ổn
     prompt = (
-        f"Phân tích query tìm kiếm: '{query}'.\n"
-        "Nhiệm vụ: Trích xuất thông tin lọc Database.\n"
-        "Trả về JSON duy nhất (không Markdown). Cấu trúc:\n"
-        "{\n"
-        "  \"brand\": \"Apple\" | \"Samsung\" | \"Xiaomi\" | \"Oppo\" | null,\n"
-        "  \"category\": \"phone\" | \"accessory\" | null,\n"
-        "  \"keyword\": string | null,\n"
-        "  \"min_price\": int | null,\n"
-        "  \"max_price\": int | null,\n"
-        "  \"sort\": \"price_asc\" | \"price_desc\" | null\n"
-        "}\n"
-        "QUY TẮC:\n"
-        "1. 'điện thoại' -> category: 'phone'.\n"
-        "2. 'sạc', 'cáp', 'tai nghe', 'ốp', 'kính', 'loa' -> category: 'accessory'.\n"
-        "3. keyword: Là từ khóa quan trọng nhất để tìm trong tên sản phẩm. \n"
-        "   - Ví dụ: 'ốp lưng iphone' -> keyword: 'ốp'.\n"
-        "   - Ví dụ: 'sạc samsung' -> keyword: 'sạc'.\n"
-        "   - Ví dụ: 'tai nghe' -> keyword: 'tai nghe'.\n"
-        "   - Nếu user tìm chung chung 'điện thoại samsung' -> keyword: null."
+        f"Phân tích query: '{query}'. Trả về JSON {{brand, category, keyword, min_price, max_price, sort}}."
     )
-
     response_text = call_gemini_api(prompt)
     if not response_text: return None
-
     try:
         clean_text = re.sub(r"```json|```", "", response_text).strip()
         match = re.search(r"\{.*\}", clean_text, re.DOTALL)
-        if match:
-            return json.loads(match.group(0))
+        if match: return json.loads(match.group(0))
         return None
-    except Exception as e:
-        print(f"JSON Parse Error: {e}")
-        return None
-
+    except: return None
 
 def get_comparison_result(p1_name, p1_price, p1_desc, p2_name, p2_price, p2_desc):
-    """
-    AI COMPARISON: Trả về bảng HTML trực tiếp để hiển thị đẹp hơn
-    [FIXED] Xử lý lỗi API trả về None và lọc sạch Markdown
-    """
     prompt = (
-        f"So sánh 2 điện thoại:\n"
-        f"1. {p1_name} ({p1_price}đ)\n"
-        f"2. {p2_name} ({p2_price}đ)\n"
-        "Hãy tạo một bảng HTML (sử dụng class='table table-bordered table-striped') so sánh các tiêu chí: "
-        "Màn hình, Camera, Hiệu năng, Pin, Đáng mua hơn?. "
-        "Cột 1: Tiêu chí, Cột 2: {p1_name}, Cột 3: {p2_name}. "
-        "Cuối cùng thêm 1 đoạn văn ngắn kết luận <b>Ai nên mua máy nào</b>. "
-        "Chỉ trả về HTML hợp lệ, ĐẢM BẢO ĐÓNG TẤT CẢ CÁC THẺ (</table>, </div>). Không markdown, không lời dẫn thừa."
+        f"So sánh 2 điện thoại: {p1_name} ({p1_price}đ) và {p2_name} ({p2_price}đ). "
+        "Tạo bảng HTML class='table table-bordered' so sánh: Màn hình, Camera, Pin, Hiệu năng. "
+        "Kết luận ngắn gọn ai nên mua máy nào."
     )
-
     result = call_gemini_api(prompt)
-
-    if result:
-        # Lọc bỏ ```html và ``` ở đầu/cuối nếu có để tránh lỗi hiển thị
-        clean_html = re.sub(r"```html|```", "", result).strip()
-        return clean_html
-    else:
-        # Trả về thông báo lỗi HTML đẹp mắt thay vì None
-        return (
-            "<div class='alert alert-warning text-center'>"
-            "<i class='fas fa-exclamation-triangle fa-2x mb-2 text-warning'></i><br>"
-            "<strong>Hệ thống AI đang quá tải hoặc mất kết nối.</strong><br>"
-            "Vui lòng thử lại sau vài phút."
-            "</div>"
-        )
+    return re.sub(r"```html|```", "", result).strip() if result else None

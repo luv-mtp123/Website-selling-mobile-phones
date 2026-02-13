@@ -1,12 +1,13 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
+from sqlalchemy import func, desc # [NEW] Import func để tính tổng, desc để sắp xếp
+from datetime import datetime, timedelta
 from app.extensions import db
-from app.models import Product, User, Order, TradeInRequest
+from app.models import Product, User, Order, TradeInRequest, OrderDetail
 import json
 
 admin_bp = Blueprint('admin', __name__)
-
 
 @admin_bp.before_request
 @login_required
@@ -14,19 +15,71 @@ def check_admin():
     if current_user.role != 'admin':
         abort(403)
 
-
-# --- Dashboard ---
+# --- Dashboard & Analytics ---
 @admin_bp.route('/admin')
 def dashboard():
+    # 1. Dữ liệu cơ bản (Giữ nguyên logic cũ)
     products = Product.query.order_by(Product.id.desc()).all()
     users = User.query.all()
-
-    # [TỐI ƯU] Sử dụng joinedload để tránh lỗi truy vấn N+1 làm chậm hệ thống
     orders = Order.query.options(joinedload(Order.user)).order_by(Order.date_created.desc()).all()
-    tradeins = TradeInRequest.query.options(joinedload(TradeInRequest.user)).order_by(
-        TradeInRequest.created_at.desc()).all()
+    tradeins = TradeInRequest.query.options(joinedload(TradeInRequest.user)).order_by(TradeInRequest.created_at.desc()).all()
 
-    return render_template('admin_dashboard.html', products=products, users=users, orders=orders, tradeins=tradeins)
+    # 2. [NEW] THỐNG KÊ DOANH THU (Chỉ tính đơn Completed)
+    total_revenue = db.session.query(func.sum(Order.total_price)).filter(Order.status == 'Completed').scalar() or 0
+    
+    # 3. [NEW] THỐNG KÊ ĐƠN HÀNG THEO TRẠNG THÁI (Cho biểu đồ tròn)
+    # Kết quả trả về dạng: [('Pending', 5), ('Completed', 10), ...]
+    status_stats = db.session.query(Order.status, func.count(Order.id)).group_by(Order.status).all()
+    status_data = {stat[0]: stat[1] for stat in status_stats} # Chuyển về Dictionary
+
+    # 4. [NEW] DOANH THU 7 NGÀY GẦN NHẤT (Cho biểu đồ đường)
+    # Logic: Lấy đơn Completed trong 7 ngày qua, group theo ngày
+    seven_days_ago = datetime.now() - timedelta(days=6)
+    revenue_chart_query = db.session.query(
+        func.date(Order.date_created), 
+        func.sum(Order.total_price)
+    ).filter(
+        Order.status == 'Completed',
+        Order.date_created >= seven_days_ago
+    ).group_by(func.date(Order.date_created)).all()
+
+    # Xử lý dữ liệu để vẽ biểu đồ (lấp đầy những ngày doanh thu = 0)
+    chart_dates = []
+    chart_revenues = []
+    # Tạo map doanh thu từ query
+    rev_map = {str(r[0]): r[1] for r in revenue_chart_query}
+    
+    for i in range(7):
+        d = seven_days_ago + timedelta(days=i)
+        d_str = d.strftime('%Y-%m-%d') # Format YYYY-MM-DD khớp với SQLite
+        chart_dates.append(d.strftime('%d/%m')) # Label hiển thị: 15/02
+        # SQLite trả về chuỗi ngày, cần so sánh khéo léo hoặc dùng python loop nếu DB nhỏ
+        # Ở đây ta dùng logic đơn giản:
+        total = 0
+        for key, val in rev_map.items():
+            if str(key).startswith(d_str): # Match ngày
+                total = val
+                break
+        chart_revenues.append(total)
+
+    # 5. [NEW] TOP 5 SẢN PHẨM BÁN CHẠY
+    top_products = db.session.query(
+        OrderDetail.product_name, 
+        func.sum(OrderDetail.quantity).label('total_qty')
+    ).join(Order).filter(Order.status == 'Completed').group_by(OrderDetail.product_name).order_by(desc('total_qty')).limit(5).all()
+
+    return render_template(
+        'admin_dashboard.html',
+        products=products,
+        users=users,
+        orders=orders,
+        tradeins=tradeins,
+        total_revenue=total_revenue,
+        status_data=status_data,
+        chart_dates=json.dumps(chart_dates),
+        chart_revenues=json.dumps(chart_revenues),
+        top_products=top_products
+    )
 
 
 # --- Xử Lý Trạng Thái Đơn Hàng ---

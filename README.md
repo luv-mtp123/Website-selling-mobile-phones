@@ -448,5 +448,53 @@
 
 # 
 
+# **9. 📊 Dashboard Quản Trị \& Analytics (Admin Dashboard) (MỚI NHẤT)**
+
+# 
+
+#### **Hệ thống quản trị viên đã được nâng cấp toàn diện với khả năng phân tích dữ liệu trực quan, giúp chủ cửa hàng nắm bắt tình hình kinh doanh tức thì:**
+
+# 
+
+## **📈 Thống Kê Doanh Thu Thực Tế (Real-time Analytics):**
+
+# 
+
+#### **Tổng hợp doanh thu chính xác từ các đơn hàng có trạng thái "Completed".**
+
+#### 
+
+#### **Hiển thị các chỉ số quan trọng (Key Metrics) ngay đầu trang: Tổng doanh thu, Tổng đơn hàng, Số lượng thành viên, Tổng sản phẩm tồn kho.**
+
+# 
+
+## **📉 Biểu Đồ Trực Quan (Chart.js Integration):**
+
+# 
+
+#### **Tích hợp thư viện Chart.js nhẹ và mượt mà để vẽ biểu đồ động:**
+
+#### 
+
+#### **Biểu đồ đường (Line Chart): Theo dõi biến động doanh thu trong 7 ngày gần nhất.**
+
+#### 
+
+#### **Biểu đồ tròn (Doughnut Chart): Phân tích tỷ lệ trạng thái đơn hàng (Chờ xử lý, Đang giao, Hoàn thành, Hủy).**
+
+# 
+
+## **🏆 Top Sản Phẩm Bán Chạy (Best Sellers):**
+
+# 
+
+#### **Tự động thống kê và xếp hạng 5 sản phẩm có số lượng bán ra cao nhất hệ thống.**
+
+#### 
+
+#### **Giúp Admin dễ dàng nhận biết xu hướng mua sắm để nhập hàng phù hợp.**
+
+# 
+
 # **Chúc bạn có trải nghiệm tuyệt vời với MobileStore phiên bản Tết 2026! 🚀🌸**
 

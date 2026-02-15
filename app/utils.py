@@ -9,6 +9,7 @@ from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy import or_
 # --- IMPORT MODEL ĐỂ AI ĐỌC DỮ LIỆU ---
 from app.extensions import db
+
 # Lưu ý: Product được import lazy bên trong hàm để tránh circular import
 
 
@@ -43,16 +44,11 @@ def validate_image_file(file):
     return True, None
 
 
-# --- PASSWORD RESET UTILS ---
 def get_serializer(secret_key):
     return URLSafeTimedSerializer(secret_key)
 
 
 def send_reset_email_simulation(to_email, token):
-    """
-    Giả lập gửi email. Trong thực tế sẽ dùng SMTP.
-    Ở đây sẽ in ra Console và trả về link để test.
-    """
     reset_link = url_for('auth.reset_password', token=token, _external=True)
     print("=" * 30)
     print(f"EMAIL MOCK SENDING TO: {to_email}")
@@ -60,30 +56,27 @@ def send_reset_email_simulation(to_email, token):
     print("=" * 30)
     return reset_link
 
+
 # --- AI CORE FUNCTIONS ---
 
 def call_gemini_api(prompt, system_instruction=None):
-    """Hàm gọi API Gemini cơ bản"""
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         print("Lỗi: Chưa cấu hình GEMINI_API_KEY")
         return None
 
-    # Sử dụng model flash để phản hồi nhanh cho Chatbot
     target_model = "gemini-2.5-flash"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_model}:generateContent?key={api_key}"
     headers = {"Content-Type": "application/json"}
 
-    # Cấu trúc payload chuẩn
     data = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
-            "temperature": 0.7, # Tăng nhẹ sự sáng tạo cho lời thoại tự nhiên
+            "temperature": 0.4,  # Giảm nhiệt độ để AI tập trung vào chính xác, bớt sáng tạo
             "maxOutputTokens": 1000
         }
     }
 
-    # Thêm System Instruction nếu có (Giúp định hình nhân cách AI tốt hơn)
     if system_instruction:
         data["systemInstruction"] = {"parts": [{"text": system_instruction}]}
 
@@ -103,17 +96,15 @@ def call_gemini_api(prompt, system_instruction=None):
         return None
 
 
-# --- [NEW] RAG: TẠO NGỮ CẢNH DỮ LIỆU CHO AI ---
 def build_product_context(user_query):
     """
     RAG LITE: Tìm sản phẩm trong DB khớp với query để nạp kiến thức cho AI.
-    [OPTIMIZED] Trả về định dạng rõ ràng hơn để AI dễ đọc.
     """
     from app.models import Product
 
     user_query = user_query.lower()
 
-    # Logic tìm kiếm mờ (Fuzzy search simulation)
+    # Logic tìm kiếm mờ
     products = Product.query.filter(
         or_(
             Product.name.ilike(f"%{user_query}%"),
@@ -138,7 +129,7 @@ def build_product_context(user_query):
     if not products:
         return "Hiện tại hệ thống không tìm thấy sản phẩm nào khớp chính xác với yêu cầu này trong kho."
 
-    # [OPTIMIZED] Tạo bảng dữ liệu ngữ cảnh
+    # Tạo bảng dữ liệu ngữ cảnh
     context_text = "--- DANH SÁCH SẢN PHẨM CÓ SẴN TẠI SHOP ---\n"
     for p in products:
         price = "{:,.0f} đ".format(p.sale_price if p.is_sale else p.price)
@@ -153,15 +144,13 @@ def build_product_context(user_query):
     context_text += "--------------------------------------------"
     return context_text
 
+
 def generate_chatbot_response(user_msg):
     """
-    [NEW] Hàm xử lý tập trung cho Chatbot
-    Kết hợp RAG + Persona + Prompt Engineering
+    Hàm xử lý tập trung cho Chatbot
     """
-    # 1. Lấy ngữ cảnh dữ liệu
     product_context = build_product_context(user_msg)
 
-    # 2. Xây dựng System Persona (Nhân cách)
     system_instruction = (
         "Bạn là Trợ lý ảo AI của 'MobileStore' trong dịp Tết Bính Ngọ 2026. 🐍🌸\n"
         "TÍNH CÁCH: Thân thiện, vui vẻ, nhiệt tình, hay dùng emoji Tết (🧧, 🌸, 💰).\n"
@@ -169,42 +158,62 @@ def generate_chatbot_response(user_msg):
         "1. Tư vấn bán hàng dựa trên dữ liệu được cung cấp.\n"
         "2. Nếu có giá tiền, hãy in đậm (ví dụ: **10.000.000 đ**).\n"
         "3. Luôn gợi ý khách mua thêm phụ kiện hoặc chốt đơn nếu khách tỏ ý thích.\n"
-        "4. Nếu khách hỏi ngoài lề (thời tiết, chính trị...), hãy khéo léo lái về mua điện thoại chơi Tết.\n"
-        "GIỚI HẠN: Trả lời ngắn gọn dưới 100 từ. Không bịa đặt thông tin sản phẩm không có trong ngữ cảnh."
+        "4. Nếu khách hỏi ngoài lề, hãy khéo léo lái về mua điện thoại chơi Tết.\n"
+        "GIỚI HẠN: Trả lời ngắn gọn dưới 100 từ."
     )
 
-    # 3. Tạo User Prompt kèm Context
     final_prompt = (
         f"Câu hỏi của khách: '{user_msg}'\n\n"
         f"Dữ liệu kho hàng thực tế:\n{product_context}\n\n"
         "Hãy trả lời khách hàng ngay:"
     )
 
-    # 4. Gọi AI
     response = call_gemini_api(final_prompt, system_instruction)
     return response if response else "Hệ thống AI đang quá tải vì khách sắm Tết đông quá! Bạn đợi xíu nha 🧧"
 
 
-def get_gemini_suggestions(product_name):
-    prompt = (
-        f"Gợi ý 3 phụ kiện cần thiết nhất cho {product_name}. "
-        "Trả về định dạng HTML <ul><li>...</li></ul> ngắn gọn."
-    )
-    return call_gemini_api(prompt)
-
+# --- [FIXED] SMART SEARCH INTENT ---
 def analyze_search_intents(query):
-    # Prompt cũ của bạn vẫn ổn
+    """
+    Phân tích ý định tìm kiếm của người dùng thành JSON.
+    [CẬP NHẬT MẠNH] Prompt ép AI trả về keyword ngắn gọn để dễ match DB.
+    """
     prompt = (
-        f"Phân tích query: '{query}'. Trả về JSON {{brand, category, keyword, min_price, max_price, sort}}."
+        f"Phân tích câu tìm kiếm: '{query}'. \n"
+        "Nhiệm vụ: Trích xuất thông tin để lọc sản phẩm trong Database.\n"
+        "Quy tắc quan trọng:\n"
+        "1. 'keyword': Phải là từ khóa CỐT LÕI ngắn gọn nhất có trong tên sản phẩm. Ví dụ: 'ốp lưng iphone' -> keyword: 'ốp lưng'. Đừng lấy cả cụm 'ốp lưng iphone'.\n"
+        "2. 'category': Bắt buộc là 'phone' hoặc 'accessory' hoặc null. Nếu tìm 'ốp', 'sạc', 'tai nghe', 'cáp' -> category='accessory'.\n"
+        "3. 'brand': Tên hãng (Apple, Samsung...) nếu có.\n"
+        "\n"
+        "Trả về JSON duy nhất (không markdown):\n"
+        "{\n"
+        "  'brand': 'Tên hãng hoặc null',\n"
+        "  'category': 'phone' hoặc 'accessory' hoặc null,\n"
+        "  'keyword': 'Từ khóa ngắn gọn (ví dụ: ốp, sạc, tai nghe, iphone 15) hoặc null',\n"
+        "  'min_price': số tiền (int) hoặc null,\n"
+        "  'max_price': số tiền (int) hoặc null,\n"
+        "  'sort': 'price_asc' (rẻ nhất), 'price_desc' (đắt nhất) hoặc null\n"
+        "}\n"
+        "Ví dụ:\n"
+        "- 'tìm mua ốp lưng cho iphone' -> {'brand': 'Apple', 'category': 'accessory', 'keyword': 'ốp'}\n"
+        "- 'điện thoại giá rẻ' -> {'category': 'phone', 'sort': 'price_asc'}\n"
+        "- 'sạc dự phòng samsung' -> {'brand': 'Samsung', 'category': 'accessory', 'keyword': 'sạc'}\n"
     )
     response_text = call_gemini_api(prompt)
     if not response_text: return None
+
     try:
+        # Làm sạch chuỗi JSON (xóa ```json và ``` nếu có)
         clean_text = re.sub(r"```json|```", "", response_text).strip()
         match = re.search(r"\{.*\}", clean_text, re.DOTALL)
-        if match: return json.loads(match.group(0))
+        if match:
+            return json.loads(match.group(0))
         return None
-    except: return None
+    except Exception as e:
+        print(f"JSON Parse Error: {e}")
+        return None
+
 
 def get_comparison_result(p1_name, p1_price, p1_desc, p2_name, p2_price, p2_desc):
     prompt = (

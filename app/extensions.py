@@ -3,6 +3,7 @@ from flask_login import LoginManager
 # [FIX] Import đúng từ 'flask_client' thay vì 'base_client' để tương thích tốt nhất với Flask
 from authlib.integrations.flask_client import OAuth
 from flask_wtf.csrf import CSRFProtect
+from flask_migrate import Migrate  # [NEW] Import Flask-Migrate
 
 # 1. Khởi tạo Database SQLAlchemy
 db = SQLAlchemy()
@@ -18,3 +19,6 @@ login_manager.login_message_category = "warning" # Loại thông báo (info, suc
 oauth = OAuth()
 
 csrf = CSRFProtect() # Thêm dòng này
+
+# 4. [NEW] Khởi tạo Migrate
+migrate = Migrate()

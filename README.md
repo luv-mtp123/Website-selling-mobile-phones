@@ -18,7 +18,19 @@
 
 # 
 
-### **✅ Fix Lỗi API Chatbot (CSRF Error): (MỚI)**
+### **✅ Quản Lý Database Chuyên Nghiệp (Flask-Migrate) (MỚI)**
+
+# 
+
+#### **Nâng cấp: Tích hợp Flask-Migrate để quản lý thay đổi cấu trúc Database mà không cần xóa dữ liệu cũ.**
+
+#### 
+
+#### **Lệnh hỗ trợ: flask db init, flask db migrate, flask db upgrade.**
+
+# 
+
+### **✅ Fix Lỗi API Chatbot (CSRF Error):**
 
 # 
 
@@ -30,7 +42,7 @@
 
 # 
 
-### **✅ Fix Lỗi AI Smart Search (Bộ lọc thông minh): (MỚI)**
+### **✅ Fix Lỗi AI Smart Search (Bộ lọc thông minh):**
 
 # 
 
@@ -42,15 +54,15 @@
 
 #### 
 
-#### **1. Cập nhật Prompt Engineering: Bắt buộc AI phân loại rõ ràng category: 'phone' hoặc category: 'accessory' dựa trên từ khóa.**
+#### **Prompt Engineering: Bắt buộc AI phân loại rõ ràng category: 'phone' hoặc category: 'accessory' dựa trên từ khóa.**
 
 #### 
 
-#### **2. Trích xuất Keyword chuyên sâu: AI tự động lấy từ khóa chính (VD: "ốp", "tai nghe") để lọc chính xác tên sản phẩm.**
+#### **Trích xuất Keyword: AI tự động lấy từ khóa chính (VD: "ốp", "tai nghe") để lọc chính xác tên sản phẩm.**
 
 #### 
 
-#### **3. Cache Versioning: Đổi key cache (v3) để xóa bỏ các kết quả phân tích cũ sai lệch, buộc hệ thống chạy lại logic mới.**
+#### **Cache Versioning: Đổi key cache để xóa bỏ các kết quả phân tích cũ sai lệch.**
 
 # 
 
@@ -58,125 +70,91 @@
 
 # 
 
-#### **Vấn đề: Trước đây, giá sản phẩm được lưu trong session giỏ hàng. Nếu Admin tăng giá sản phẩm trong lúc khách đang chọn mua, khách vẫn thanh toán với giá cũ.**
+#### **Vấn đề: Giá sản phẩm lưu trong session. Nếu Admin tăng giá khi khách đang mua, khách vẫn thanh toán giá cũ.**
 
 #### 
 
-#### **Giải pháp: Tại bước thanh toán (checkout), hệ thống hiện truy vấn lại giá thực tế từ Database để tính tổng tiền, đảm bảo tính chính xác và bảo mật doanh thu.**
+#### **Giải pháp: Tại bước thanh toán (checkout), hệ thống truy vấn lại giá thực tế từ Database để tính tổng tiền.**
 
 # 
 
-## **✅ Fix Lỗi Toàn Vẹn Dữ Liệu (Cascade Delete):**
+### **✅ Fix Lỗi Toàn Vẹn Dữ Liệu (Cascade Delete):**
 
 # 
-
-#### **Vấn đề: Khi xóa một sản phẩm, các dữ liệu liên quan (như bình luận) còn sót lại gây lỗi Foreign Key hoặc rác dữ liệu.**
-
-#### 
 
 #### **Giải pháp: Thêm cấu hình cascade="all, delete-orphan" vào Model. Khi xóa sản phẩm, toàn bộ bình luận liên quan sẽ tự động được dọn dẹp.**
 
 # 
 
-## **✅ Tối ưu Cấu trúc Database (SQLAlchemy 2.0): (MỚI)**
-
-
+### **✅ Tối ưu Cấu trúc Database (SQLAlchemy 2.0):**
 
 # 
 
-#### **Cập nhật: Thay thế toàn bộ cú pháp truy vấn cũ (Model.query.get) bằng chuẩn mới của SQLAlchemy 2.0 (db.session.get()) giúp tối ưu hiệu suất và loại bỏ hoàn toàn các cảnh báo (LegacyAPIWarning).**
+#### **Cập nhật: Thay thế cú pháp Model.query.get bằng db.session.get() giúp tối ưu hiệu suất và loại bỏ cảnh báo (LegacyAPIWarning).**
 
 # 
 
-## **✅ Fix Lỗi Xung Đột Thời Gian (Timezone TypeError): (MỚI)**
+### **✅ Fix Lỗi Xung Đột Thời Gian (Timezone TypeError):**
 
 # 
 
-#### **Vấn đề: Lỗi TypeError: can't subtract offset-naive and offset-aware datetimes khi tính toán thời gian hết hạn đơn hàng.**
-
-#### 
-
-#### **Giải pháp: Đồng bộ toàn bộ dữ liệu thời gian về dạng naive UTC (sử dụng .replace(tzinfo=None)) để tương thích hoàn toàn với cơ sở dữ liệu SQLite.**
+#### **Giải pháp: Đồng bộ toàn bộ dữ liệu thời gian về dạng naive UTC (.replace(tzinfo=None)) để tương thích hoàn toàn với SQLite.**
 
 # 
 
-# **2. ✨ Tính Năng Mới: Bình Luận \& Đánh Giá (Reviews)**
+## **2. ✨ Tính Năng Mới: Bình Luận \& Đánh Giá (Reviews)**
 
 # 
 
-## **⭐ Hệ thống đánh giá 5 sao:**
+### **⭐ Hệ thống đánh giá 5 sao: Cho phép người dùng đăng nhập gửi đánh giá chất lượng sản phẩm.**
 
 # 
 
-#### **Cho phép người dùng đăng nhập gửi đánh giá chất lượng sản phẩm từ 1 đến 5 sao.**
-
-#### 
-
-#### **Giao diện nhập liệu trực quan với các ngôi sao tương tác.**
-
-#### 
-
-#### **💬 Bình luận thời gian thực:**
-
-#### 
-
-#### **Hiển thị danh sách bình luận mới nhất ngay dưới trang chi tiết sản phẩm.**
-
-#### 
-
-#### **Hiển thị thông tin người dùng (Avatar, Tên) và thời gian gửi.**
+### **💬 Bình luận thời gian thực: Hiển thị danh sách bình luận mới nhất kèm Avatar và tên người dùng.**
 
 # 
 
-# **3. 🎨 Nâng Cấp Giao Diện (UI/UX Optimization)**
+## **3. 🎨 Nâng Cấp Giao Diện (UI/UX Optimization)**
 
 # 
 
-## **🏠 Trang Chủ (Homepage) - Giao diện Tết:**
+### **🏠 Trang Chủ (Homepage) - Giao diện Tết:**
 
 # 
 
-#### **Banner Tết Bính Ngọ: Banner tĩnh khổ lớn với hiệu ứng zoom nhẹ (hover) sang trọng.**
+#### **Banner Tết Bính Ngọ: Banner tĩnh khổ lớn với hiệu ứng zoom nhẹ sang trọng.**
 
 #### 
 
-#### **Flash Sale: Khu vực khuyến mãi với đồng hồ đếm ngược (Countdown Timer) sống động.**
+#### **Flash Sale: Khu vực khuyến mãi với đồng hồ đếm ngược (Countdown Timer).**
 
 #### 
 
-#### **Smart Search: Thanh tìm kiếm AI thiết kế dạng nổi (floating), đẹp mắt và dễ sử dụng.**
-
-#### 
-
-#### **Tiện ích: Các icon cam kết (Giao hỏa tốc, Bảo hành vàng...) được thiết kế lại hiện đại.**
+#### **Smart Search: Thanh tìm kiếm AI thiết kế dạng nổi (floating).**
 
 # 
 
-## **📱 Trang Chi Tiết (Product Detail):**
+### **📱 Trang Chi Tiết (Product Detail):**
 
 # 
 
-#### **Image Gallery: Khung hiển thị ảnh sản phẩm gọn gàng, hỗ trợ zoom khi di chuột.**
+#### **Image Gallery: Khung hiển thị ảnh sản phẩm gọn gàng, hỗ trợ zoom.**
 
 #### 
 
-#### **Variant Selection: Nút chọn Màu sắc/Phiên bản có chỉ báo "active" (dấu tick) rõ ràng.**
+#### **Variant Selection: Nút chọn Màu sắc/Phiên bản có chỉ báo "active".**
 
 #### 
 
-#### **Sticky Actions: Nút "Mua ngay" và "Thêm giỏ" được thiết kế nổi bật, đổ bóng 3D.**
+#### **Sticky Actions: Nút "Mua ngay" và "Thêm giỏ" thiết kế nổi bật.**
 
 # 
 
-## **🔔 Hệ thống Thông báo Thông minh (SweetAlert2): (MỚI)**
+### **🔔 Hệ thống Thông báo Thông minh (SweetAlert2):**
 
-#### 
+# 
 
-#### **Thay thế hoàn toàn Bootstrap Toasts mặc định.**
-
-#### 
-
-#### **Các thông báo (Thêm giỏ hàng thành công, Lỗi đăng nhập, Cảnh báo kho hàng) giờ đây hiển thị dưới dạng Pop-up góc màn hình cực kỳ mượt mà, có thanh thời gian tự động ẩn.**
+#### **Thay thế Bootstrap Toasts bằng Pop-up SweetAlert2 mượt mà góc màn hình.**
 
 # 
 
@@ -200,57 +178,127 @@
 
 #### 
 
-#### **So Sánh Sản Phẩm: Kẻ bảng so sánh thông số chi tiết.**
+#### **So Sánh Sản Phẩm: Kẻ bảng so sánh thông số chi tiết (HTML Table).**
 
 #### 
 
-#### **Chatbot: Trả lời tự động các câu hỏi thường gặp.**
+#### **Chatbot: Trả lời tự động các câu hỏi thường gặp và tư vấn sản phẩm.**
 
 # 
 
-## **6. 🧪 Kiểm Thử Tự Động (Automated Testing) (MỚI)**
+## **6. 🧪 Kiểm Thử Tự Động (Automated Testing)**
 
 # 
 
-
-
-#### **Dự án đã được tích hợp hệ thống kiểm thử tự động, sử dụng DB ảo trên RAM (sqlite:///:memory:) đảm bảo không ảnh hưởng dữ liệu thật:**
+#### **Dự án tích hợp hệ thống kiểm thử tự động, sử dụng DB ảo trên RAM (sqlite:///:memory:):**
 
 #### 
 
-#### **Unit Testing: Kiểm tra luồng Đăng nhập, Giỏ hàng, Phân quyền bảo mật Admin.**
+#### **Unit Testing: Login, Cart, Phân quyền Admin.**
 
 #### 
 
-#### **Integration Testing: Đảm bảo toàn vẹn dữ liệu (xóa sản phẩm tự động xóa bình luận).**
+#### **Integration Testing: Toàn vẹn dữ liệu.**
 
 #### 
 
-#### **System Testing (E2E): Giả lập vòng đời đơn hàng hoàn chỉnh (Khách mua hàng -> Trừ kho -> Admin hủy đơn -> Hoàn lại kho an toàn).**
+#### **System Testing (E2E): Vòng đời đơn hàng (Mua -> Trừ kho -> Hủy -> Hoàn kho).**
 
 # 
 
-
-
-## **7. 🌐 Sẵn Sàng Triển Khai (Production Ready) (MỚI)**
+## **7. 🌐 Sẵn Sàng Triển Khai (Production Ready)**
 
 # 
 
-
-
-#### **Dự án đã được cấu hình sẵn sàng để đẩy lên các máy chủ thực tế (VPS, Render, Heroku...):**
+#### **wsgi.py: Entry Point độc lập cho Production.**
 
 #### 
 
-#### **Tích hợp wsgi.py làm Entry Point độc lập.**
+#### **Procfile: Cấu hình cho Gunicorn (Linux/Heroku/Render).**
 
 #### 
 
-#### **Cấu hình sẵn Procfile cho Gunicorn (môi trường Linux).**
+#### **Waitress: Hỗ trợ chạy server trên môi trường Windows.**
+
+# 
+
+## **8. 🛡️ Bảo Mật Nâng Cao**
+
+# 
+
+#### **✅ Ngăn Chặn Race Condition: Áp dụng khóa dòng (with\_for\_update()) khi thanh toán để tránh bán quá số lượng tồn kho.**
 
 #### 
 
-#### **Hỗ trợ chạy máy chủ ảo hóa bằng Waitress trên môi trường Windows.**
+#### **✅ Bảo Mật CSRF: Tích hợp Flask-WTF bảo vệ toàn bộ Form.**
+
+#### 
+
+#### **✅ Chống DDoS Upload: Giới hạn MAX\_CONTENT\_LENGTH.**
+
+#### 
+
+#### **✅ Security Audit: Script test\_security.py quét lỗ hổng IDOR.**
+
+## 
+
+## **9. 📊 Dashboard Quản Trị (Admin Dashboard)**
+
+# 
+
+#### **📈 Real-time Analytics: Thống kê doanh thu từ đơn hàng "Completed".**
+
+#### 
+
+#### **📉 Biểu Đồ (Chart.js):**
+
+#### 
+
+#### **Biểu đồ đường: Doanh thu 7 ngày gần nhất.**
+
+#### 
+
+#### **Biểu đồ tròn: Tỷ lệ trạng thái đơn hàng.**
+
+#### 
+
+#### **🏆 Top Sản Phẩm: Xếp hạng 5 sản phẩm bán chạy nhất.**
+
+# 
+
+## **10. 🧠 Tối Ưu Hóa AI \& Persona**
+
+# 
+
+#### **AI Persona: Thiết lập tính cách nhân viên bán hàng vui vẻ, dùng emoji Tết (🧧, 🌸).**
+
+#### 
+
+#### **RAG Optimization: Cải thiện ngữ cảnh dữ liệu giúp AI nhận biết tình trạng "Hết hàng".**
+
+#### 
+
+#### **Refactor Code: Tách logic AI sang utils.py.**
+
+# 
+
+## **11. 💳 Thanh Toán Online Tự Động (VietQR)**
+
+# 
+
+#### **✅ Cổng Thanh Toán VietQR Động: Tự động tạo mã QR chính xác theo số tiền đơn hàng.**
+
+#### 
+
+#### **✅ Real-time Polling: Tự động kiểm tra trạng thái mỗi 3 giây (AJAX).**
+
+#### 
+
+#### **✅ Countdown Timer: Giao dịch hết hạn sau 3 phút để bảo mật tồn kho.**
+
+#### 
+
+#### **✅ Chế Độ Giả Lập (Local): Nút "Gửi tín hiệu ĐÃ NHẬN TIỀN" để test luồng thanh toán mà không cần chuyển khoản thật.**
 
 # 
 
@@ -258,59 +306,49 @@
 
 # 
 
-### **MobileStore/**
+## **MobileStore/**
 
-### **│**
+## **│**
 
-### **├── run.py                  # (ENTRY POINT) File chạy chính**
+## **├── run.py                  # (ENTRY POINT) File chạy chính**
 
-#### **├── wsgi.py                 # (PROD ENTRY) File chạy cho máy chủ thực tế**
+## **├── wsgi.py                 # (PROD ENTRY) File chạy cho máy chủ thực tế**
 
-#### **├── Procfile                # Cấu hình Web Server (Gunicorn)**
+## **├── Procfile                # Cấu hình Web Server (Gunicorn)**
 
-#### **├── test\_\*.py               # Các kịch bản kiểm thử tự động**
+## **├── migrations/             # (NEW) Thư mục chứa file migration DB**
 
-#### **├──test\_security.py         # Kiểm thử bảo mật chuyên biệt**
+## **├── test\_\*.py               # Các kịch bản kiểm thử tự động**
 
-### **├── .env                    # Cấu hình bảo mật**
+## **├── .env                    # Cấu hình bảo mật**
 
-### **├── requirements.txt        # Thư viện**
+## **├── requirements.txt        # Thư viện**
 
-### **│**
+## **│**
 
-### **└── app/                    # (PACKAGE) Source Code**
+## **└── app/                    # (PACKAGE) Source Code**
 
-### **├── \_\_init\_\_.py         # App Factory**
+##     **├── \_\_init\_\_.py         # App Factory**
 
-### **├── extensions.py       # DB, Login, OAuth**
+##     **├── extensions.py       # DB, Login, OAuth, Migrate, CSRF**
 
-### **├── models.py           # Database (User, Product, Order, Comment...)**
+##     **├── models.py           # Database Models**
 
-### **├── utils.py            # AI Logic**
+##     **├── utils.py            # AI Logic \& Helpers**
 
-### **│**
+##     **│**
 
-### **├── templates/          # (VIEW) Giao diện HTML**
+##     **├── templates/          # (VIEW) Giao diện HTML**
 
-### **│   ├── base.html       # Layout chung**
+##     **└── routes/             # (CONTROLLER)**
 
-### **│   ├── home.html       # Trang chủ (New UI)**
+##         **├── main.py         # Xử lý chính**
 
-### **│   ├── detail.html     # Chi tiết (Reviews added)**
+##         **├── auth.py         # Xác thực**
 
-### **│   └── ...**
+##         **└── admin.py        # Quản trị**
 
-### **│**
-
-### **└── routes/             # (CONTROLLER)**
-
-### **├── main.py         # Xử lý chính (Home, Cart, Comment)**
-
-### **├── auth.py         # Xác thực**
-
-### **└── admin.py        # Quản trị**
-
-### **└── test/             # Các bản test hệ thống** 
+# 
 
 # 
 
@@ -318,7 +356,7 @@
 
 # 
 
-## **Bước 1: Cài đặt**
+## **Bước 1: Cài đặt thư viện**
 
 # 
 
@@ -336,311 +374,95 @@
 
 # 
 
-## **Bước 3: Khởi tạo Database (BẮT BUỘC)**
+## **Bước 3: Khởi tạo Database (QUAN TRỌNG)**
 
 # 
 
-#### **Do có thêm bảng Comment và các quan hệ mới, hãy:**
+#### **Do đã tích hợp Flask-Migrate, bạn chạy các lệnh sau để khởi tạo DB:**
 
 #### 
 
-#### **Xóa file mobilestore.db cũ.**
+#### **# 1. Khởi tạo môi trường migration (chỉ chạy lần đầu)**
+
+#### **flask db init**
 
 #### 
 
-#### **Chạy lại server để hệ thống tự tạo DB mới.**
+#### **# 2. Tạo file migration từ Models**
+
+#### **flask db migrate -m "Initial migration"**
+
+#### 
+
+#### **# 3. Áp dụng vào Database**
+
+#### **flask db upgrade**
 
 # 
 
-## **Bước 4: Chạy Website (Môi trường Phát triển)**
+# 
+
+## **Bước 4: Chạy Website (Local)**
 
 # 
 
 #### **python run.py**
 
-#### **👉 Truy cập: http://127.0.0.1:5000**
+# 
 
 # 
 
-## **Bước 5: Chạy Website (Môi trường Thực tế - Windows)**
+### **👉 Truy cập: http://127.0.0.1:5000**
 
-## 
+# 
 
-#### **pip install waitress**
+## **Bước 5: Chạy Production (Windows)**
+
+# 
 
 #### **waitress-serve --port=5000 wsgi:app**
 
 # 
 
-
+# 
 
 # **🔑 Tài Khoản Demo**
 
 # 
 
-#### **Vai trò**
-
-#### 
-
-#### **Username**
-
-#### 
-
-#### **Password**
-
-#### 
-
-#### **Admin**
-
-#### 
-
-#### **admin**
-
-#### 
-
-#### **123456**
-
-#### 
-
-#### **Khách**
-
-#### 
-
-#### **khach**
-
-#### 
-
-#### **123456**
+# **Vai trò**
 
 # 
 
-# **8. 🛡️ Cập Nhật Bảo Mật Nâng Cao \& Tối Ưu Hóa (Vừa Cập Nhật)**
+# **Username**
 
 # 
 
-#### **Dự án vừa trải qua đợt đánh giá bảo mật (Security Audit) và đã khắc phục triệt để các rủi ro:**
+# **Password**
 
 # 
 
-## **✅ Ngăn Chặn Race Condition (Tranh chấp tài nguyên):**
-
-#### 
-
-* #### **Áp dụng kỹ thuật khóa dòng bi quan (Pessimistic Locking - with\_for\_update()) vào logic thanh toán (checkout). Khắc phục hoàn toàn lỗi âm kho khi có nhiều khách hàng cùng bấm thanh toán một sản phẩm tại cùng một thời điểm.**
+# **Admin**
 
 # 
 
-## **✅ Củng Cố Bảo Mật CSRF (Cross-Site Request Forgery):**
-
-#### 
-
-* #### **Tích hợp thư viện Flask-WTF giúp tự động sinh và kiểm chứng CSRF Token cho toàn bộ các Form trên hệ thống (Login, Register, Checkout, Admin), ngăn chặn hacker đánh cắp phiên và giả mạo thao tác.**
+# **admin**
 
 # 
 
-## **✅ Phòng Chống Tấn Công DDoS Upload:**
-
-* #### **Khẳng định tính an toàn trước các thủ đoạn DDoS thông qua việc cố tình tải lên file rác cực lớn nhờ cấu hình MAX\_CONTENT\_LENGTH chặt chẽ.**
+# **123456**
 
 # 
 
-## **✅ Fix Cảnh Báo Deprecation Python:**
-
-#### 
-
-* #### **Cập nhật code import đối tượng thời gian theo chuẩn mới nhất của Python (from datetime import datetime, timezone), làm sạch hoàn toàn terminal khỏi các dòng cảnh báo cũ.**
+# **Khách**
 
 # 
 
-## **✅ Tích Hợp Kịch Bản Penetration Testing:**
-
-#### 
-
-* #### **Bổ sung thêm script kiểm thử bảo mật chuyên biệt test\_security.py giúp tự động quét và ngăn chặn lỗ hổng IDOR (Insecure Direct Object Reference).**
+# **khach**
 
 # 
 
-# **9. 📊 Dashboard Quản Trị \& Analytics (Admin Dashboard) (MỚI NHẤT)**
-
-# 
-
-#### **Hệ thống quản trị viên đã được nâng cấp toàn diện với khả năng phân tích dữ liệu trực quan, giúp chủ cửa hàng nắm bắt tình hình kinh doanh tức thì:**
-
-# 
-
-## **📈 Thống Kê Doanh Thu Thực Tế (Real-time Analytics):**
-
-# 
-
-#### **Tổng hợp doanh thu chính xác từ các đơn hàng có trạng thái "Completed".**
-
-#### 
-
-#### **Hiển thị các chỉ số quan trọng (Key Metrics) ngay đầu trang: Tổng doanh thu, Tổng đơn hàng, Số lượng thành viên, Tổng sản phẩm tồn kho.**
-
-# 
-
-## **📉 Biểu Đồ Trực Quan (Chart.js Integration):**
-
-# 
-
-#### **Tích hợp thư viện Chart.js nhẹ và mượt mà để vẽ biểu đồ động:**
-
-#### 
-
-#### **Biểu đồ đường (Line Chart): Theo dõi biến động doanh thu trong 7 ngày gần nhất.**
-
-#### 
-
-#### **Biểu đồ tròn (Doughnut Chart): Phân tích tỷ lệ trạng thái đơn hàng (Chờ xử lý, Đang giao, Hoàn thành, Hủy).**
-
-# 
-
-## **🏆 Top Sản Phẩm Bán Chạy (Best Sellers):**
-
-# 
-
-#### **Tự động thống kê và xếp hạng 5 sản phẩm có số lượng bán ra cao nhất hệ thống.**
-
-#### 
-
-#### **Giúp Admin dễ dàng nhận biết xu hướng mua sắm để nhập hàng phù hợp.**
-
-# 
-
-# **10. 🧠 Tối Ưu Hóa AI \& Kiểm Thử Nâng Cao (Mới Nhất)**
-
-# 
-
-## **✅ Nâng Cấp Trí Tuệ Nhân Tạo (AI Persona \& RAG):**
-
-# 
-
-#### **Tối ưu hóa utils.py để "thổi hồn" cho Chatbot:**
-
-#### 
-
-#### **System Persona (Nhân cách hệ thống): Thiết lập tính cách cho AI là một nhân viên bán hàng thân thiện, vui vẻ, mang đậm không khí Tết Bính Ngọ (sử dụng emoji 🧧, 🌸).**
-
-#### 
-
-#### **Prompt Engineering: Cải thiện câu lệnh (prompt) để AI trả lời ngắn gọn, biết in đậm giá tiền và luôn gợi ý khách mua thêm (Upsell).**
-
-#### 
-
-#### **RAG Optimization: Cấu trúc lại dữ liệu sản phẩm nạp vào ngữ cảnh (Context) giúp AI hiểu rõ tình trạng "Sẵn hàng" hay "Hết hàng" để tư vấn chính xác hơn.**
-
-# 
-
-## **✅ Refactor Code (Tái cấu trúc):**
-
-# 
-
-#### **Cleaner Architecture: Chuyển toàn bộ logic xử lý AI từ main.py sang utils.py (generate\_chatbot\_response), giúp code gọn gàng và dễ bảo trì hơn.**
-
-# 
-
-## **✅ Bổ Sung Unit Test Chuyên Sâu (test\_new\_features.py):**
-
-# 
-
-### **1. Kiểm thử tính năng Thu Cũ Đổi Mới (Trade-In):**
-
-# 
-
-#### **Kiểm tra bắt buộc đăng nhập.**
-
-#### 
-
-#### **Kiểm tra luồng gửi yêu cầu thành công.**
-
-#### 
-
-#### **Security Test: Ngăn chặn upload file không hợp lệ (ví dụ: file .txt giả danh ảnh).**
-
-#### 
-
-### **2. Kiểm thử Chatbot (Mocking Technique):**
-
-# 
-
-#### **Mocking API: Sử dụng kỹ thuật unittest.mock để giả lập phản hồi từ Google Gemini. Điều này giúp chạy test siêu tốc, không cần mạng và không tốn quota API Key.**
-
-#### 
-
-#### **Kiểm tra logic phản hồi theo từ khóa (Rule-based) và phản hồi từ AI.**
-
-# 
-
-# **11. 💳 Tính Năng Mới: Thanh Toán Online Tự Động (MỚI NHẤT)**
-
-# 
-
-#### **Hệ thống thanh toán đã được nâng cấp lên chuẩn chuyên nghiệp, mô phỏng các sàn TMĐT lớn:**
-
-#### 
-
-## **✅ Cổng Thanh Toán VietQR Động:**
-
-# 
-
-#### **Tự động tạo mã QR chứa chính xác số tiền đơn hàng và nội dung chuyển khoản định danh.**
-
-#### 
-
-#### **Tích hợp API VietQR giúp khách hàng quét mã nhanh trên tất cả các App ngân hàng.**
-
-# 
-
-## **✅ Cơ Chế Tự Động Nhận Diện (Real-time Polling):**
-
-# 
-
-#### **Website sử dụng kỹ thuật Polling (AJAX) để kiểm tra trạng thái đơn hàng mỗi 3 giây.**
-
-#### 
-
-#### **Khi tiền về tài khoản (hoặc kích hoạt giả lập), hệ thống tự động hiển thị thông báo "Thanh toán thành công" và chuyển trang mà không cần tải lại.**
-
-# 
-
-## **✅ Giới Hạn Thời Gian Thanh Toán (Countdown Timer):**
-
-# 
-
-#### **Mỗi giao dịch chỉ có hiệu lực trong vòng 3 phút.**
-
-#### 
-
-#### **Đồng hồ đếm ngược hiển thị trực quan. Khi hết giờ, mã QR sẽ bị vô hiệu hóa và đơn hàng bị hủy để bảo mật tồn kho.**
-
-#### 
-
-## **✅ Hệ Thống Khóa Bảo Mật:**
-
-# 
-
-#### **Loại bỏ hoàn toàn nút "Xác nhận thủ công". Cả người dùng và Admin đều không thể can thiệp bằng cách nhấn nút ảo.**
-
-#### 
-
-#### **Trạng thái đơn hàng chỉ chuyển sang "Đã thanh toán" dựa trên dữ liệu thực tế từ Database.**
-
-# 
-
-## **🧪 Chế Độ Thử Nghiệm \& Kiểm Thử (Testing \& Simulation)**
-
-# 
-
-### **🛠️ Giả Lập Webhook Ngân Hàng:**
-
-# 
-
-#### **Do chạy ở môi trường Local (không có kết nối ngân hàng thật), hệ thống cung cấp một Endpoint bí mật để giả lập tín hiệu thanh toán thành công:**
-
-#### 
-
-#### **Nút "Gửi tín hiệu ĐÃ NHẬN TIỀN" giúp lập trình viên kiểm tra luồng tự động nhận diện của Frontend.**
+# **123456**
 
 # 
 

@@ -2,9 +2,10 @@ import os
 import json
 from flask import Flask
 from werkzeug.security import generate_password_hash
-from .extensions import db, login_manager, oauth
+# [NEW] Thêm migrate vào import
+from .extensions import db, login_manager, oauth, csrf, migrate
 from .models import User, Product, AICache
-from .extensions import db, login_manager, oauth, csrf # Thêm csrf
+
 
 def create_app():
     app = Flask(__name__)
@@ -35,10 +36,13 @@ def create_app():
 
     # 2. Khởi tạo Extensions
     db.init_app(app)
-    csrf.init_app(app)  # Khởi tạo CSRF bảo vệ toàn cục
+    csrf.init_app(app)
     login_manager.init_app(app)
-    login_manager.login_view = 'auth.login'  # Chuyển hướng về route login của blueprint auth
+    login_manager.login_view = 'auth.login'
     oauth.init_app(app)
+
+    # [NEW] Khởi tạo Flask-Migrate
+    migrate.init_app(app, db)
 
     # Đăng ký Google OAuth (Logic từ app.py cũ)
     oauth.register(
@@ -49,7 +53,7 @@ def create_app():
         client_kwargs={'scope': 'openid email profile'}
     )
 
-    # 3. Đăng ký Filter Tiền tệ (Logic từ app.py cũ - đã fix lỗi ValueError)
+    # 3. Đăng ký Filter Tiền tệ
     @app.template_filter('vnd')
     def vnd_filter(value):
         if value is None: return "0 đ"
@@ -61,7 +65,6 @@ def create_app():
         return "{:,.0f} đ".format(value).replace(",", ".")
 
     # 4. Đăng ký Blueprints (Routes)
-    # Import bên trong hàm để tránh lỗi vòng lặp (circular import)
     from .routes.main import main_bp
     from .routes.auth import auth_bp
     from .routes.admin import admin_bp
@@ -80,9 +83,9 @@ def load_user(user_id):
 
 
 # Helper khởi tạo dữ liệu mẫu (Được gọi từ run.py)
-# Logic này được lấy từ app.py cũ để đảm bảo dữ liệu nhất quán
 def initialize_database():
-    # Lưu ý: Hàm này cần được gọi trong app_context từ run.py
+    # [NOTE] Khi dùng Flask-Migrate, db.create_all() vẫn có tác dụng tạo bảng nếu chưa có,
+    # nhưng Migration sẽ quản lý version tốt hơn.
     db.create_all()
 
     # 1. Tạo Admin & Khách

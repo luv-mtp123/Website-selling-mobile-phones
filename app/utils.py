@@ -3,12 +3,14 @@ import requests
 import json
 import time
 import re
+import hashlib
 from flask import current_app, url_for
 from itsdangerous import URLSafeTimedSerializer
 # [FIX] Import or_ từ sqlalchemy để dùng cho tìm kiếm
 from sqlalchemy import or_
 # --- IMPORT MODEL ĐỂ AI ĐỌC DỮ LIỆU ---
 from app.extensions import db
+from app.models import AICache
 
 # Lưu ý: Product được import lazy bên trong hàm để tránh circular import
 
@@ -73,7 +75,7 @@ def call_gemini_api(prompt, system_instruction=None):
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
             "temperature": 0.4,  # Giảm nhiệt độ để AI tập trung vào chính xác, bớt sáng tạo
-            "maxOutputTokens": 1000
+            "maxOutputTokens": 4000  # Tăng token để bảng so sánh không bị cắt giữa chừng
         }
     }
 
@@ -81,7 +83,7 @@ def call_gemini_api(prompt, system_instruction=None):
         data["systemInstruction"] = {"parts": [{"text": system_instruction}]}
 
     try:
-        response = requests.post(url, headers=headers, json=data, timeout=10)
+        response = requests.post(url, headers=headers, json=data, timeout=30)  # Tăng timeout lên 30s
         if response.status_code == 200:
             result = response.json()
             try:
@@ -176,7 +178,6 @@ def generate_chatbot_response(user_msg):
 def analyze_search_intents(query):
     """
     Phân tích ý định tìm kiếm của người dùng thành JSON.
-    [CẬP NHẬT MẠNH] Prompt ép AI trả về keyword ngắn gọn để dễ match DB.
     """
     prompt = (
         f"Phân tích câu tìm kiếm: '{query}'. \n"
@@ -195,10 +196,6 @@ def analyze_search_intents(query):
         "  'max_price': số tiền (int) hoặc null,\n"
         "  'sort': 'price_asc' (rẻ nhất), 'price_desc' (đắt nhất) hoặc null\n"
         "}\n"
-        "Ví dụ:\n"
-        "- 'tìm mua ốp lưng cho iphone' -> {'brand': 'Apple', 'category': 'accessory', 'keyword': 'ốp'}\n"
-        "- 'điện thoại giá rẻ' -> {'category': 'phone', 'sort': 'price_asc'}\n"
-        "- 'sạc dự phòng samsung' -> {'brand': 'Samsung', 'category': 'accessory', 'keyword': 'sạc'}\n"
     )
     response_text = call_gemini_api(prompt)
     if not response_text: return None
@@ -216,10 +213,21 @@ def analyze_search_intents(query):
 
 
 def get_comparison_result(p1_name, p1_price, p1_desc, p2_name, p2_price, p2_desc):
+    # [FIX] Prompt chặt chẽ hơn để tránh AI trả về lời dẫn chuyện
     prompt = (
-        f"So sánh 2 điện thoại: {p1_name} ({p1_price}đ) và {p2_name} ({p2_price}đ). "
-        "Tạo bảng HTML class='table table-bordered' so sánh: Màn hình, Camera, Pin, Hiệu năng. "
-        "Kết luận ngắn gọn ai nên mua máy nào."
+        f"Đóng vai chuyên gia công nghệ. So sánh 2 sản phẩm: {p1_name} ({p1_price}đ) và {p2_name} ({p2_price}đ). \n"
+        "YÊU CẦU ĐẦU RA (Output Requirement): \n"
+        "1. CHỈ TRẢ VỀ MÃ HTML (HTML Code Only). KHÔNG ĐƯỢC có lời chào, lời dẫn (như 'Chắc chắn rồi', 'Dưới đây là...').\n"
+        "2. Cấu trúc HTML:\n"
+        "   - Một thẻ <h3> tiêu đề.\n"
+        "   - Một bảng <table class='table table-bordered table-striped table-hover'> so sánh: Màn hình, Camera, Pin, Hiệu năng, Giá.\n"
+        "   - Một thẻ <div class='alert alert-success mt-3'> chứa kết luận ngắn gọn: Ai nên mua máy nào.\n"
+        "3. Không sử dụng markdown code block (```html)."
     )
     result = call_gemini_api(prompt)
-    return re.sub(r"```html|```", "", result).strip() if result else None
+
+    if not result: return None
+
+    # Làm sạch triệt để: Xóa markdown code block và khoảng trắng thừa
+    clean_html = re.sub(r"```html|```", "", result).strip()
+    return clean_html

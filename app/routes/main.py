@@ -2,6 +2,7 @@ import os
 import time
 import json
 import hashlib
+import re
 from datetime import datetime, timedelta, timezone
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
@@ -26,26 +27,93 @@ from app.utils import (
 main_bp = Blueprint('main', __name__)
 
 
+# --- [NEW] LOCAL INTELLIGENCE FALLBACK ---
+# Hàm này chạy khi Google AI bị lỗi (Hết quota 429 hoặc lỗi mạng)
+def local_analyze_intent(query):
+    query = query.lower()
+    data = {
+        'brand': None,
+        'category': None,
+        'keyword': query,
+        'min_price': None,
+        'max_price': None,
+        'sort': None
+    }
+
+    # 1. Đoán Hãng (Rule-based)
+    brands_map = {
+        'iphone': 'Apple', 'apple': 'Apple', 'ipad': 'Apple',
+        'samsung': 'Samsung', 'galaxy': 'Samsung',
+        'oppo': 'Oppo', 'xiaomi': 'Xiaomi', 'redmi': 'Xiaomi',
+        'vivo': 'Vivo', 'realme': 'Realme'
+    }
+    for k, v in brands_map.items():
+        if k in query:
+            data['brand'] = v
+            break  # Ưu tiên hãng đầu tiên tìm thấy
+
+    # 2. Đoán Loại (Category)
+    accessories_keywords = ['ốp', 'sạc', 'tai nghe', 'cáp', 'cường lực', 'dây', 'pin dự phòng']
+    if any(k in query for k in accessories_keywords):
+        data['category'] = 'accessory'
+    elif any(k in query for k in ['điện thoại', 'máy', 'smartphone']):
+        data['category'] = 'phone'
+
+    # 3. Đoán Giá (Simple regex)
+    # Ví dụ: "dưới 10 triệu" -> max_price = 10000000
+    if 'dưới' in query and 'triệu' in query:
+        nums = re.findall(r'\d+', query)
+        if nums:
+            data['max_price'] = int(nums[0]) * 1000000
+
+    if 'trên' in query and 'triệu' in query:
+        nums = re.findall(r'\d+', query)
+        if nums:
+            data['min_price'] = int(nums[0]) * 1000000
+
+    # 4. Làm sạch Keyword để tìm tên sản phẩm
+    # Loại bỏ các từ vô nghĩa để keyword ngắn gọn hơn
+    stop_words = ['mua', 'tìm', 'giá', 'rẻ', 'điện thoại', 'bán', 'cần', 'cho', 'khoảng', 'dưới', 'trên', 'triệu']
+    clean_kw = query
+    for w in stop_words:
+        clean_kw = clean_kw.replace(w, '')
+
+    # Nếu keyword sau khi làm sạch quá ngắn, giữ nguyên query gốc
+    if len(clean_kw.strip()) > 1:
+        data['keyword'] = clean_kw.strip()
+
+    return data
+
+
 # --- AI Cache Helper ---
 def cached_ai_call(func, *args):
     try:
-        # [CRITICAL] Key cache v8 để đảm bảo logic search mới nhất được áp dụng
-        cache_key_content = str(args) + "_v8_smart_search_fix"
+        # [FIX] Đổi key suffix từ v8 -> v9_compare_fix để xóa cache lỗi cũ
+        cache_key_content = str(args) + "_v9_compare_fix"
         key = hashlib.md5(cache_key_content.encode()).hexdigest()
 
         cached = AICache.query.filter_by(prompt_hash=key).first()
         if cached:
+            # Kiểm tra xem cache có phải là JSON hay text thường
+            # Đặc biệt với so sánh (HTML), ta trả về text trực tiếp
             try:
-                return json.loads(cached.response_text) if '{' in cached.response_text else cached.response_text
+                # Nếu là JSON (cho search intent)
+                if '{' in cached.response_text and '}' in cached.response_text:
+                    return json.loads(cached.response_text)
+                return cached.response_text
             except:
-                pass
+                return cached.response_text
     except Exception as e:
         print(f"Cache Error: {e}")
 
+    # Gọi hàm thực thi (Call API)
     res = func(*args)
+
+    # Nếu thành công thì lưu cache
     if res:
         try:
             val = json.dumps(res) if isinstance(res, (dict, list)) else str(res)
+            # Chỉ lưu nếu chưa tồn tại
             if not AICache.query.filter_by(prompt_hash=key).first():
                 db.session.add(AICache(prompt_hash=key, response_text=val))
                 db.session.commit()
@@ -60,97 +128,87 @@ def cached_ai_call(func, *args):
 
 @main_bp.route('/')
 def home():
-    # 1. Lấy tham số tìm kiếm cơ bản
     q = request.args.get('q', '').strip()
     brand_arg = request.args.get('brand', '')
     sort_arg = request.args.get('sort', '')
 
     ai_msg = ""
-    ai_data = None
     products = []
 
-    # Query gốc: Chỉ lấy sản phẩm đang kinh doanh
+    # Query gốc
     base_query = Product.query.filter_by(is_active=True)
 
     # ---------------------------------------------------------
-    # 2. AI SMART SEARCH (Ưu tiên)
+    # 1. XỬ LÝ TÌM KIẾM (AI + LOCAL FALLBACK)
     # ---------------------------------------------------------
-    # Chỉ gọi AI nếu query >= 2 từ và không phải filter brand thủ công
-    if q and len(q.split()) >= 2 and not brand_arg:
-        ai_data = cached_ai_call(analyze_search_intents, q)
+    if q and len(q.split()) >= 1 and not brand_arg:
+        ai_data = None
 
-        if ai_data and isinstance(ai_data, dict):
+        # Chỉ gọi AI nếu query dài >= 2 từ (tiết kiệm quota)
+        if len(q.split()) >= 2:
+            ai_data = cached_ai_call(analyze_search_intents, q)
+
+        # [QUAN TRỌNG] Nếu AI trả về None (do lỗi 429/Quota), dùng Local Logic
+        if not ai_data:
+            print("⚠️ AI Quota Limit/Error -> Chuyển sang Phân tích Nội bộ (Local)")
+            ai_data = local_analyze_intent(q)
+            if ai_data:
+                ai_msg = "🔍 Tìm kiếm thông minh (Local Mode)"
+
+        # Áp dụng bộ lọc từ dữ liệu phân tích (AI hoặc Local)
+        if ai_data:
             query = base_query
 
-            # 2.1 Lọc Hãng (Không phân biệt hoa thường)
+            # Lọc Hãng
             if ai_data.get('brand'):
                 query = query.filter(Product.brand.ilike(f"%{ai_data['brand']}%"))
-                ai_msg += f"Hãng: {ai_data['brand']}"
+                ai_msg += f" | Hãng: {ai_data['brand']}"
 
-            # 2.2 Lọc Loại (Phone/Accessory)
+            # Lọc Loại
             if ai_data.get('category'):
                 query = query.filter(Product.category.ilike(f"{ai_data['category']}"))
                 cat_vn = "Điện thoại" if ai_data['category'] == 'phone' else "Phụ kiện"
-                sep = " | " if ai_msg else ""
-                ai_msg += f"{sep}Loại: {cat_vn}"
+                ai_msg += f" | Loại: {cat_vn}"
 
-            # 2.3 Lọc theo Keyword tên sản phẩm (Quan trọng)
+            # Lọc Keyword (Tìm trong Tên hoặc Mô tả)
             if ai_data.get('keyword'):
                 kw = ai_data['keyword']
-                # Tìm trong tên hoặc mô tả
                 query = query.filter(or_(
                     Product.name.ilike(f"%{kw}%"),
                     Product.description.ilike(f"%{kw}%")
                 ))
-                sep = " | " if ai_msg else ""
-                ai_msg += f"{sep}Tìm: '{kw}'"
+                ai_msg += f" | Từ khóa: {kw}"
 
-            # 2.4 Lọc khoảng giá
+            # Lọc Giá
             if ai_data.get('min_price'):
                 query = query.filter(Product.price >= int(ai_data['min_price']))
             if ai_data.get('max_price'):
                 query = query.filter(Product.price <= int(ai_data['max_price']))
 
-            # 2.5 Cập nhật Sort nếu AI gợi ý
+            # Sort
             if ai_data.get('sort'):
                 sort_arg = ai_data['sort']
 
-            if ai_msg:
-                ai_msg = f"🔍 AI Smart Filter: {ai_msg}"
-
-            # Thực thi query AI
             products = query.all()
 
     # ---------------------------------------------------------
-    # 3. FALLBACK SEARCH (Dự phòng khi AI không tìm thấy)
+    # 2. FALLBACK CUỐI CÙNG (Nếu cả AI và Local Logic đều không ra kết quả)
     # ---------------------------------------------------------
     if not products and q:
-        # Tách từ khóa để tìm kiếm linh hoạt hơn (Token Search)
+        # Tìm kiếm đơn giản: Tách từ khóa và tìm "gần đúng"
         search_words = q.split()
-        stop_words = ['mua', 'tìm', 'giá', 'rẻ', 'cho', 'cần', 'bán']
-        keywords = [w for w in search_words if w.lower() not in stop_words and len(w) > 1]
+        stop_words = ['mua', 'tìm', 'giá', 'rẻ', 'cho', 'cần']
+        keywords = [w for w in search_words if w.lower() not in stop_words]
 
         if keywords:
-            if ai_msg: ai_msg += " (Chuyển sang tìm kiếm mở rộng)"
-
-            fallback_query = base_query
-
-            # Giữ lại category filter nếu AI đã đoán đúng (tránh tìm ốp ra điện thoại)
-            if ai_data and ai_data.get('category'):
-                fallback_query = fallback_query.filter(Product.category == ai_data['category'])
-
-            # Chiến thuật 1: Tìm sản phẩm chứa TẤT CẢ từ khóa (AND)
-            conditions_and = [Product.name.ilike(f"%{word}%") for word in keywords]
-            products = fallback_query.filter(and_(*conditions_and)).all()
-
-            # Chiến thuật 2: Nếu không ra, tìm sản phẩm chứa BẤT KỲ từ khóa nào (OR)
-            if not products:
-                conditions_or = [Product.name.ilike(f"%{word}%") for word in keywords]
-                products = fallback_query.filter(or_(*conditions_or)).all()
-                if products: ai_msg = "🔍 Kết quả có thể bạn quan tâm"
+            # Tìm sản phẩm chứa BẤT KỲ từ khóa nào
+            conditions = [Product.name.ilike(f"%{word}%") for word in keywords]
+            products = base_query.filter(or_(*conditions)).all()
+            if products:
+                ai_msg = "🔍 Kết quả tương tự (Tìm kiếm mở rộng)"
 
     # ---------------------------------------------------------
-    # 4. TRƯỜNG HỢP MẶC ĐỊNH (Không search hoặc filter tay)
+    # 3. TRƯỜNG HỢP MẶC ĐỊNH
     # ---------------------------------------------------------
     elif not q:
         query = base_query
@@ -158,16 +216,14 @@ def home():
             query = query.filter(Product.brand == brand_arg)
         products = query.all()
 
-    # 5. Sắp xếp kết quả (Áp dụng cho cả danh sách từ AI hoặc DB)
+    # 4. Sắp xếp kết quả
     if products:
         if sort_arg == 'price_asc':
             products.sort(key=lambda x: x.sale_price if x.is_sale else x.price)
         elif sort_arg == 'price_desc':
             products.sort(key=lambda x: x.sale_price if x.is_sale else x.price, reverse=True)
-        # Mặc định sort theo ID giảm dần (mới nhất) nếu lấy từ DB thì đã sort rồi,
-        # nhưng list sort lại cho chắc nếu cần logic khác.
 
-    # 6. Dữ liệu bổ trợ cho giao diện
+    # Dữ liệu bổ trợ
     brands = [b[0] for b in db.session.query(Product.brand).distinct().all()]
     hot_products = Product.query.filter_by(is_active=True, is_sale=True).limit(4).all()
 
@@ -185,13 +241,11 @@ def home():
 @login_required
 def checkout():
     cart = session.get('cart', {})
-    if not cart:
-        return redirect(url_for('main.home'))
+    if not cart: return redirect(url_for('main.home'))
 
     total = sum(item['price'] * item['quantity'] for item in cart.values())
     final_items = []
 
-    # Chuẩn bị dữ liệu để xử lý
     for pid, item in cart.items():
         p = db.session.get(Product, int(pid))
         if p and p.is_active:
@@ -202,24 +256,14 @@ def checkout():
         try:
             payment_method = request.form.get('payment', 'cod')
 
-            # Transaction: Khóa dòng và Trừ kho an toàn
             for i in final_items:
-                # with_for_update() giúp ngăn chặn Race Condition (tranh chấp khi mua cùng lúc)
                 prod = db.session.query(Product).filter_by(id=i['p'].id).with_for_update().first()
-
-                if not prod:
-                    flash(f"Sản phẩm {i['p'].name} không tồn tại.", 'danger')
+                if not prod or prod.stock_quantity < i['qty']:
+                    flash(f"Sản phẩm {i['p'].name} không đủ hàng.", 'danger')
                     db.session.rollback()
                     return redirect(url_for('main.view_cart'))
-
-                if prod.stock_quantity < i['qty']:
-                    flash(f"{prod.name} không đủ hàng (Còn {prod.stock_quantity}).", 'danger')
-                    db.session.rollback()
-                    return redirect(url_for('main.view_cart'))
-
                 prod.stock_quantity -= i['qty']
 
-            # Tạo đơn hàng
             order = Order(
                 user_id=current_user.id,
                 total_price=total,
@@ -229,40 +273,32 @@ def checkout():
                 status='Pending'
             )
             db.session.add(order)
-            db.session.flush()  # Lấy ID đơn hàng ngay
+            db.session.flush()
 
-            # Lưu chi tiết đơn hàng
             for i in final_items:
-                db.session.add(OrderDetail(
-                    order_id=order.id,
-                    product_id=i['p'].id,
-                    product_name=i['p'].name,
-                    quantity=i['qty'],
-                    price=i['price']
-                ))
+                db.session.add(
+                    OrderDetail(order_id=order.id, product_id=i['p'].id, product_name=i['p'].name, quantity=i['qty'],
+                                price=i['price']))
 
             db.session.commit()
-            session.pop('cart', None)  # Xóa giỏ hàng sau khi thành công
+            session.pop('cart', None)
 
-            # Điều hướng sang trang thanh toán QR nếu chọn Banking
             if payment_method == 'banking':
                 return redirect(url_for('main.payment_qr', order_id=order.id))
 
-            flash('Đặt hàng thành công! Đơn hàng đang chờ xử lý.', 'success')
+            flash('Đặt hàng thành công!', 'success')
             return redirect(url_for('main.dashboard'))
 
         except Exception as e:
             db.session.rollback()
             print(f"Checkout Error: {e}")
-            flash('Đã xảy ra lỗi hệ thống. Vui lòng thử lại.', 'danger')
+            flash('Lỗi xử lý đơn hàng.', 'danger')
             return redirect(url_for('main.view_cart'))
 
     return render_template('checkout.html', cart=cart, total=total)
 
 
-# =========================================================
-# CÁC ROUTE KHÁC
-# =========================================================
+# --- CÁC ROUTE KHÁC ---
 
 @main_bp.route('/product/<int:id>')
 def product_detail(id):
@@ -341,7 +377,6 @@ def update_cart(id, action):
     return redirect(url_for('main.view_cart'))
 
 
-# --- PAYMENT ROUTES (Đã Fix lỗi Timezone) ---
 @main_bp.route('/payment/qr/<int:order_id>')
 @login_required
 def payment_qr(order_id):
@@ -352,7 +387,6 @@ def payment_qr(order_id):
         return redirect(url_for('main.dashboard'))
 
     expiration_time = order.date_created + timedelta(minutes=3)
-    # [FIX] Sử dụng replace(tzinfo=None) để đồng bộ kiểu thời gian Naive với SQLite
     now_naive = datetime.now(timezone.utc).replace(tzinfo=None)
     remaining_seconds = (expiration_time - now_naive).total_seconds()
 
@@ -364,6 +398,7 @@ def payment_qr(order_id):
     account_no = "9999999999"
     account_name = "MOBILE STORE"
     content = f"THANHTOAN DONHANG {order.id}"
+    # [FIX] Đã sửa đường dẫn QR Code: Loại bỏ markdown syntax thừa []()
     qr_url = f"https://img.vietqr.io/image/{bank_id}-{account_no}-compact2.png?amount={order.total_price}&addInfo={content}&accountName={account_name}"
 
     return render_template('payment_qr.html', order=order, qr_url=qr_url, remaining_seconds=int(remaining_seconds))
@@ -440,12 +475,27 @@ def cancel_order_user(id):
 def compare_page():
     products = Product.query.filter_by(is_active=True).all()
     res, p1, p2 = None, None, None
+
     if request.method == 'POST':
-        p1 = db.session.get(Product, request.form.get('product1'))
-        p2 = db.session.get(Product, request.form.get('product2'))
-        if p1 and p2:
-            res = cached_ai_call(get_comparison_result, p1.name, p1.price, p1.description, p2.name, p2.price,
-                                 p2.description)
+        try:
+            id1 = request.form.get('product1')
+            id2 = request.form.get('product2')
+
+            if not id1 or not id2:
+                flash('Vui lòng chọn đủ 2 sản phẩm để so sánh', 'warning')
+            else:
+                p1 = db.session.get(Product, int(id1))
+                p2 = db.session.get(Product, int(id2))
+
+                if p1 and p2:
+                    # [FALLBACK] Nếu AI lỗi 429, hiển thị thông báo
+                    res = cached_ai_call(get_comparison_result, p1.name, p1.price, p1.description or "", p2.name,
+                                         p2.price, p2.description or "")
+                    if not res:
+                        res = "<div class='alert alert-warning'>Hệ thống AI đang quá tải hoặc lỗi kết nối. Vui lòng so sánh dựa trên thông số hiển thị bên trên.</div>"
+        except ValueError:
+            flash('Dữ liệu sản phẩm không hợp lệ', 'danger')
+
     return render_template('compare.html', products=products, result=res, p1=p1, p2=p2)
 
 
@@ -474,15 +524,17 @@ def chatbot_api():
     msg = request.json.get('message', '').strip()
     if not msg: return jsonify({'response': "Mời bạn hỏi ạ!"})
 
-    # 1. Rule-based Response (Trả lời nhanh các câu hỏi thường gặp)
+    # 1. Rule-based Response (Luôn chạy được)
     keywords = {"địa chỉ": "📍 123 Đường Tết, Q1, TP.HCM", "bảo hành": "🛡️ 12 tháng chính hãng."}
     for k, v in keywords.items():
         if k in msg.lower(): return jsonify({'response': v})
 
-    # 2. AI Response (Sử dụng Gemini)
+    # 2. AI Response
     try:
         response = generate_chatbot_response(msg)
-        return jsonify({'response': response or "AI đang bận, bạn thử lại sau nhé!"})
+        # Fallback nếu AI lỗi
+        return jsonify(
+            {'response': response or "AI đang nghỉ Tết (Hết quota), bạn thử lại sau hoặc dùng tìm kiếm nhé! 🧧"})
     except Exception as e:
         print(f"Chat Error: {e}")
         return jsonify({'response': "Lỗi kết nối AI."})

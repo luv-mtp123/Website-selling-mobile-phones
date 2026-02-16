@@ -529,12 +529,26 @@ def chatbot_api():
     for k, v in keywords.items():
         if k in msg.lower(): return jsonify({'response': v})
 
-    # 2. AI Response
+    # 2. AI Response with MEMORY (Session)
     try:
-        response = generate_chatbot_response(msg)
-        # Fallback nếu AI lỗi
-        return jsonify(
-            {'response': response or "AI đang nghỉ Tết (Hết quota), bạn thử lại sau hoặc dùng tìm kiếm nhé! 🧧"})
+        # [NEW] Lấy lịch sử chat từ Session
+        chat_history = session.get('chat_history', [])
+
+        # Gọi hàm AI có truyền lịch sử
+        response = generate_chatbot_response(msg, chat_history)
+        final_response = response or "AI đang nghỉ Tết (Hết quota), bạn thử lại sau hoặc dùng tìm kiếm nhé! 🧧"
+
+        # [NEW] Cập nhật lịch sử
+        chat_history.append({'user': msg, 'ai': final_response})
+
+        # Giữ lại 4 cặp hội thoại (8 câu) gần nhất để tiết kiệm Session & Token
+        if len(chat_history) > 4:
+            chat_history = chat_history[-4:]
+
+        # Lưu lại vào Session
+        session['chat_history'] = chat_history
+
+        return jsonify({'response': final_response})
     except Exception as e:
         print(f"Chat Error: {e}")
         return jsonify({'response': "Lỗi kết nối AI."})

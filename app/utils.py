@@ -147,11 +147,20 @@ def build_product_context(user_query):
     return context_text
 
 
-def generate_chatbot_response(user_msg):
+def generate_chatbot_response(user_msg, chat_history=[]):
     """
-    Hàm xử lý tập trung cho Chatbot
+    Hàm xử lý tập trung cho Chatbot (Có nhớ lịch sử)
     """
     product_context = build_product_context(user_msg)
+
+    # [NEW] Format lịch sử thành text để AI hiểu ngữ cảnh
+    history_text = ""
+    if chat_history:
+        history_text = "\n--- LỊCH SỬ TRÒ CHUYỆN (CONTEXT) ---\n"
+        for turn in chat_history:
+            history_text += f"Khách hàng: {turn['user']}\nAI: {turn['ai']}\n"
+        history_text += "------------------------------------\n"
+        history_text += "HÃY DỰA VÀO LỊCH SỬ TRÊN ĐỂ HIỂU CÁC TỪ NHƯ 'NÓ', 'CÁI ĐÓ', 'SẢN PHẨM KIA'.\n"
 
     system_instruction = (
         "Bạn là Trợ lý ảo AI của 'MobileStore' trong dịp Tết Bính Ngọ 2026. 🐍🌸\n"
@@ -160,13 +169,14 @@ def generate_chatbot_response(user_msg):
         "1. Tư vấn bán hàng dựa trên dữ liệu được cung cấp.\n"
         "2. Nếu có giá tiền, hãy in đậm (ví dụ: **10.000.000 đ**).\n"
         "3. Luôn gợi ý khách mua thêm phụ kiện hoặc chốt đơn nếu khách tỏ ý thích.\n"
-        "4. Nếu khách hỏi ngoài lề, hãy khéo léo lái về mua điện thoại chơi Tết.\n"
+        "4. Nếu khách hỏi tiếp nối (ví dụ: 'còn màu khác không?'), hãy nhìn vào LỊCH SỬ TRÒ CHUYỆN để biết họ đang hỏi về sản phẩm nào.\n"
         "GIỚI HẠN: Trả lời ngắn gọn dưới 100 từ."
     )
 
     final_prompt = (
-        f"Câu hỏi của khách: '{user_msg}'\n\n"
-        f"Dữ liệu kho hàng thực tế:\n{product_context}\n\n"
+        f"{history_text}\n"
+        f"Câu hỏi MỚI NHẤT của khách: '{user_msg}'\n\n"
+        f"Dữ liệu kho hàng thực tế (để tra cứu):\n{product_context}\n\n"
         "Hãy trả lời khách hàng ngay:"
     )
 

@@ -184,6 +184,10 @@
 
 #### **Chatbot: Trả lời tự động các câu hỏi thường gặp và tư vấn sản phẩm.**
 
+#### 
+
+#### **Chatbot Memory (MỚI): Ghi nhớ lịch sử hội thoại ngắn hạn (Contextual Awareness), giúp AI hiểu các đại từ như "nó", "cái đó" trong câu hỏi nối tiếp.**
+
 # 
 
 ## **6. 🧪 Kiểm Thử Tự Động (Automated Testing)**
@@ -328,25 +332,25 @@
 
 ## **└── app/                    # (PACKAGE) Source Code**
 
-##     **├── \_\_init\_\_.py         # App Factory**
+## **├── \_\_init\_\_.py         # App Factory**
 
-##     **├── extensions.py       # DB, Login, OAuth, Migrate, CSRF**
+## **├── extensions.py       # DB, Login, OAuth, Migrate, CSRF**
 
-##     **├── models.py           # Database Models**
+## **├── models.py           # Database Models**
 
-##     **├── utils.py            # AI Logic \& Helpers**
+## **├── utils.py            # AI Logic \& Helpers**
 
-##     **│**
+## **│**
 
-##     **├── templates/          # (VIEW) Giao diện HTML**
+## **├── templates/          # (VIEW) Giao diện HTML**
 
-##     **└── routes/             # (CONTROLLER)**
+## **└── routes/             # (CONTROLLER)**
 
-##         **├── main.py         # Xử lý chính**
+## **├── main.py         # Xử lý chính**
 
-##         **├── auth.py         # Xác thực**
+## **├── auth.py         # Xác thực**
 
-##         **└── admin.py        # Quản trị**
+## **└── admin.py        # Quản trị**
 
 # 
 

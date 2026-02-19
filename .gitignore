@@ -4,4 +4,8 @@ pycache/
 instance/
 .venv/
 env/
+instance/
 mobilestore.db
+chroma_db/
+.idea/
+.vscode/

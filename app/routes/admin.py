@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from app.extensions import db
 from app.models import Product, User, Order, TradeInRequest, OrderDetail
 import json
+from app.utils import sync_product_to_vector_db
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -135,6 +136,10 @@ def add_product():
 
         db.session.add(new_product)
         db.session.commit()
+
+        # [NEW] Đồng bộ ngay sang Vector DB
+        sync_product_to_vector_db(new_product)
+
         flash(f'Thêm sản phẩm {name} thành công!', 'success')
     except Exception as e:
         db.session.rollback()
@@ -170,6 +175,10 @@ def edit_product(id):
             if versions_json: product.versions = versions_json
 
             db.session.commit()
+
+            # [NEW] Cập nhật lại Vector DB sau khi sửa
+            sync_product_to_vector_db(product)
+
             flash('Cập nhật thông tin thành công!', 'success')
             return redirect(url_for('admin.dashboard'))
         except Exception as e:

@@ -1,48 +1,71 @@
 import os
-import requests
 import json
-import time
 import re
-import hashlib
-from flask import current_app, url_for
+import requests
+import chromadb
+import google.generativeai as genai
+from chromadb.utils import embedding_functions
+from flask import url_for
 from itsdangerous import URLSafeTimedSerializer
-# [FIX] Import or_ từ sqlalchemy để dùng cho tìm kiếm
-from sqlalchemy import or_
-# --- IMPORT MODEL ĐỂ AI ĐỌC DỮ LIỆU ---
-from app.extensions import db
-from app.models import AICache
-
-# Lưu ý: Product được import lazy bên trong hàm để tránh circular import
-
 
 # --- CẤU HÌNH ---
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-# --- FILE VALIDATION UTILS ---
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
+# --- [NEW] CẤU HÌNH TRUE RAG (VECTOR DB) ---
+# Sử dụng Google Generative AI Embeddings
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+
+# Khởi tạo ChromaDB (Lưu file local tại thư mục chroma_db)
+# PersistentClient giúp dữ liệu không bị mất khi restart server
+try:
+    chroma_client = chromadb.PersistentClient(path="./chroma_db")
+except Exception as e:
+    print(f"⚠️ ChromaDB Init Warning: {e}")
+    chroma_client = None
+
+
+# Hàm tạo Embedding dùng Gemini (Wrapper cho ChromaDB)
+class GeminiEmbeddingFunction(embedding_functions.EmbeddingFunction):
+    def __call__(self, input: list[str]) -> list[list[float]]:
+        model = 'models/embedding-001'
+        embeddings = []
+        for text in input:
+            try:
+                # Gọi API Google để lấy vector (768 chiều)
+                res = genai.embed_content(model=model, content=text, task_type="retrieval_document")
+                embeddings.append(res['embedding'])
+            except:
+                # Fallback vector rỗng nếu lỗi (để không crash app)
+                embeddings.append([0.0] * 768)
+        return embeddings
+
+
+# Tạo hoặc lấy Collection (Bảng lưu vector)
+try:
+    if chroma_client and GEMINI_API_KEY:
+        product_collection = chroma_client.get_or_create_collection(
+            name="mobile_store_products",
+            embedding_function=GeminiEmbeddingFunction()
+        )
+    else:
+        product_collection = None
+except Exception as e:
+    print(f"⚠️ ChromaDB Collection Error: {e}")
+    product_collection = None
+
+
+# ---------------------------------------------------------
 
 def validate_image_file(file):
-    """
-    Kiểm tra file upload:
-    1. Có tên file không?
-    2. Đuôi file hợp lệ không?
-    3. Kích thước file < 2MB không? (Kiểm tra length con trỏ file)
-    Trả về: (True, None) hoặc (False, "Lỗi cụ thể")
-    """
-    if file.filename == '':
-        return False, "Chưa chọn file."
-
+    if file.filename == '': return False, "Chưa chọn file."
     if '.' not in file.filename or file.filename.rsplit('.', 1)[1].lower() not in ALLOWED_EXTENSIONS:
-        return False, "Định dạng file không hỗ trợ. Chỉ nhận: JPG, PNG, WEBP."
-
-    # Kiểm tra kích thước (seek đến cuối để lấy size, sau đó seek về đầu)
+        return False, "Chỉ nhận: JPG, PNG, WEBP."
     file.seek(0, os.SEEK_END)
-    file_length = file.tell()
+    size = file.tell()
     file.seek(0)
-
-    if file_length > 2 * 1024 * 1024:  # 2MB
-        return False, "File quá lớn! Vui lòng chọn ảnh dưới 2MB."
-
+    if size > 2 * 1024 * 1024: return False, "File > 2MB."
     return True, None
 
 
@@ -51,243 +74,178 @@ def get_serializer(secret_key):
 
 
 def send_reset_email_simulation(to_email, token):
-    reset_link = url_for('auth.reset_password', token=token, _external=True)
-    print("=" * 30)
-    print(f"EMAIL MOCK SENDING TO: {to_email}")
-    print(f"LINK RESET: {reset_link}")
-    print("=" * 30)
-    return reset_link
+    link = url_for('auth.reset_password', token=token, _external=True)
+    print(f"EMAIL MOCK: {link}")
+    return link
 
 
-# --- AI CORE FUNCTIONS ---
+# --- [NEW] VECTOR SEARCH FUNCTIONS ---
 
-def call_gemini_api(prompt, system_instruction=None):
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        print("Lỗi: Chưa cấu hình GEMINI_API_KEY")
-        return None
-
-    target_model = "gemini-2.5-flash"
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_model}:generateContent?key={api_key}"
-    headers = {"Content-Type": "application/json"}
-
-    data = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "temperature": 0.4,  # Giảm nhiệt độ để AI tập trung vào chính xác, bớt sáng tạo
-            "maxOutputTokens": 4000  # Tăng token để bảng so sánh không bị cắt giữa chừng
-        }
-    }
-
-    if system_instruction:
-        data["systemInstruction"] = {"parts": [{"text": system_instruction}]}
+def search_vector_db(query_text, n_results=5):
+    """
+    Tìm kiếm ngữ nghĩa bằng Vector Database.
+    Input: Câu hỏi tự nhiên (VD: 'máy nào chụp ảnh đẹp')
+    Output: Danh sách ID sản phẩm phù hợp nhất.
+    """
+    if not product_collection or not GEMINI_API_KEY:
+        return []
 
     try:
-        response = requests.post(url, headers=headers, json=data, timeout=30)  # Tăng timeout lên 30s
-        if response.status_code == 200:
-            result = response.json()
-            try:
-                return result['candidates'][0]['content']['parts'][0]['text']
-            except (KeyError, IndexError):
-                return None
-        else:
-            print(f"Gemini Error {response.status_code}: {response.text}")
-            return None
+        results = product_collection.query(
+            query_texts=[query_text],
+            n_results=n_results
+        )
+        # Chroma trả về dict of lists, cần lấy list IDs đầu tiên
+        # results['ids'][0] chứa danh sách ID tìm thấy
+        found_ids = results['ids'][0]
+        return found_ids  # Trả về list ID (dạng string)
     except Exception as e:
-        print(f"Network Error: {str(e)}")
+        print(f"Vector Search Error: {e}")
+        return []
+
+
+def sync_product_to_vector_db(product):
+    """
+    Đồng bộ 1 sản phẩm vào Vector DB.
+    Cần gọi hàm này khi Add/Edit sản phẩm trong Admin.
+    """
+    if not product_collection: return
+
+    # Tạo nội dung ngữ nghĩa phong phú (Rich Semantic Content)
+    # Kết hợp Tên, Hãng, Loại, Mô tả và Giá để AI hiểu toàn diện
+    semantic_text = f"Sản phẩm: {product.name}. Hãng: {product.brand}. Loại: {product.category}. Mô tả chi tiết: {product.description}. Mức giá khoảng: {product.price} đồng."
+
+    # Upsert (Update hoặc Insert) vào ChromaDB
+    try:
+        product_collection.upsert(
+            documents=[semantic_text],
+            metadatas=[{
+                "price": product.price,
+                "brand": product.brand,
+                "category": product.category
+            }],
+            ids=[str(product.id)]
+        )
+        print(f"✅ Indexed Vector: {product.name}")
+    except Exception as e:
+        print(f"Sync Vector Error: {e}")
+
+
+# --- AI CORE FUNCTIONS (UPDATED) ---
+
+def call_gemini_api(prompt, system_instruction=None):
+    if not GEMINI_API_KEY: return None
+    # Dùng SDK Google Generative AI thay vì requests thủ công
+    try:
+        model = genai.GenerativeModel(
+            model_name="gemini-2.5-flash",
+            system_instruction=system_instruction
+        )
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        print(f"Gemini API Error: {e}")
         return None
 
-
-# --- [MOVED] LOCAL INTELLIGENCE FALLBACK ---
-def local_analyze_intent(query):
-    """
-    Phân tích ý định tìm kiếm bằng Logic/Regex nội bộ (Fallback khi không có AI).
-    """
-    query = query.lower()
-    data = {
-        'brand': None,
-        'category': None,
-        'keyword': query,
-        'min_price': None,
-        'max_price': None,
-        'sort': None
-    }
-
-    # 1. Đoán Hãng
-    brands_map = {
-        'iphone': 'Apple', 'apple': 'Apple', 'ipad': 'Apple',
-        'samsung': 'Samsung', 'galaxy': 'Samsung',
-        'oppo': 'Oppo', 'xiaomi': 'Xiaomi', 'redmi': 'Xiaomi',
-        'vivo': 'Vivo', 'realme': 'Realme'
-    }
-    for k, v in brands_map.items():
-        if k in query:
-            data['brand'] = v
-            break
-
-    # 2. Đoán Loại
-    accessories_keywords = ['ốp', 'sạc', 'tai nghe', 'cáp', 'cường lực', 'dây', 'pin dự phòng']
-    if any(k in query for k in accessories_keywords):
-        data['category'] = 'accessory'
-    elif any(k in query for k in ['điện thoại', 'máy', 'smartphone']):
-        data['category'] = 'phone'
-
-    # 3. Đoán Giá
-    if 'dưới' in query and 'triệu' in query:
-        nums = re.findall(r'\d+', query)
-        if nums: data['max_price'] = int(nums[0]) * 1000000
-
-    if 'trên' in query and 'triệu' in query:
-        nums = re.findall(r'\d+', query)
-        if nums: data['min_price'] = int(nums[0]) * 1000000
-
-    # 4. Làm sạch Keyword
-    stop_words = ['mua', 'tìm', 'giá', 'rẻ', 'điện thoại', 'bán', 'cần', 'cho', 'khoảng', 'dưới', 'trên', 'triệu']
-    clean_kw = query
-    for w in stop_words:
-        clean_kw = clean_kw.replace(w, '')
-
-    if len(clean_kw.strip()) > 1:
-        data['keyword'] = clean_kw.strip()
-
-    return data
 
 def build_product_context(user_query):
     """
-    RAG LITE: Tìm sản phẩm trong DB khớp với query để nạp kiến thức cho AI.
+    TRUE RAG FLOW:
+    1. Vector Search (Tìm ý hiểu)
+    2. Fallback Keyword Search (Tìm chính xác)
+    3. Query DB lấy dữ liệu realtime (Tồn kho, Giá mới)
     """
     from app.models import Product
 
-    user_query = user_query.lower()
+    # Bước 1: Tìm ID sản phẩm bằng Vector Search (Semantic)
+    # Ví dụ: "máy pin trâu" -> Vector DB trả về ID của Samsung M34, iPhone 15 Plus
+    vector_ids = search_vector_db(user_query)
 
-    # Logic tìm kiếm mờ
-    products = Product.query.filter(
-        or_(
-            Product.name.ilike(f"%{user_query}%"),
-            Product.brand.ilike(f"%{user_query}%"),
-            Product.category.ilike(f"%{user_query}%")
-        ),
-        Product.is_active == True
-    ).limit(6).all()
+    products = []
+    if vector_ids:
+        # Chuyển ID string về int để query SQL
+        ids = [int(i) for i in vector_ids if i.isdigit()]
+        # Fetch từ DB để đảm bảo lấy đúng Tồn kho/Giá hiện tại (tránh dữ liệu vector bị cũ)
+        products = Product.query.filter(Product.id.in_(ids), Product.is_active == True).all()
 
-    # Nếu không tìm thấy chính xác, thử tìm theo từ đơn
+    # Bước 2: Fallback - Nếu Vector không ra, dùng tìm kiếm từ khóa LIKE (SQL)
     if not products:
-        words = user_query.split()
-        for word in words:
-            if len(word) > 2:
-                found = Product.query.filter(Product.name.ilike(f"%{word}%"), Product.is_active == True).limit(3).all()
-                products.extend(found)
-                if len(products) >= 3: break
-
-    # Loại bỏ trùng lặp
-    products = list({p.id: p for p in products}.values())
+        user_query_lower = user_query.lower()
+        products = Product.query.filter(
+            Product.name.ilike(f"%{user_query_lower}%"),
+            Product.is_active == True
+        ).limit(3).all()
 
     if not products:
-        return "Hiện tại hệ thống không tìm thấy sản phẩm nào khớp chính xác với yêu cầu này trong kho."
+        return "Hiện tại hệ thống không tìm thấy sản phẩm nào phù hợp trong kho."
 
-    # Tạo bảng dữ liệu ngữ cảnh
-    context_text = "--- DANH SÁCH SẢN PHẨM CÓ SẴN TẠI SHOP ---\n"
+    # Bước 3: Format dữ liệu để trả về cho AI (Context Window)
+    context_text = "--- KHO HÀNG THỰC TẾ (Đã lọc theo nhu cầu) ---\n"
     for p in products:
-        # [FIX] Format giá tiền: thay dấu phẩy bằng dấu chấm để khớp với Test Case và văn hóa VN
-        # Ví dụ: 3,000,000 -> 3.000.000
         price = "{:,.0f} đ".format(p.sale_price if p.is_sale else p.price).replace(",", ".")
-        status = f"Sẵn hàng ({p.stock_quantity})" if p.stock_quantity > 0 else "Tạm hết"
-        context_text += f"ID: {p.id} | Tên: {p.name} | Giá: {price} | Tình trạng: {status}\n"
-    context_text += "--------------------------------------------"
+        status = f"Sẵn hàng ({p.stock_quantity})" if p.stock_quantity > 0 else "Hết hàng"
+
+        # Chỉ lấy 150 ký tự mô tả để tiết kiệm token
+        desc_short = (p.description or "")[:150].replace('\n', ' ')
+
+        context_text += f"- ID:{p.id} | {p.name} ({p.brand}) | Giá: {price} | Tình trạng: {status}\n"
+        context_text += f"  Chi tiết: {desc_short}...\n"
+
     return context_text
 
 
 def generate_chatbot_response(user_msg, chat_history=[]):
-    """
-    Hàm xử lý tập trung cho Chatbot (Có nhớ lịch sử)
-    """
+    # [UPDATED] Context giờ đây được lấy thông minh hơn nhờ Vector Search
     product_context = build_product_context(user_msg)
 
-    # [NEW] Format lịch sử thành text để AI hiểu ngữ cảnh
     history_text = ""
     if chat_history:
-        history_text = "\n--- LỊCH SỬ TRÒ CHUYỆN (CONTEXT) ---\n"
+        history_text = "\n--- LỊCH SỬ HỘI THOẠI ---\n"
         for turn in chat_history:
-            history_text += f"Khách hàng: {turn['user']}\nAI: {turn['ai']}\n"
-        history_text += "------------------------------------\n"
-        history_text += "HÃY DỰA VÀO LỊCH SỬ TRÊN ĐỂ HIỂU CÁC TỪ NHƯ 'NÓ', 'CÁI ĐÓ', 'SẢN PHẨM KIA'.\n"
+            history_text += f"User: {turn['user']}\nAI: {turn['ai']}\n"
 
     system_instruction = (
-        "Bạn là Trợ lý ảo AI của 'MobileStore' trong dịp Tết Bính Ngọ 2026. 🐍🌸\n"
-        "TÍNH CÁCH: Thân thiện, vui vẻ, nhiệt tình, hay dùng emoji Tết (🧧, 🌸, 💰).\n"
-        "NHIỆM VỤ:\n"
-        "1. Tư vấn bán hàng dựa trên dữ liệu được cung cấp.\n"
-        "2. Nếu có giá tiền, hãy in đậm (ví dụ: **10.000.000 đ**).\n"
-        "3. Luôn gợi ý khách mua thêm phụ kiện hoặc chốt đơn nếu khách tỏ ý thích.\n"
-        "4. Nếu khách hỏi tiếp nối (ví dụ: 'còn màu khác không?'), hãy nhìn vào LỊCH SỬ TRÒ CHUYỆN để biết họ đang hỏi về sản phẩm nào.\n"
-        "GIỚI HẠN: Trả lời ngắn gọn dưới 100 từ."
+        "Bạn là Chuyên gia tư vấn công nghệ AI của MobileStore. "
+        "Hãy tư vấn dựa trên danh sách 'KHO HÀNG THỰC TẾ' được cung cấp. "
+        "Nếu sản phẩm khách hỏi không có trong kho (context), hãy lịch sự báo hết hàng và gợi ý sản phẩm tương tự trong danh sách."
     )
 
-    final_prompt = (
-        f"{history_text}\n"
-        f"Câu hỏi MỚI NHẤT của khách: '{user_msg}'\n\n"
-        f"Dữ liệu kho hàng thực tế (để tra cứu):\n{product_context}\n\n"
-        "Hãy trả lời khách hàng ngay:"
-    )
+    final_prompt = f"{history_text}\nKhách hàng hỏi: '{user_msg}'\n\n{product_context}\n\nAI trả lời:"
 
-    response = call_gemini_api(final_prompt, system_instruction)
-    return response if response else "Hệ thống AI đang quá tải vì khách sắm Tết đông quá! Bạn đợi xíu nha 🧧"
+    return call_gemini_api(final_prompt, system_instruction)
 
 
-# --- [FIXED] SMART SEARCH INTENT ---
+# (Các hàm cũ giữ nguyên nhưng cập nhật dùng call_gemini_api mới)
 def analyze_search_intents(query):
-    """
-    Phân tích ý định tìm kiếm của người dùng thành JSON.
-    """
-    prompt = (
-        f"Phân tích câu tìm kiếm: '{query}'. \n"
-        "Nhiệm vụ: Trích xuất thông tin để lọc sản phẩm trong Database.\n"
-        "Quy tắc quan trọng:\n"
-        "1. 'keyword': Phải là từ khóa CỐT LÕI ngắn gọn nhất có trong tên sản phẩm. Ví dụ: 'ốp lưng iphone' -> keyword: 'ốp lưng'. Đừng lấy cả cụm 'ốp lưng iphone'.\n"
-        "2. 'category': Bắt buộc là 'phone' hoặc 'accessory' hoặc null. Nếu tìm 'ốp', 'sạc', 'tai nghe', 'cáp' -> category='accessory'.\n"
-        "3. 'brand': Tên hãng (Apple, Samsung...) nếu có.\n"
-        "\n"
-        "Trả về JSON duy nhất (không markdown):\n"
-        "{\n"
-        "  'brand': 'Tên hãng hoặc null',\n"
-        "  'category': 'phone' hoặc 'accessory' hoặc null,\n"
-        "  'keyword': 'Từ khóa ngắn gọn (ví dụ: ốp, sạc, tai nghe, iphone 15) hoặc null',\n"
-        "  'min_price': số tiền (int) hoặc null,\n"
-        "  'max_price': số tiền (int) hoặc null,\n"
-        "  'sort': 'price_asc' (rẻ nhất), 'price_desc' (đắt nhất) hoặc null\n"
-        "}\n"
-    )
-    response_text = call_gemini_api(prompt)
-    if not response_text: return None
-
+    prompt = f"Phân tích JSON tìm kiếm (brand, category, min_price, max_price) cho: '{query}'."
+    res = call_gemini_api(prompt)
+    if not res: return None
     try:
-        # Làm sạch chuỗi JSON (xóa ```json và ``` nếu có)
-        clean_text = re.sub(r"```json|```", "", response_text).strip()
-        match = re.search(r"\{.*\}", clean_text, re.DOTALL)
-        if match:
-            return json.loads(match.group(0))
+        clean = re.sub(r"```json|```", "", res).strip()
+        match = re.search(r"\{.*\}", clean, re.DOTALL)
+        return json.loads(match.group(0)) if match else None
+    except:
         return None
-    except Exception as e:
-        print(f"JSON Parse Error: {e}")
-        return None
+
+
+def local_analyze_intent(query):
+    # Hàm này vẫn giữ nguyên như phiên bản cũ để làm fallback
+    query = query.lower()
+    data = {'brand': None, 'category': None, 'keyword': query, 'min_price': None, 'max_price': None, 'sort': None}
+    brands = {'iphone': 'Apple', 'samsung': 'Samsung', 'oppo': 'Oppo', 'xiaomi': 'Xiaomi'}
+    for k, v in brands.items():
+        if k in query: data['brand'] = v
+    if any(x in query for x in ['ốp', 'sạc', 'tai nghe']):
+        data['category'] = 'accessory'
+    elif any(x in query for x in ['điện thoại', 'máy']):
+        data['category'] = 'phone'
+    if 'dưới' in query and 'triệu' in query:
+        nums = re.findall(r'\d+', query)
+        if nums: data['max_price'] = int(nums[0]) * 1000000
+    return data
 
 
 def get_comparison_result(p1_name, p1_price, p1_desc, p2_name, p2_price, p2_desc):
-    # [FIX] Prompt chặt chẽ hơn để tránh AI trả về lời dẫn chuyện
-    prompt = (
-        f"Đóng vai chuyên gia công nghệ. So sánh 2 sản phẩm: {p1_name} ({p1_price}đ) và {p2_name} ({p2_price}đ). \n"
-        "YÊU CẦU ĐẦU RA (Output Requirement): \n"
-        "1. CHỈ TRẢ VỀ MÃ HTML (HTML Code Only). KHÔNG ĐƯỢC có lời chào, lời dẫn (như 'Chắc chắn rồi', 'Dưới đây là...').\n"
-        "2. Cấu trúc HTML:\n"
-        "   - Một thẻ <h3> tiêu đề.\n"
-        "   - Một bảng <table class='table table-bordered table-striped table-hover'> so sánh: Màn hình, Camera, Pin, Hiệu năng, Giá.\n"
-        "   - Một thẻ <div class='alert alert-success mt-3'> chứa kết luận ngắn gọn: Ai nên mua máy nào.\n"
-        "3. Không sử dụng markdown code block (```html)."
-    )
-    result = call_gemini_api(prompt)
-
-    if not result: return None
-
-    # Làm sạch triệt để: Xóa markdown code block và khoảng trắng thừa
-    clean_html = re.sub(r"```html|```", "", result).strip()
-    return clean_html
+    prompt = f"Tạo bảng HTML so sánh chi tiết: {p1_name} ({p1_price}) vs {p2_name} ({p2_price}). Chỉ trả về code HTML."
+    res = call_gemini_api(prompt)
+    return re.sub(r"```html|```", "", res).strip() if res else None

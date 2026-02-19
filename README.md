@@ -212,7 +212,7 @@
 
 #### **Hệ thống kiểm thử đã được tổ chức lại để chuyên nghiệp và dễ bảo trì hơn:**
 
-# 
+#### 
 
 #### **✅ run\_tests.py: Script chạy toàn bộ test case chỉ với 1 lệnh (python run\_tests.py).**
 
@@ -346,6 +346,50 @@
 
 # 
 
+## **12. 🧠 Nâng Cấp AI: True RAG \& Vector Search**
+
+# 
+
+#### **Chuyển đổi từ "Keyword Search" sang "Semantic Search" giúp AI hiểu ngữ nghĩa sâu sắc:**
+
+#### 
+
+#### **✅ Vector Database (ChromaDB): Lưu trữ dữ liệu sản phẩm dưới dạng Vector Embeddings thay vì text thuần.**
+
+#### 
+
+#### **✅ Gemini Embedding API: Chuyển đổi mô tả sản phẩm thành vector số học (768 chiều).**
+
+#### 
+
+#### **✅ Tìm Kiếm Ngữ Nghĩa: AI có thể tìm thấy sản phẩm phù hợp ngay cả khi không khớp từ khóa (VD: "máy chụp đêm đẹp" -> Tìm ra S24 Ultra).**
+
+#### 
+
+#### **✅ Script Đồng Bộ (rag\_sync.py): Công cụ tự động quét Database và cập nhật lại Vector Index.**
+
+# 
+
+## **13. 🔄 Tự Động Hóa CI/CD (GitHub Actions)**
+
+# 
+
+#### **Thiết lập quy trình DevOps chuyên nghiệp:**
+
+#### 
+
+#### **✅ Automated Testing Pipeline: Mỗi khi push code lên GitHub, hệ thống tự động chạy toàn bộ bộ kiểm thử (run\_tests.py).**
+
+#### 
+
+#### **✅ Environment Isolation: Test chạy trên môi trường sạch (Ubuntu Latest + Python 3.12 + In-Memory DB).**
+
+#### 
+
+#### **✅ Quality Gate: Đảm bảo code lỗi không bao giờ được merge vào nhánh chính.**
+
+# 
+
 # **📂 Cấu Trúc Dự Án (Modular MVC)**
 
 # 
@@ -357,6 +401,8 @@
 #### **├── run.py                  # (ENTRY POINT) File chạy chính**
 
 #### **├── run\_tests.py            # (TEST RUNNER) Script chạy toàn bộ test**
+
+#### **├── rag\_sync.py             # (AI SYNC) Script đồng bộ Vector DB (ChromaDB)**
 
 #### **├── wsgi.py                 # (PROD ENTRY) File chạy cho máy chủ thực tế**
 
@@ -400,7 +446,11 @@
 
 #### **└── admin.py        # Quản trị**
 
-#### 
+#### **├── .github/                # (CI/CD) Cấu hình GitHub Actions**
+
+#### **│   └── workflows/**
+
+#### **│       └── ci\_cd.yml**
 
 # 
 
@@ -454,11 +504,15 @@
 
 # 
 
-## **Bước 4: Chạy Website (Local)**
+## **Bước 4: Đồng bộ Vector Database (Cho AI)**
 
 # 
 
-#### **python run.py**
+#### **Chạy lệnh này để AI "học" dữ liệu sản phẩm lần đầu:**
+
+#### 
+
+#### **python rag\_sync.py**
 
 # 
 
@@ -468,13 +522,23 @@
 
 # 
 
-## **Bước 5: Chạy Production (Windows)**
+## **Bước 5: Chạy Website (Local)**
 
-# 
+## 
+
+#### **python run.py**
+
+## 
+
+### **👉 Truy cập: http://127.0.0.1:5000**
+
+## 
+
+## **Bước 6: Chạy Production (Windows)**
+
+## 
 
 #### **waitress-serve --port=5000 wsgi:app**
-
-# 
 
 # 
 
@@ -482,39 +546,39 @@
 
 # 
 
-# **Vai trò**
+## **Vai trò**
+
+## 
+
+## **Username**
+
+## 
+
+## **Password**
+
+## 
+
+## **Admin**
 
 # 
 
-# **Username**
+#### **admin**
+
+#### 
+
+#### **123456**
 
 # 
 
-# **Password**
+## **Khách**
 
 # 
 
-# **Admin**
+#### **khach**
 
-# 
+#### 
 
-# **admin**
-
-# 
-
-# **123456**
-
-# 
-
-# **Khách**
-
-# 
-
-# **khach**
-
-# 
-
-# **123456**
+#### **123456**
 
 # 
 

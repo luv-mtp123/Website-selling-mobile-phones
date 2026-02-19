@@ -98,6 +98,60 @@ def call_gemini_api(prompt, system_instruction=None):
         return None
 
 
+# --- [MOVED] LOCAL INTELLIGENCE FALLBACK ---
+def local_analyze_intent(query):
+    """
+    Phân tích ý định tìm kiếm bằng Logic/Regex nội bộ (Fallback khi không có AI).
+    """
+    query = query.lower()
+    data = {
+        'brand': None,
+        'category': None,
+        'keyword': query,
+        'min_price': None,
+        'max_price': None,
+        'sort': None
+    }
+
+    # 1. Đoán Hãng
+    brands_map = {
+        'iphone': 'Apple', 'apple': 'Apple', 'ipad': 'Apple',
+        'samsung': 'Samsung', 'galaxy': 'Samsung',
+        'oppo': 'Oppo', 'xiaomi': 'Xiaomi', 'redmi': 'Xiaomi',
+        'vivo': 'Vivo', 'realme': 'Realme'
+    }
+    for k, v in brands_map.items():
+        if k in query:
+            data['brand'] = v
+            break
+
+    # 2. Đoán Loại
+    accessories_keywords = ['ốp', 'sạc', 'tai nghe', 'cáp', 'cường lực', 'dây', 'pin dự phòng']
+    if any(k in query for k in accessories_keywords):
+        data['category'] = 'accessory'
+    elif any(k in query for k in ['điện thoại', 'máy', 'smartphone']):
+        data['category'] = 'phone'
+
+    # 3. Đoán Giá
+    if 'dưới' in query and 'triệu' in query:
+        nums = re.findall(r'\d+', query)
+        if nums: data['max_price'] = int(nums[0]) * 1000000
+
+    if 'trên' in query and 'triệu' in query:
+        nums = re.findall(r'\d+', query)
+        if nums: data['min_price'] = int(nums[0]) * 1000000
+
+    # 4. Làm sạch Keyword
+    stop_words = ['mua', 'tìm', 'giá', 'rẻ', 'điện thoại', 'bán', 'cần', 'cho', 'khoảng', 'dưới', 'trên', 'triệu']
+    clean_kw = query
+    for w in stop_words:
+        clean_kw = clean_kw.replace(w, '')
+
+    if len(clean_kw.strip()) > 1:
+        data['keyword'] = clean_kw.strip()
+
+    return data
+
 def build_product_context(user_query):
     """
     RAG LITE: Tìm sản phẩm trong DB khớp với query để nạp kiến thức cho AI.
@@ -134,15 +188,11 @@ def build_product_context(user_query):
     # Tạo bảng dữ liệu ngữ cảnh
     context_text = "--- DANH SÁCH SẢN PHẨM CÓ SẴN TẠI SHOP ---\n"
     for p in products:
-        price = "{:,.0f} đ".format(p.sale_price if p.is_sale else p.price)
+        # [FIX] Format giá tiền: thay dấu phẩy bằng dấu chấm để khớp với Test Case và văn hóa VN
+        # Ví dụ: 3,000,000 -> 3.000.000
+        price = "{:,.0f} đ".format(p.sale_price if p.is_sale else p.price).replace(",", ".")
         status = f"Sẵn hàng ({p.stock_quantity})" if p.stock_quantity > 0 else "Tạm hết"
-        is_sale = "🔥 Đang giảm giá!" if p.is_sale else ""
-
-        context_text += f"ID: {p.id} | Tên: {p.name} | Giá: {price} | Tình trạng: {status} {is_sale}\n"
-        if p.description:
-            clean_desc = p.description.replace('\n', ' ').strip()[:80]
-            context_text += f"   Mô tả: {clean_desc}...\n"
-
+        context_text += f"ID: {p.id} | Tên: {p.name} | Giá: {price} | Tình trạng: {status}\n"
     context_text += "--------------------------------------------"
     return context_text
 

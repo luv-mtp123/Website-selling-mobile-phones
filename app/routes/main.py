@@ -14,9 +14,10 @@ from sqlalchemy import or_, and_
 from app.extensions import db, csrf
 from app.models import Product, Order, OrderDetail, AICache, TradeInRequest, Comment
 
-# Import Utils
+# [FIX] Import local_analyze_intent từ utils (đã chuyển hàm này sang utils)
 from app.utils import (
     analyze_search_intents,
+    local_analyze_intent,
     get_comparison_result,
     call_gemini_api,
     validate_image_file,
@@ -25,65 +26,6 @@ from app.utils import (
 )
 
 main_bp = Blueprint('main', __name__)
-
-
-# --- [NEW] LOCAL INTELLIGENCE FALLBACK ---
-# Hàm này chạy khi Google AI bị lỗi (Hết quota 429 hoặc lỗi mạng)
-def local_analyze_intent(query):
-    query = query.lower()
-    data = {
-        'brand': None,
-        'category': None,
-        'keyword': query,
-        'min_price': None,
-        'max_price': None,
-        'sort': None
-    }
-
-    # 1. Đoán Hãng (Rule-based)
-    brands_map = {
-        'iphone': 'Apple', 'apple': 'Apple', 'ipad': 'Apple',
-        'samsung': 'Samsung', 'galaxy': 'Samsung',
-        'oppo': 'Oppo', 'xiaomi': 'Xiaomi', 'redmi': 'Xiaomi',
-        'vivo': 'Vivo', 'realme': 'Realme'
-    }
-    for k, v in brands_map.items():
-        if k in query:
-            data['brand'] = v
-            break  # Ưu tiên hãng đầu tiên tìm thấy
-
-    # 2. Đoán Loại (Category)
-    accessories_keywords = ['ốp', 'sạc', 'tai nghe', 'cáp', 'cường lực', 'dây', 'pin dự phòng']
-    if any(k in query for k in accessories_keywords):
-        data['category'] = 'accessory'
-    elif any(k in query for k in ['điện thoại', 'máy', 'smartphone']):
-        data['category'] = 'phone'
-
-    # 3. Đoán Giá (Simple regex)
-    # Ví dụ: "dưới 10 triệu" -> max_price = 10000000
-    if 'dưới' in query and 'triệu' in query:
-        nums = re.findall(r'\d+', query)
-        if nums:
-            data['max_price'] = int(nums[0]) * 1000000
-
-    if 'trên' in query and 'triệu' in query:
-        nums = re.findall(r'\d+', query)
-        if nums:
-            data['min_price'] = int(nums[0]) * 1000000
-
-    # 4. Làm sạch Keyword để tìm tên sản phẩm
-    # Loại bỏ các từ vô nghĩa để keyword ngắn gọn hơn
-    stop_words = ['mua', 'tìm', 'giá', 'rẻ', 'điện thoại', 'bán', 'cần', 'cho', 'khoảng', 'dưới', 'trên', 'triệu']
-    clean_kw = query
-    for w in stop_words:
-        clean_kw = clean_kw.replace(w, '')
-
-    # Nếu keyword sau khi làm sạch quá ngắn, giữ nguyên query gốc
-    if len(clean_kw.strip()) > 1:
-        data['keyword'] = clean_kw.strip()
-
-    return data
-
 
 # --- AI Cache Helper ---
 def cached_ai_call(func, *args):

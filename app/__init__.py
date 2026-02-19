@@ -7,7 +7,7 @@ from .extensions import db, login_manager, oauth, csrf, migrate
 from .models import User, Product, AICache
 
 
-def create_app():
+def create_app(test_config=None):
     app = Flask(__name__)
 
     # 1. Cấu hình App & Load .env
@@ -40,6 +40,11 @@ def create_app():
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     oauth.init_app(app)
+
+    # [TEST] Áp dụng config test nếu có (QUAN TRỌNG ĐỂ FIX LỖI TEST)
+    if test_config:
+        app.config.update(test_config)
+
 
     # [NEW] Khởi tạo Flask-Migrate
     migrate.init_app(app, db)

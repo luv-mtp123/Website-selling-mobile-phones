@@ -190,7 +190,7 @@
 
 # 
 
-## **6. 🧪 Kiểm Thử Tự Động (Automated Testing)**
+## **6. 🧪 Tái Cấu Trúc Hệ Thống Kiểm Thử (Testing Refactor)**
 
 # 
 
@@ -207,6 +207,46 @@
 #### 
 
 #### **System Testing (E2E): Vòng đời đơn hàng (Mua -> Trừ kho -> Hủy -> Hoàn kho).**
+
+#### 
+
+#### **Hệ thống kiểm thử đã được tổ chức lại để chuyên nghiệp và dễ bảo trì hơn:**
+
+# 
+
+#### **✅ run\_tests.py: Script chạy toàn bộ test case chỉ với 1 lệnh (python run\_tests.py).**
+
+#### 
+
+#### **✅ Phân chia Module Test Rõ Ràng:**
+
+#### 
+
+#### **- test\_core.py: Kiểm tra chức năng cốt lõi (Đăng ký, Đăng nhập, Giỏ hàng, Thanh toán, Thu cũ). Thay thế cho các file cũ rời rạc.**
+
+#### 
+
+#### **- test\_ai.py: Kiểm tra chuyên sâu AI (Mocking API Gemini, Logic Fallback khi mất mạng, RAG Context).**
+
+#### 
+
+#### **- test\_security.py: Kiểm tra lỗ hổng bảo mật (IDOR, Tấn công Upload file).**
+
+#### 
+
+#### **- test\_integration\_system.py: Kiểm tra tích hợp hệ thống (End-to-End Flow).**
+
+#### 
+
+#### **✅ Dọn dẹp Code:**
+
+#### 
+
+#### **- Xóa bỏ các file test dư thừa trùng lặp (tests.py, test\_app.py, test\_features.py).**
+
+#### 
+
+#### **- Chuyển logic local\_analyze\_intent sang utils.py để tái sử dụng và kiểm thử độc lập.**
 
 # 
 
@@ -312,47 +352,55 @@
 
 ## **MobileStore/**
 
-## **│**
+#### **│**
 
-## **├── run.py                  # (ENTRY POINT) File chạy chính**
+#### **├── run.py                  # (ENTRY POINT) File chạy chính**
 
-## **├── wsgi.py                 # (PROD ENTRY) File chạy cho máy chủ thực tế**
+#### **├── run\_tests.py            # (TEST RUNNER) Script chạy toàn bộ test**
 
-## **├── Procfile                # Cấu hình Web Server (Gunicorn)**
+#### **├── wsgi.py                 # (PROD ENTRY) File chạy cho máy chủ thực tế**
 
-## **├── migrations/             # (NEW) Thư mục chứa file migration DB**
+#### **├── Procfile                # Cấu hình Web Server (Gunicorn)**
 
-## **├── test\_\*.py               # Các kịch bản kiểm thử tự động**
+#### **├── migrations/             # (NEW) Thư mục chứa file migration DB**
 
-## **├── .env                    # Cấu hình bảo mật**
+#### **├── test\_core.py            # Test chức năng cơ bản (Core)**
 
-## **├── requirements.txt        # Thư viện**
+#### **├── test\_ai.py              # Test tính năng AI (Mocking)**
 
-## **│**
+#### **├── test\_security.py        # Test bảo mật**
 
-## **└── app/                    # (PACKAGE) Source Code**
+#### **├── test\_integration\_system.py # Test tích hợp hệ thống**
 
-## **├── \_\_init\_\_.py         # App Factory**
+#### **├── .env                    # Cấu hình bảo mật**
 
-## **├── extensions.py       # DB, Login, OAuth, Migrate, CSRF**
+#### **├── requirements.txt        # Thư viện**
 
-## **├── models.py           # Database Models**
+#### **│**
 
-## **├── utils.py            # AI Logic \& Helpers**
+#### **└── app/                    # (PACKAGE) Source Code**
 
-## **│**
+#### **├── \_\_init\_\_.py         # App Factory**
 
-## **├── templates/          # (VIEW) Giao diện HTML**
+#### **├── extensions.py       # DB, Login, OAuth, Migrate, CSRF**
 
-## **└── routes/             # (CONTROLLER)**
+#### **├── models.py           # Database Models**
 
-## **├── main.py         # Xử lý chính**
+#### **├── utils.py            # AI Logic \& Helpers**
 
-## **├── auth.py         # Xác thực**
+#### **│**
 
-## **└── admin.py        # Quản trị**
+#### **├── templates/          # (VIEW) Giao diện HTML**
 
-# 
+#### **└── routes/             # (CONTROLLER)**
+
+#### **├── main.py         # Xử lý chính**
+
+#### **├── auth.py         # Xác thực**
+
+#### **└── admin.py        # Quản trị**
+
+#### 
 
 # 
 

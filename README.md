@@ -42,11 +42,11 @@
 
 # 
 
-### **✅ Fix Lỗi AI Smart Search (Bộ lọc thông minh):**
+### **✅ Fix Lỗi \& Nâng Cấp Toàn Diện AI Smart Search (Hybrid Search):**
 
 # 
 
-#### **Vấn đề: Trước đây tìm kiếm "ốp lưng", "sạc" vẫn hiển thị cả điện thoại do AI chỉ lọc theo Hãng.**
+#### **Vấn đề: Trước đây tìm kiếm đôi khi hiển thị kết quả rác (nhầm hãng) do logic Fallback mở rộng dùng phép toán OR, đồng thời AI chưa hiểu được các từ lóng ngữ nghĩa cao (như "pin trâu", "củ").**
 
 #### 
 
@@ -54,15 +54,19 @@
 
 #### 
 
-#### **Prompt Engineering: Bắt buộc AI phân loại rõ ràng category: 'phone' hoặc category: 'accessory' dựa trên từ khóa.**
+#### **Hybrid Search (Tìm kiếm lai): Kết hợp hoàn hảo giữa SQL (lọc chính xác giá, hãng) và Vector DB (đọc hiểu ngữ nghĩa từ lóng, tính năng đặc thù).**
 
 #### 
 
-#### **Trích xuất Keyword: AI tự động lấy từ khóa chính (VD: "ốp", "tai nghe") để lọc chính xác tên sản phẩm.**
+#### **Advanced Prompt Engineering (Few-Shot): Dạy AI cách quy đổi tiền tệ ("củ", "triệu" -> số 0), tự động sửa lỗi chính tả và phân loại cực chuẩn phụ kiện/điện thoại.**
 
 #### 
 
-#### **Cache Versioning: Đổi key cache để xóa bỏ các kết quả phân tích cũ sai lệch.**
+#### **Fix Fallback Logic: Đổi toán tử OR thành AND ở bước tìm kiếm cuối cùng, triệt để ngăn chặn tình trạng "tìm Samsung hiển thị sạc Xiaomi".**
+
+#### 
+
+#### **Cache Versioning: Đổi key cache để làm sạch toàn bộ các kết quả phân tích cũ sai lệch.**
 
 # 
 
@@ -346,11 +350,15 @@
 
 # 
 
-## **12. 🧠 Nâng Cấp AI: True RAG \& Vector Search**
+## **12. 🧠 Nâng Cấp AI: True RAG \& Vector Search (Hybrid)**
 
-# 
+## 
 
-#### **Chuyển đổi từ "Keyword Search" sang "Semantic Search" giúp AI hiểu ngữ nghĩa sâu sắc:**
+#### **Chuyển đổi từ "Keyword Search" sang hệ thống "Hybrid Search" (Lai giữa Semantic và SQL):**
+
+#### 
+
+#### **✅ Tích hợp trực tiếp vào Thanh Tìm Kiếm: Thanh tìm kiếm chính giờ đây hiểu được cả thông số kỹ thuật lẫn nhu cầu sử dụng bằng từ lóng (Ví dụ: "máy chuyên chơi game", "pin trâu").**
 
 #### 
 
@@ -362,7 +370,7 @@
 
 #### 
 
-#### **✅ Tìm Kiếm Ngữ Nghĩa: AI có thể tìm thấy sản phẩm phù hợp ngay cả khi không khớp từ khóa (VD: "máy chụp đêm đẹp" -> Tìm ra S24 Ultra).**
+#### **✅ Tìm Kiếm Ngữ Nghĩa: AI có thể tìm thấy sản phẩm phù hợp ngay cả khi không khớp từ khóa.**
 
 #### 
 

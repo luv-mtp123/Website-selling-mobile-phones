@@ -215,16 +215,50 @@ def generate_chatbot_response(user_msg, chat_history=[]):
     return call_gemini_api(final_prompt, system_instruction)
 
 
-# (Các hàm cũ giữ nguyên nhưng cập nhật dùng call_gemini_api mới)
+# [FIXED & UPGRADED] Cải thiện hàm phân tích ý định tìm kiếm
 def analyze_search_intents(query):
-    prompt = f"Phân tích JSON tìm kiếm (brand, category, min_price, max_price) cho: '{query}'."
-    res = call_gemini_api(prompt)
+    system_instruction = """
+    Bạn là hệ thống trích xuất dữ liệu tìm kiếm cho Website bán điện thoại MobileStore.
+    Nhiệm vụ: Phân tích câu hỏi của khách và trả về CHỈ MỘT chuỗi JSON hợp lệ. Không giải thích thêm.
+
+    Quy tắc quy đổi tiền: 'triệu' hoặc 'củ' = 1,000,000 VNĐ. 'trăm' = 100,000 VNĐ.
+
+    Định dạng JSON yêu cầu (Nếu không xác định được trường nào thì để giá trị là null):
+    {
+        "brand": "Tên hãng viết hoa chữ đầu (ví dụ: Apple, Samsung, Xiaomi, Oppo, Vivo...)",
+        "category": "Điền 'phone' nếu tìm điện thoại. Điền 'accessory' nếu tìm ốp lưng, sạc, cáp, tai nghe.",
+        "min_price": Số nguyên (ví dụ: 5000000),
+        "max_price": Số nguyên (ví dụ: 10000000),
+        "keyword": "Đặc điểm kỹ thuật hoặc dòng máy (ví dụ: 'pro max', 'pin', 'camera'). KHÔNG lấy nguyên văn từ lóng như 'pin trâu', 'chụp ảnh đẹp' mà hãy dịch thành thuật ngữ 'pin', 'camera'.",
+        "sort": "Điền 'price_asc' nếu muốn tìm rẻ nhất. Điền 'price_desc' nếu muốn tìm đắt nhất/cao cấp nhất."
+    }
+
+    === VÍ DỤ MẪU ===
+    Input: "tìm điện thoại samsung dưới 10 củ pin trâu"
+    Output: {"brand": "Samsung", "category": "phone", "min_price": null, "max_price": 10000000, "keyword": "pin", "sort": null}
+
+    Input: "ốp lưng iphone rẻ nhất"
+    Output: {"brand": "Apple", "category": "accessory", "min_price": null, "max_price": null, "keyword": "ốp lưng", "sort": "price_asc"}
+
+    Input: "điện thoại tầm 5 đến 7 triệu chụp ảnh đẹp"
+    Output: {"brand": null, "category": "phone", "min_price": 5000000, "max_price": 7000000, "keyword": "camera", "sort": null}
+    """
+
+    prompt = f"Câu hỏi của khách: '{query}'\n\nTrả về JSON:"
+
+    # Truyền system_instruction vào API
+    res = call_gemini_api(prompt, system_instruction=system_instruction)
     if not res: return None
+
     try:
+        # Làm sạch kết quả trả về để đảm bảo parse được JSON
         clean = re.sub(r"```json|```", "", res).strip()
         match = re.search(r"\{.*\}", clean, re.DOTALL)
-        return json.loads(match.group(0)) if match else None
-    except:
+        if match:
+            return json.loads(match.group(0))
+        return None
+    except Exception as e:
+        print(f"AI Parse JSON Error: {e} - Raw text: {res}")
         return None
 
 

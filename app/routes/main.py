@@ -22,7 +22,8 @@ from app.utils import (
     call_gemini_api,
     validate_image_file,
     build_product_context,
-    generate_chatbot_response
+    generate_chatbot_response,
+    search_vector_db # [NEW] Bổ sung hàm Vector Search
 )
 
 main_bp = Blueprint('main', __name__)
@@ -30,8 +31,8 @@ main_bp = Blueprint('main', __name__)
 # --- AI Cache Helper ---
 def cached_ai_call(func, *args):
     try:
-        # [FIX] Đổi key suffix từ v8 -> v9_compare_fix để xóa cache lỗi cũ
-        cache_key_content = str(args) + "_v9_compare_fix"
+        # [FIX] Đổi key suffix sang v10 để hệ thống xóa bỏ bộ nhớ đệm (cache) lỗi cũ
+        cache_key_content = str(args) + "_v10_hybrid_search"
         key = hashlib.md5(cache_key_content.encode()).hexdigest()
 
         cached = AICache.query.filter_by(prompt_hash=key).first()
@@ -115,11 +116,20 @@ def home():
             # Lọc Keyword (Tìm trong Tên hoặc Mô tả)
             if ai_data.get('keyword'):
                 kw = ai_data['keyword']
-                query = query.filter(or_(
-                    Product.name.ilike(f"%{kw}%"),
-                    Product.description.ilike(f"%{kw}%")
-                ))
-                ai_msg += f" | Từ khóa: {kw}"
+                # [HYBRID SEARCH] Dùng Vector DB để hiểu ngữ nghĩa từ lóng (như "pin trâu")
+                vector_ids = search_vector_db(kw, n_results=20)
+
+                if vector_ids:
+                    # Nếu Vector hiểu được, ép CSDL chỉ tìm trong các ID phù hợp ngữ nghĩa
+                    ids = [int(i) for i in vector_ids if i.isdigit()]
+                    query = query.filter(Product.id.in_(ids))
+                else:
+                    # Nếu Vector DB lỗi/không bật, quay về tìm chuỗi thông thường
+                    query = query.filter(or_(
+                        Product.name.ilike(f"%{kw}%"),
+                        Product.description.ilike(f"%{kw}%")
+                    ))
+                ai_msg += f" | Yêu cầu: {kw}"
 
             # Lọc Giá
             if ai_data.get('min_price'):
@@ -137,18 +147,28 @@ def home():
     # 2. FALLBACK CUỐI CÙNG (Nếu cả AI và Local Logic đều không ra kết quả)
     # ---------------------------------------------------------
     if not products and q:
-        # Tìm kiếm đơn giản: Tách từ khóa và tìm "gần đúng"
-        search_words = q.split()
-        stop_words = ['mua', 'tìm', 'giá', 'rẻ', 'cho', 'cần']
-        keywords = [w for w in search_words if w.lower() not in stop_words]
+        # [NEW FALLBACK] Thử tìm kiếm toàn bộ câu bằng Vector Search (Ngữ nghĩa)
+        vector_ids = search_vector_db(q, n_results=8)
+        if vector_ids:
+            ids = [int(i) for i in vector_ids if i.isdigit()]
+            products = base_query.filter(Product.id.in_(ids)).all()
+            if products:
+                ai_msg = "🧠 Kết quả theo ngữ nghĩa (Vector AI)"
+
+        # Nếu Vector DB vẫn không ra, dùng tìm kiếm từ khóa (ĐỔI OR THÀNH AND)
+        if not products:
+            search_words = q.split()
+            # Bổ sung thêm các từ rác cần loại bỏ
+            stop_words = ['mua', 'tìm', 'giá', 'rẻ', 'cho', 'cần', 'dưới', 'khoảng', 'củ', 'triệu']
+            keywords = [w for w in search_words if w.lower() not in stop_words]
 
         if keywords:
-            # Tìm sản phẩm chứa BẤT KỲ từ khóa nào
+            # [QUAN TRỌNG] Dùng 'and_' thay vì 'or_' để tránh hiện kết quả rác
+            # Phải chứa cả từ "samsung" VÀ chữ "pin" thì mới hiển thị
             conditions = [Product.name.ilike(f"%{word}%") for word in keywords]
-            products = base_query.filter(or_(*conditions)).all()
+            products = base_query.filter(and_(*conditions)).all()
             if products:
                 ai_msg = "🔍 Kết quả tương tự (Tìm kiếm mở rộng)"
-
     # ---------------------------------------------------------
     # 3. TRƯỜNG HỢP MẶC ĐỊNH
     # ---------------------------------------------------------

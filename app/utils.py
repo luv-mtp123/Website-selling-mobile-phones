@@ -280,6 +280,28 @@ def local_analyze_intent(query):
 
 
 def get_comparison_result(p1_name, p1_price, p1_desc, p2_name, p2_price, p2_desc):
-    prompt = f"Tạo bảng HTML so sánh chi tiết: {p1_name} ({p1_price}) vs {p2_name} ({p2_price}). Chỉ trả về code HTML."
-    res = call_gemini_api(prompt)
+    system_instruction = (
+        "Bạn là chuyên gia bán hàng công nghệ cấp cao. "
+        "Nhiệm vụ của bạn là so sánh thông số, sau đó BẮT BUỘC phải đưa ra lời khuyên "
+        "để khách hàng biết mình nên chọn máy nào."
+    )
+
+    prompt = f"""
+    Hãy tạo mã HTML so sánh 2 sản phẩm:
+    1. {p1_name} (Giá: {p1_price}) - Thông tin: {p1_desc}
+    2. {p2_name} (Giá: {p2_price}) - Thông tin: {p2_desc}
+
+    Yêu cầu ĐỊNH DẠNG HTML BẮT BUỘC:
+    - Bước 1: Tạo một bảng `<table class="table table-bordered table-hover">` so sánh các thông số kỹ thuật chính.
+    - Bước 2: Dưới bảng, thêm một thẻ `<div class="alert alert-info mt-4" style="border-radius: 10px;">`.
+    - Trong thẻ div này, tạo tiêu đề `<h5 class="fw-bold text-primary">💡 TƯ VẤN TỪ CHUYÊN GIA AI</h5>`.
+    - Viết 1-2 đoạn văn ngắn gọn phân tích tóm tắt.
+    - Thêm danh sách `<ul>` chỉ rõ:
+      + <li>Nên mua <b>{p1_name}</b> nếu bạn cần...</li>
+      + <li>Nên mua <b>{p2_name}</b> nếu bạn ưu tiên...</li>
+
+    CHỈ TRẢ VỀ MÃ HTML CỦA BẢNG VÀ PHẦN TƯ VẤN, KHÔNG GIẢI THÍCH THÊM.
+    """
+
+    res = call_gemini_api(prompt, system_instruction=system_instruction)
     return re.sub(r"```html|```", "", res).strip() if res else None

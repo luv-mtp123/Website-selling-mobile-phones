@@ -31,8 +31,8 @@ main_bp = Blueprint('main', __name__)
 # --- AI Cache Helper ---
 def cached_ai_call(func, *args):
     try:
-        # [FIX] Đổi key suffix sang v10 để hệ thống xóa bỏ bộ nhớ đệm (cache) lỗi cũ
-        cache_key_content = str(args) + "_v10_hybrid_search"
+        # [FIX] Đổi key suffix sang v12_compare_conclusion để buộc AI sinh lại bảng có phần Kết Luận
+        cache_key_content = str(args) + "_v12_compare_conclusion"
         key = hashlib.md5(cache_key_content.encode()).hexdigest()
 
         cached = AICache.query.filter_by(prompt_hash=key).first()

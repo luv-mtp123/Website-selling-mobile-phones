@@ -99,20 +99,15 @@ class AIFeaturesTestCase(unittest.TestCase):
         self.assertNotIn("iPhone 15 Pro Max", context)  # Không được trộn lẫn Apple vào
 
     # --- TEST 3: CHATBOT MEMORY & INTEGRATION (Mocking) ---
-    @patch('app.utils.requests.post')
-    def test_chatbot_memory_flow(self, mock_post):
+    @patch('app.utils.call_gemini_api')
+    def test_chatbot_memory_flow(self, mock_gemini):
         """
         Kiểm tra luồng hội thoại có nhớ ngữ cảnh (Session Memory).
         """
         print("\n[AI Test 3] Testing Chatbot Memory & Session...")
 
         # Setup Mock AI Response
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            'candidates': [{'content': {'parts': [{'text': 'AI Response'}]}}]
-        }
-        mock_post.return_value = mock_response
+        mock_gemini.return_value = "AI Response"
 
         # Bước 1: Khách hỏi câu 1
         with self.client:
@@ -133,13 +128,12 @@ class AIFeaturesTestCase(unittest.TestCase):
             self.assertEqual(history[1]['user'], 'Nó có màu gì?')
 
             # [QUAN TRỌNG] Kiểm tra Prompt gửi đi lần 2 phải chứa lịch sử lần 1
-            # Lấy arguments mà code đã gọi requests.post
-            args, kwargs = mock_post.call_args
-            sent_payload = kwargs['json']
-            prompt_text = sent_payload['contents'][0]['parts'][0]['text']
+            # Lấy arguments mà code đã gọi call_gemini_api
+            args, kwargs = mock_gemini.call_args
+            prompt_text = args[0] # The prompt string is the first positional argument
 
             # Prompt gửi đi phải chứa câu hỏi cũ để AI hiểu từ "Nó"
-            self.assertIn("LỊCH SỬ TRÒ CHUYỆN", prompt_text)
+            self.assertIn("LỊCH SỬ HỘI THOẠI", prompt_text)
             self.assertIn("iPhone 15 giá bao nhiêu?", prompt_text)
 
     # --- TEST 4: COMPARISON LOGIC (So sánh) ---
@@ -165,7 +159,7 @@ class AIFeaturesTestCase(unittest.TestCase):
 
         self.assertIn("iPhone A", sent_prompt)
         self.assertIn("Samsung B", sent_prompt)
-        self.assertIn("CHỈ TRẢ VỀ MÃ HTML", sent_prompt)  # Kiểm tra instruction quan trọng
+        self.assertIn("Chỉ trả về code HTML", sent_prompt)  # Kiểm tra instruction quan trọng
 
 
 if __name__ == '__main__':

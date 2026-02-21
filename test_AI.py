@@ -159,7 +159,9 @@ class AIFeaturesTestCase(unittest.TestCase):
 
         self.assertIn("iPhone A", sent_prompt)
         self.assertIn("Samsung B", sent_prompt)
-        self.assertIn("Chỉ trả về code HTML", sent_prompt)  # Kiểm tra instruction quan trọng
+        # [ĐÃ SỬA]: Thay đổi từ "Chỉ trả về code HTML" thành một cụm từ thực sự tồn tại
+        # trong chuỗi prompt được định nghĩa tại app/utils.py
+        self.assertIn("CHỈ TRẢ VỀ MÃ HTML", sent_prompt)  # Kiểm tra instruction quan trọng
 
 
 if __name__ == '__main__':

@@ -7,8 +7,8 @@
     <list default="true" id="3173c2d7-cc29-4323-83c7-0baca6ea3dee" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/routes/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/instance/mobilestore.db" beforeDir="false" afterPath="$PROJECT_DIR$/instance/mobilestore.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_AI.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_AI.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

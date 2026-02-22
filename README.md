@@ -30,6 +30,18 @@
 
 # 
 
+## **✅ Sửa Lỗi Xung Đột Khởi Tạo Database (Migration):**
+
+## 
+
+#### **Vấn đề: Lệnh flask db migrate bị lỗi OperationalError do vòng lặp khởi tạo CSDL tự động trong run.py/wsgi.py.**
+
+#### 
+
+#### **Giải pháp: Xử lý và tối ưu hóa khối lệnh with app.app\_context(): bằng cách tạm thời ẩn lệnh initialize\_database() trong run.py/wsgi.py và thêm lệnh pass ( bỏ qua ) tránh việc lỗi thụt lề , cho phép chạy lệnh nâng cấp CSDL an toàn mà không làm mất dữ liệu hiện tại.**
+
+# 
+
 ### **✅ Fix Lỗi API Chatbot (CSRF Error):**
 
 # 
@@ -106,15 +118,35 @@
 
 # 
 
+## **✅ Nâng Cấp Hệ Thống AI So Sánh (AI Battle):**
+
+## 
+
+#### **Vấn đề: AI đôi khi chỉ trả về phần tóm tắt ngắn, ngoài ra hệ thống lưu Cache cũ (câu trả lời ngắn) làm ảnh hưởng trải nghiệm.**
+
+#### 
+
+#### **Giải pháp: Tối ưu hóa hệ thống System Instruction \& Prompt, ép buộc AI sinh ra mã HTML chi tiết và đưa ra lời khuyên (Pros/Cons). Đổi cơ chế băm cache\_key để hệ thống luôn nạp kết quả phân tích chuyên sâu mới nhất.**
+
+# 
+
 ## **2. ✨ Tính Năng Mới: Bình Luận \& Đánh Giá (Reviews)**
 
 # 
 
-### **⭐ Hệ thống đánh giá 5 sao: Cho phép người dùng đăng nhập gửi đánh giá chất lượng sản phẩm.**
+### **✅ Hệ Thống Đánh Giá \& Bình Luận Chuyên Nghiệp:**
 
-# 
+### 
 
-### **💬 Bình luận thời gian thực: Hiển thị danh sách bình luận mới nhất kèm Avatar và tên người dùng.**
+#### **Nâng cấp: Tái thiết kế toàn bộ khối Đánh giá sản phẩm ở trang Chi tiết (detail.html) mang phong cách hiện đại của các trang TMĐT lớn.**
+
+#### 
+
+#### **Tính năng trực quan: Hiển thị Điểm số trung bình nổi bật, Tích hợp thanh tiến trình (Progress Bar) cho từng mức sao (1 đến 5 sao), và khung Đánh giá theo trải nghiệm (Hiệu năng, Pin, Camera).**
+
+#### 
+
+#### **Bộ lọc thông minh: Viết thêm thuật toán JavaScript hỗ trợ lọc Đánh giá/Bình luận mượt mà (Lọc theo số sao, Đã mua hàng...) không cần phải tải lại trang (No-reload).**
 
 # 
 
@@ -474,8 +506,6 @@
 
 # 
 
-# 
-
 ## **Bước 2: Cấu hình .env**
 
 # 
@@ -510,8 +540,6 @@
 
 # 
 
-# 
-
 ## **Bước 4: Đồng bộ Vector Database (Cho AI)**
 
 # 
@@ -521,12 +549,6 @@
 #### 
 
 #### **python rag\_sync.py**
-
-# 
-
-# 
-
-### **👉 Truy cập: http://127.0.0.1:5000**
 
 # 
 

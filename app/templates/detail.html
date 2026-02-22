@@ -17,47 +17,56 @@
     }
     .btn-variant:hover { border-color: #d70018; background-color: #fff5f5; color: #d70018; }
     .btn-variant.active { border-color: #d70018; color: #d70018; background: #fff0f0; box-shadow: 0 0 0 1px #d70018 inset; }
-    .btn-variant.active::after {
-        content: '✔'; position: absolute; top: -8px; right: -8px; background: #d70018; color: white;
-        font-size: 10px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+    .btn-variant.active::after { content: '✔'; position: absolute; top: -8px; right: -8px; background: #d70018; color: white; font-size: 10px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
     /* --- Action Buttons --- */
-    .btn-buy-now {
-        background: linear-gradient(135deg, #d70018 0%, #ff0000 100%); color: white; border: none; width: 100%; padding: 14px;
-        border-radius: 12px; font-weight: 800; text-transform: uppercase; font-size: 1.2rem; box-shadow: 0 8px 20px rgba(215, 0, 24, 0.25); transition: all 0.3s;
-    }
+    .btn-buy-now { background: linear-gradient(135deg, #d70018 0%, #ff0000 100%); color: white; border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; text-transform: uppercase; font-size: 1.2rem; box-shadow: 0 8px 20px rgba(215, 0, 24, 0.25); transition: all 0.3s; }
     .btn-buy-now:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(215, 0, 24, 0.35); color: white; }
-
-    .btn-add-cart {
-        border: 2px solid #d70018; color: #d70018; background: white; width: 100%; padding: 10px; border-radius: 12px;
-        font-weight: 700; text-transform: uppercase; font-size: 0.75rem; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s;
-    }
+    .btn-add-cart { border: 2px solid #d70018; color: #d70018; background: white; width: 100%; padding: 10px; border-radius: 12px; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s; }
     .btn-add-cart:hover { background: #d70018; color: white; }
-
     .btn-disabled { background: #e9ecef !important; border-color: #dee2e6 !important; cursor: not-allowed; box-shadow: none !important; color: #adb5bd !important; pointer-events: none; }
 
-    /* --- Rating Stars --- */
-    .rating { display: flex; flex-direction: row-reverse; justify-content: flex-start; gap: 5px; }
-    .rating input { display: none; }
-    .rating label { font-size: 2rem; color: #e9ecef; cursor: pointer; transition: color 0.2s; }
-    .rating input:checked ~ label, .rating label:hover, .rating label:hover ~ label { color: #ffc107; }
-
     /* --- Image Gallery --- */
-    .main-image-container {
-        padding: 30px;
-        background: white;
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: transform 0.3s ease;
-    }
+    .main-image-container { padding: 30px; background: white; border-radius: 20px; display: flex; align-items: center; justify-content: center; transition: transform 0.3s ease; }
     .main-image-container:hover img { transform: scale(1.05); }
     .main-image-container img { transition: transform 0.3s ease; max-height: 450px; }
+
+    /* --- CSS CHUẨN CELLPHONES (Cam kết & Thông số) --- */
+    .guarantee-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px; }
+    .guarantee-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 12px 15px; display: flex; align-items: flex-start; gap: 12px; }
+    .guarantee-icon { color: #d70018; font-size: 1.4rem; margin-top: 2px; flex-shrink: 0; }
+
+    .specs-section { border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; margin-top: 25px; }
+    .specs-header { background: #f8f9fa; padding: 15px; font-weight: bold; font-size: 1.1rem; border-bottom: 1px solid #e9ecef; color: #333;}
+    .specs-table { margin: 0; width: 100%; border-collapse: collapse; }
+    .specs-table th, .specs-table td { padding: 12px 15px; border-bottom: 1px solid #f1f1f1; font-size: 0.95rem; }
+    .specs-table th { width: 35%; background-color: #fafafa; color: #555; font-weight: 500; }
+    .specs-table td { color: #222; font-weight: 500; }
+    .specs-table tr:last-child th, .specs-table tr:last-child td { border-bottom: none; }
+
+    /* --- Review Section (ĐÃ CĂN CHỈNH LẠI CHUẨN XÁC) --- */
+    .review-overview { border: 1px solid #eee; border-radius: 16px; padding: 25px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+    .rating-score { font-size: 3.5rem; font-weight: 800; color: #d70018; line-height: 1; }
+    .rating-score-total { font-size: 1.2rem; color: #777; font-weight: normal; }
+    .progress-thin { height: 8px; border-radius: 10px; background-color: #f1f1f1; }
+    .progress-thin .progress-bar { background-color: #d70018; border-radius: 10px; }
+    .star-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+
+    .filter-btn { border: 1px solid #e0e0e0; border-radius: 20px; padding: 6px 16px; font-size: 0.9rem; color: #444; background: #fff; transition: 0.2s; cursor: pointer; }
+    .filter-btn:hover { background: #f8f9fa; border-color: #ccc; }
+    .filter-btn.active { background: #fff1f1; color: #d70018; border-color: #d70018; font-weight: bold; }
+
+    .review-item { padding: 20px 0; border-bottom: 1px solid #f1f1f1; }
+    .review-item:last-child { border-bottom: none; }
+    .review-avatar { width: 45px; height: 45px; border-radius: 50%; background: #e9ecef; color: #6c757d; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; }
+    .review-badge { background: #e8f5e9; color: #2e7d32; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; }
+
+    .rating-input { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 5px; }
+    .rating-input input { display: none; }
+    .rating-input label { font-size: 2rem; color: #e9ecef; cursor: pointer; transition: color 0.2s; }
+    .rating-input input:checked ~ label, .rating-input label:hover, .rating-input label:hover ~ label { color: #ffc107; }
 </style>
 
-<!-- Breadcrumb -->
 <nav aria-label="breadcrumb" class="my-4">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted fw-bold"><i class="fas fa-home me-1"></i>Trang chủ</a></li>
@@ -67,7 +76,7 @@
 </nav>
 
 <div class="row g-4 mb-5">
-    <!-- Cột TRÁI: Hình ảnh -->
+    <!-- Cột TRÁI: Ảnh + Cam Kết -->
     <div class="col-lg-5">
         <div class="main-image-container shadow-sm border position-relative">
             <img id="mainImage" src="{{ product.image_url }}" class="img-fluid" alt="{{ product.name }}" onerror="this.src='https://via.placeholder.com/500x500?text=No+Image'">
@@ -77,11 +86,29 @@
             </div>
             {% endif %}
         </div>
+
+        <!-- KHỐI CAM KẾT SẢN PHẨM -->
+        {% if product.guarantees_list and product.guarantees_list|length > 0 %}
+        <div class="mt-4">
+            <h5 class="fw-bold mb-3">Cam kết sản phẩm</h5>
+            <div class="guarantee-container">
+                {% for g in product.guarantees_list %}
+                <div class="guarantee-box shadow-sm">
+                    <div class="guarantee-icon"><i class="{{ g.icon }}"></i></div>
+                    <div>
+                        <div class="guarantee-title fw-bold" style="font-size: 0.9rem; color: #333;">{{ g.title }}</div>
+                        {% if g.desc %}<div class="guarantee-desc text-muted mt-1" style="font-size: 0.8rem; line-height: 1.4;">{{ g.desc }}</div>{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 
-    <!-- Cột PHẢI: Thông tin & Mua hàng -->
+    <!-- Cột PHẢI: Thông tin, Mua hàng & Thông số -->
     <div class="col-lg-7">
-        <div class="bg-white p-4 rounded-4 shadow-sm border h-100">
+        <div class="bg-white p-4 rounded-4 shadow-sm border mb-4">
             <h1 class="product-title">{{ product.name }}</h1>
 
             <div class="d-flex align-items-center mb-3">
@@ -140,8 +167,7 @@
                 {% endif %}
             {% endif %}
 
-            <!-- Nút Mua (Disabled nếu hết hàng) -->
-            <div class="mt-auto">
+            <div class="mb-2 mt-4">
                 {% if product.stock_quantity > 0 %}
                     <div class="row g-2">
                         <div class="col-9">
@@ -165,101 +191,197 @@
                     </div>
                 {% else %}
                     <button class="btn btn-buy-now btn-disabled" disabled>HẾT HÀNG</button>
-                    <p class="text-danger mt-2 small fw-bold"><i class="fas fa-bell me-1"></i> Sản phẩm đang tạm hết. Vui lòng quay lại sau.</p>
                 {% endif %}
             </div>
 
-            <!-- Policy Box -->
-            <div class="mt-4 pt-3 border-top">
-                <div class="row small text-muted">
-                    <div class="col-6 mb-2"><i class="fas fa-box-open me-2 text-primary"></i>Bộ sản phẩm chuẩn</div>
-                    <div class="col-6 mb-2"><i class="fas fa-shield-alt me-2 text-primary"></i>Bảo hành 12 tháng</div>
-                    <div class="col-6"><i class="fas fa-sync me-2 text-primary"></i>Đổi trả 30 ngày</div>
-                    <div class="col-6"><i class="fas fa-truck me-2 text-primary"></i>Freeship toàn quốc</div>
+            <!-- BẢNG THÔNG SỐ KỸ THUẬT -->
+            {% if product.specs_list and product.specs_list|length > 0 %}
+            <div class="specs-section shadow-sm">
+                <div class="specs-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-cogs me-2 text-danger"></i> Thông số kỹ thuật</span>
                 </div>
+                <table class="specs-table">
+                    <tbody>
+                        {% for spec in product.specs_list %}
+                        <tr>
+                            <th>{{ spec.key }}</th>
+                            <td>{{ spec.val }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- BÌNH LUẬN & ĐÁNH GIÁ (ĐÃ FIX CĂN LỀ & KHOẢNG TRẮNG) -->
+<!-- ========================================== -->
+
+<!-- TÍNH TOÁN DỮ LIỆU ĐÁNH GIÁ -->
+{% set stats = namespace(total=0, sum=0, s5=0, s4=0, s3=0, s2=0, s1=0) %}
+{% for c in comments %}
+    {% set stats.total = stats.total + 1 %}
+    {% set stats.sum = stats.sum + c.rating %}
+    {% if c.rating == 5 %}{% set stats.s5 = stats.s5 + 1 %}{% endif %}
+    {% if c.rating == 4 %}{% set stats.s4 = stats.s4 + 1 %}{% endif %}
+    {% if c.rating == 3 %}{% set stats.s3 = stats.s3 + 1 %}{% endif %}
+    {% if c.rating == 2 %}{% set stats.s2 = stats.s2 + 1 %}{% endif %}
+    {% if c.rating == 1 %}{% set stats.s1 = stats.s1 + 1 %}{% endif %}
+{% endfor %}
+{% set avg = (stats.sum / stats.total)|round(1) if stats.total > 0 else 0 %}
+
+<div class="mb-5">
+    <h4 class="fw-bold mb-4">Đánh giá {{ product.name }}</h4>
+
+    <div class="review-overview mb-4">
+        <div class="row align-items-center">
+
+            <!-- Cột Điểm Trung Bình -->
+            <div class="col-md-3 text-center border-end mb-4 mb-md-0">
+                <div class="rating-score mb-1">{{ avg }}<span class="rating-score-total">/5</span></div>
+                <div class="mb-2 fs-5">
+                    {% for i in range(5) %}
+                        {% if i < avg|round(0, 'floor') %}<i class="fas fa-star text-warning"></i>
+                        {% elif i < avg %}<i class="fas fa-star-half-alt text-warning"></i>
+                        {% else %}<i class="far fa-star text-warning"></i>{% endif %}
+                    {% endfor %}
+                </div>
+                <div class="text-muted small mb-3"><strong>{{ stats.total }}</strong> lượt đánh giá</div>
+                <button class="btn btn-danger btn-sm rounded-pill px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                    <i class="fas fa-pencil-alt me-1"></i> Viết đánh giá
+                </button>
+            </div>
+
+            <!-- Cột Thanh Tiến Trình (Đã căn lề lại chữ '0 đánh giá') -->
+            <div class="col-md-5 px-md-4 border-end mb-4 mb-md-0">
+                {% for star, count in [(5, stats.s5), (4, stats.s4), (3, stats.s3), (2, stats.s2), (1, stats.s1)] %}
+                    {% set percent = (count / stats.total * 100) if stats.total > 0 else 0 %}
+                    <div class="star-row">
+                        <span class="fw-bold" style="width: 35px; color: #555;">{{ star }} <i class="fas fa-star text-warning"></i></span>
+                        <!-- Thêm mx-3 để thanh tiến trình cách xa chữ 2 bên -->
+                        <div class="progress progress-thin flex-grow-1 mx-3">
+                            <div class="progress-bar" style="width: {{ percent }}%"></div>
+                        </div>
+                        <!-- Cố định chiều rộng cột chữ bên phải thành 80px để không bị dính chữ -->
+                        <span class="text-muted text-end" style="min-width: 80px; font-size: 0.85rem;">{{ count }} đánh giá</span>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Cột Đánh giá trải nghiệm -->
+            <div class="col-md-4 ps-md-4">
+                <h6 class="fw-bold mb-3">Đánh giá theo trải nghiệm</h6>
+                <div class="d-flex justify-content-between align-items-center mb-2 small">
+                    <span class="text-dark">Hiệu năng</span>
+                    <div>
+                        <i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i>
+                        <span class="ms-1 fw-bold text-dark">5/5</span> <span class="text-muted" style="font-size: 0.75rem;">({{ stats.total }} đánh giá)</span>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2 small">
+                    <span class="text-dark">Thời lượng pin</span>
+                    <div>
+                        <i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i>
+                        <span class="ms-1 fw-bold text-dark">5/5</span> <span class="text-muted" style="font-size: 0.75rem;">({{ stats.total }} đánh giá)</span>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center small">
+                    <span class="text-dark">Chất lượng camera</span>
+                    <div>
+                        <i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star-half-alt text-warning"></i>
+                        <span class="ms-1 fw-bold text-dark">4.8/5</span> <span class="text-muted" style="font-size: 0.75rem;">({{ stats.total }} đánh giá)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nút Lọc -->
+    <div class="d-flex align-items-center flex-wrap gap-2 mb-4">
+        <strong class="me-2">Lọc đánh giá theo</strong>
+        <button class="filter-btn active" onclick="filterReviews('all', this)">Tất cả</button>
+        <button class="filter-btn" onclick="filterReviews('purchased', this)">Đã mua hàng</button>
+        <button class="filter-btn" onclick="filterReviews('5', this)">5 sao</button>
+        <button class="filter-btn" onclick="filterReviews('4', this)">4 sao</button>
+        <button class="filter-btn" onclick="filterReviews('3', this)">3 sao</button>
+        <button class="filter-btn" onclick="filterReviews('2', this)">2 sao</button>
+        <button class="filter-btn" onclick="filterReviews('1', this)">1 sao</button>
+    </div>
+
+    <!-- Danh sách đánh giá -->
+    <div class="bg-white p-4 rounded-4 shadow-sm border" id="reviewsContainer">
+        {% if comments %}
+            {% for c in comments %}
+            <div class="review-item" data-rating="{{ c.rating }}" data-has-image="false" data-purchased="true">
+                <div class="d-flex">
+                    <div class="review-avatar me-3 shadow-sm">{{ (c.user.full_name or c.user.username)[:1]|upper }}</div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-1">
+                            <h6 class="fw-bold mb-0 me-3">{{ c.user.full_name or c.user.username }}</h6>
+                            <div class="text-warning small me-2">{% for i in range(c.rating) %}<i class="fas fa-star"></i>{% endfor %}{% for i in range(5 - c.rating) %}<i class="far fa-star"></i>{% endfor %}</div>
+                        </div>
+                        <div class="mb-2"><span class="review-badge"><i class="fas fa-check-circle"></i> Đã mua tại MobileStore</span></div>
+                        <p class="mb-2 text-dark" style="line-height: 1.5;">{{ c.content }}</p>
+                        <div class="text-muted small"><i class="far fa-clock me-1"></i> Đánh giá đã đăng vào {{ c.created_at.strftime('%d/%m/%Y') }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <!-- Căn chỉnh khối hiển thị khi chưa có đánh giá -->
+            <div class="text-center py-5 bg-light rounded-3 mt-3 border">
+                <i class="fas fa-comment-slash fa-3x text-muted opacity-25 mb-3"></i>
+                <p class="text-muted mb-0 fw-bold">Chưa có đánh giá nào. Hãy là người đầu tiên!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Ghi Đánh Giá -->
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white rounded-top-4">
+                <h5 class="modal-title fw-bold">Đánh giá {{ product.name }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                {% if current_user.is_authenticated %}
+                <form action="/product/{{ product.id }}/comment" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="mb-4 text-center">
+                        <label class="form-label text-dark fw-bold mb-2">Bạn cảm thấy sản phẩm này thế nào?</label>
+                        <div class="rating-input justify-content-center">
+                            <input type="radio" name="rating" value="5" id="star5" checked><label for="star5" title="Tuyệt vời">★</label>
+                            <input type="radio" name="rating" value="4" id="star4"><label for="star4" title="Tốt">★</label>
+                            <input type="radio" name="rating" value="3" id="star3"><label for="star3" title="Bình thường">★</label>
+                            <input type="radio" name="rating" value="2" id="star2"><label for="star2" title="Tệ">★</label>
+                            <input type="radio" name="rating" value="1" id="star1"><label for="star1" title="Rất tệ">★</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <textarea name="content" class="form-control bg-light" rows="4" placeholder="Xin mời chia sẻ cảm nhận về sản phẩm..." required style="resize: none; border-radius: 12px;"></textarea>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-danger rounded-pill fw-bold py-2 text-uppercase">Gửi Đánh Giá</button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-lock fa-3x text-muted mb-3 opacity-50"></i>
+                    <p class="mb-4 text-muted">Bạn cần đăng nhập để viết đánh giá.</p>
+                    <a href="/login" class="btn btn-primary rounded-pill px-5 fw-bold">Đăng Nhập Ngay</a>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- [SECTION] BÌNH LUẬN & ĐÁNH GIÁ -->
-<div class="row mb-5">
-    <div class="col-12">
-        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-            <div class="card-header bg-gradient bg-light p-3 border-bottom d-flex align-items-center">
-                <h5 class="fw-bold mb-0 text-primary"><i class="fas fa-comments me-2"></i> Đánh giá từ khách hàng</h5>
-            </div>
-            <div class="card-body p-4">
-                <div class="row">
-                    <!-- Form gửi đánh giá -->
-                    <div class="col-md-4 mb-4 mb-md-0 border-end">
-                        <h6 class="fw-bold mb-3">Gửi nhận xét của bạn</h6>
-                        {% if current_user.is_authenticated %}
-                        <form action="/product/{{ product.id }}/comment" method="POST">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                            <div class="mb-3 text-center">
-                                <label class="form-label text-muted small fw-bold">BẠN CẢM THẤY THẾ NÀO?</label>
-                                <div class="rating justify-content-center">
-                                    <input type="radio" name="rating" value="5" id="5" checked><label for="5" title="Tuyệt vời">★</label>
-                                    <input type="radio" name="rating" value="4" id="4"><label for="4" title="Tốt">★</label>
-                                    <input type="radio" name="rating" value="3" id="3"><label for="3" title="Bình thường">★</label>
-                                    <input type="radio" name="rating" value="2" id="2"><label for="2" title="Tệ">★</label>
-                                    <input type="radio" name="rating" value="1" id="1"><label for="1" title="Rất tệ">★</label>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <textarea name="content" class="form-control bg-light border-0" rows="4" placeholder="Hãy chia sẻ cảm nhận về sản phẩm..." required style="resize: none;"></textarea>
-                            </div>
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary rounded-pill fw-bold">Gửi Đánh Giá</button>
-                            </div>
-                        </form>
-                        {% else %}
-                        <div class="text-center py-4 bg-light rounded-3">
-                            <i class="fas fa-lock fa-2x text-muted mb-2"></i>
-                            <p class="mb-3 text-muted">Vui lòng đăng nhập để đánh giá</p>
-                            <a href="/login" class="btn btn-outline-primary rounded-pill px-4 btn-sm">Đăng nhập ngay</a>
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Danh sách đánh giá -->
-                    <div class="col-md-8 ps-md-4">
-                        <h6 class="fw-bold mb-3">Bình luận mới nhất ({{ comments|length }})</h6>
-                        <div class="d-flex flex-column gap-3" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
-                            {% if comments %}
-                                {% for c in comments %}
-                                <div class="d-flex p-3 bg-light rounded-3 border-0">
-                                    <img src="{{ c.user.avatar_url or 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }}"
-                                         class="rounded-circle me-3 border shadow-sm" width="50" height="50" style="object-fit: cover;">
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <h6 class="fw-bold mb-0 text-dark">{{ c.user.full_name or c.user.username }}</h6>
-                                            <small class="text-muted" style="font-size: 0.75rem;">{{ c.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
-                                        </div>
-                                        <div class="mb-2">
-                                            {% for i in range(c.rating) %}<i class="fas fa-star text-warning small"></i>{% endfor %}
-                                            {% for i in range(5 - c.rating) %}<i class="far fa-star text-muted small opacity-25"></i>{% endfor %}
-                                        </div>
-                                        <p class="mb-0 text-secondary small">{{ c.content }}</p>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            {% else %}
-                                <div class="text-center py-5">
-                                    <img src="https://cdn-icons-png.flaticon.com/512/1144/1144811.png" width="60" class="opacity-25 mb-3">
-                                    <p class="text-muted">Chưa có đánh giá nào. Hãy là người đầu tiên!</p>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Gợi ý (Giữ nguyên logic) -->
+<!-- Gợi ý Phụ kiện -->
 <div class="mt-5 mb-5">
     <div class="d-flex align-items-center mb-4">
         <h4 class="fw-bold text-uppercase mb-0 text-danger">Gợi ý phụ kiện</h4>
@@ -270,7 +392,7 @@
         <div class="col">
             <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
                 <a href="/product/{{ item.id }}" class="text-center p-3 bg-white position-relative">
-                    <img src="{{ item.image_url }}" class="img-fluid" style="height: 140px; object-fit: contain;">
+                    <img src="{{ item.image_url }}" class="img-fluid" style="height: 140px; object-fit: contain;" onerror="this.src='https://via.placeholder.com/150'">
                 </a>
                 <div class="card-body p-3 bg-light">
                     <h6 class="card-title text-truncate mb-1"><a href="/product/{{ item.id }}" class="text-decoration-none text-dark fw-bold small">{{ item.name }}</a></h6>
@@ -284,11 +406,13 @@
 
 <script>
     function formatVND(n) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n).replace('₫', 'đ'); }
+
     function updateImage(el, imageUrl) {
         el.parentElement.querySelectorAll('.btn-variant').forEach(btn => btn.classList.remove('active'));
         el.classList.add('active');
         if(imageUrl && imageUrl != 'None' && imageUrl != '') document.getElementById('mainImage').src = imageUrl;
     }
+
     function updatePrice(el, price) {
         el.parentElement.querySelectorAll('.btn-variant').forEach(btn => btn.classList.remove('active'));
         el.classList.add('active');
@@ -296,6 +420,37 @@
             document.getElementById('priceDisplay').innerText = formatVND(price);
             const oldPrice = document.getElementById('oldPriceDisplay');
             if(oldPrice) oldPrice.style.display = 'none';
+        }
+    }
+
+    function filterReviews(filterType, btnElement) {
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        btnElement.classList.add('active');
+        const reviews = document.querySelectorAll('.review-item');
+        let visibleCount = 0;
+
+        reviews.forEach(item => {
+            let show = false;
+            if (filterType === 'all') show = true;
+            else if (filterType === 'purchased') show = item.getAttribute('data-purchased') === 'true';
+            else show = item.getAttribute('data-rating') === filterType;
+
+            if (show) { item.style.display = 'block'; visibleCount++; }
+            else { item.style.display = 'none'; }
+        });
+
+        let emptyMsg = document.getElementById('emptyReviewMsg');
+        if (visibleCount === 0 && reviews.length > 0) {
+            if (!emptyMsg) {
+                emptyMsg = document.createElement('div');
+                emptyMsg.id = 'emptyReviewMsg';
+                emptyMsg.className = 'text-center py-5 bg-light rounded-3 mt-3 border';
+                emptyMsg.innerHTML = '<i class="fas fa-comment-slash fa-3x text-muted opacity-25 mb-3"></i><p class="text-muted mb-0 fw-bold">Không có đánh giá nào phù hợp với bộ lọc này.</p>';
+                document.getElementById('reviewsContainer').appendChild(emptyMsg);
+            }
+            emptyMsg.style.display = 'block';
+        } else if (emptyMsg) {
+            emptyMsg.style.display = 'none';
         }
     }
 </script>

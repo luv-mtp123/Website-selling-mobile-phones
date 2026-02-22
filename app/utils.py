@@ -291,16 +291,35 @@ def get_comparison_result(p1_name, p1_price, p1_desc, p2_name, p2_price, p2_desc
     1. {p1_name} (Giá: {p1_price}) - Thông tin: {p1_desc}
     2. {p2_name} (Giá: {p2_price}) - Thông tin: {p2_desc}
 
+    LƯU Ý QUAN TRỌNG: 
+    Nếu phần "Thông tin cung cấp" bên trên bị thiếu thông số, hãy SỬ DỤNG KIẾN THỨC CỦA BẠN về 2 dòng điện thoại này để điền bổ sung cho đầy đủ và chính xác nhất. Không được để trống quá nhiều.
+
     Yêu cầu ĐỊNH DẠNG HTML BẮT BUỘC:
-    - Bước 1: Tạo một bảng `<table class="table table-bordered table-hover">` so sánh các thông số kỹ thuật chính.
+    - Bước 1: Tạo một bảng `<table class="table table-bordered table-hover">`.
+    Cột 1 là "Thông số kỹ thuật", Cột 2 là tên máy 1, Cột 3 là tên máy 2.
+    BẮT BUỘC phải tạo các hàng (row) sau đây trong bảng:
+      + Kích thước màn hình
+      + Công nghệ màn hình / Độ phân giải
+      + Tần số quét (Hz)
+      + Camera sau
+      + Camera trước
+      + Chipset (CPU)
+      + Dung lượng RAM
+      + Bộ nhớ trong (ROM)
+      + Dung lượng Pin & Công suất Sạc nhanh
+      + Công nghệ NFC
+      + Thẻ SIM
+      + Hệ điều hành
+      + Thiết kế & Trọng lượng
+
     - Bước 2: Dưới bảng, thêm một thẻ `<div class="alert alert-info mt-4" style="border-radius: 10px;">`.
     - Trong thẻ div này, tạo tiêu đề `<h5 class="fw-bold text-primary">💡 TƯ VẤN TỪ CHUYÊN GIA AI</h5>`.
-    - Viết 1-2 đoạn văn ngắn gọn phân tích tóm tắt.
+    - Viết 1-2 đoạn văn phân tích chuyên sâu về sự khác biệt lớn nhất giữa 2 máy.
     - Thêm danh sách `<ul>` chỉ rõ:
-      + <li>Nên mua <b>{p1_name}</b> nếu bạn cần...</li>
-      + <li>Nên mua <b>{p2_name}</b> nếu bạn ưu tiên...</li>
+      + <li>Nên mua <b>{p1_name}</b> nếu bạn...</li>
+      + <li>Nên mua <b>{p2_name}</b> nếu bạn...</li>
 
-    CHỈ TRẢ VỀ MÃ HTML CỦA BẢNG VÀ PHẦN TƯ VẤN, KHÔNG GIẢI THÍCH THÊM.
+    CHỈ TRẢ VỀ MÃ HTML CỦA BẢNG VÀ PHẦN TƯ VẤN, KHÔNG GIẢI THÍCH THÊM BẤT CỨ ĐIỀU GÌ.
     """
 
     res = call_gemini_api(prompt, system_instruction=system_instruction)

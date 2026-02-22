@@ -31,20 +31,7 @@
     .main-image-container:hover img { transform: scale(1.05); }
     .main-image-container img { transition: transform 0.3s ease; max-height: 450px; }
 
-    /* --- CSS CHUẨN CELLPHONES (Cam kết & Thông số) --- */
-    .guarantee-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px; }
-    .guarantee-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 12px 15px; display: flex; align-items: flex-start; gap: 12px; }
-    .guarantee-icon { color: #d70018; font-size: 1.4rem; margin-top: 2px; flex-shrink: 0; }
-
-    .specs-section { border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; margin-top: 25px; }
-    .specs-header { background: #f8f9fa; padding: 15px; font-weight: bold; font-size: 1.1rem; border-bottom: 1px solid #e9ecef; color: #333;}
-    .specs-table { margin: 0; width: 100%; border-collapse: collapse; }
-    .specs-table th, .specs-table td { padding: 12px 15px; border-bottom: 1px solid #f1f1f1; font-size: 0.95rem; }
-    .specs-table th { width: 35%; background-color: #fafafa; color: #555; font-weight: 500; }
-    .specs-table td { color: #222; font-weight: 500; }
-    .specs-table tr:last-child th, .specs-table tr:last-child td { border-bottom: none; }
-
-    /* --- Review Section (ĐÃ CĂN CHỈNH LẠI CHUẨN XÁC) --- */
+    /* --- Review Section --- */
     .review-overview { border: 1px solid #eee; border-radius: 16px; padding: 25px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
     .rating-score { font-size: 3.5rem; font-weight: 800; color: #d70018; line-height: 1; }
     .rating-score-total { font-size: 1.2rem; color: #777; font-weight: normal; }
@@ -76,7 +63,6 @@
 </nav>
 
 <div class="row g-4 mb-5">
-    <!-- Cột TRÁI: Ảnh + Cam Kết -->
     <div class="col-lg-5">
         <div class="main-image-container shadow-sm border position-relative">
             <img id="mainImage" src="{{ product.image_url }}" class="img-fluid" alt="{{ product.name }}" onerror="this.src='https://via.placeholder.com/500x500?text=No+Image'">
@@ -86,34 +72,16 @@
             </div>
             {% endif %}
         </div>
-
-        <!-- KHỐI CAM KẾT SẢN PHẨM -->
-        {% if product.guarantees_list and product.guarantees_list|length > 0 %}
-        <div class="mt-4">
-            <h5 class="fw-bold mb-3">Cam kết sản phẩm</h5>
-            <div class="guarantee-container">
-                {% for g in product.guarantees_list %}
-                <div class="guarantee-box shadow-sm">
-                    <div class="guarantee-icon"><i class="{{ g.icon }}"></i></div>
-                    <div>
-                        <div class="guarantee-title fw-bold" style="font-size: 0.9rem; color: #333;">{{ g.title }}</div>
-                        {% if g.desc %}<div class="guarantee-desc text-muted mt-1" style="font-size: 0.8rem; line-height: 1.4;">{{ g.desc }}</div>{% endif %}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
     </div>
 
-    <!-- Cột PHẢI: Thông tin, Mua hàng & Thông số -->
+    <!-- Cột PHẢI -->
     <div class="col-lg-7">
         <div class="bg-white p-4 rounded-4 shadow-sm border mb-4">
             <h1 class="product-title">{{ product.name }}</h1>
 
             <div class="d-flex align-items-center mb-3">
-                <span class="badge bg-warning text-dark me-2"><i class="fas fa-star me-1"></i>4.9/5</span>
-                <span class="text-muted small">Đã bán 1.2k+</span>
+                <span class="badge bg-warning text-dark me-2"><i class="fas fa-star me-1"></i>{{ rating.avg }}/5</span>
+                <span class="text-muted small">Đã đánh giá {{ rating.total }} lượt</span>
                 <div class="vr mx-3"></div>
                 {% if product.stock_quantity > 0 %}
                     <span class="text-success fw-bold"><i class="fas fa-check-circle me-1"></i>Còn hàng ({{ product.stock_quantity }})</span>
@@ -173,19 +141,13 @@
                         <div class="col-9">
                             <form action="/cart/add/{{ product.id }}" method="POST">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                <button type="submit" class="btn btn-buy-now">
-                                    MUA NGAY <br>
-                                    <span style="font-size: 0.75rem; font-weight: normal; opacity: 0.9">Giao tận nơi hoặc nhận tại cửa hàng</span>
-                                </button>
+                                <button type="submit" class="btn btn-buy-now">MUA NGAY</button>
                             </form>
                         </div>
                         <div class="col-3">
                             <form action="/cart/add/{{ product.id }}" method="POST" class="h-100">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                <button type="submit" class="btn btn-add-cart">
-                                    <i class="fas fa-cart-plus fs-3 mb-1"></i>
-                                    <span>Thêm giỏ</span>
-                                </button>
+                                <button type="submit" class="btn btn-add-cart"><i class="fas fa-cart-plus fs-3 mb-1"></i></button>
                             </form>
                         </div>
                     </div>
@@ -193,106 +155,71 @@
                     <button class="btn btn-buy-now btn-disabled" disabled>HẾT HÀNG</button>
                 {% endif %}
             </div>
-
-            <!-- BẢNG THÔNG SỐ KỸ THUẬT -->
-            {% if product.specs_list and product.specs_list|length > 0 %}
-            <div class="specs-section shadow-sm">
-                <div class="specs-header d-flex justify-content-between align-items-center">
-                    <span><i class="fas fa-cogs me-2 text-danger"></i> Thông số kỹ thuật</span>
-                </div>
-                <table class="specs-table">
-                    <tbody>
-                        {% for spec in product.specs_list %}
-                        <tr>
-                            <th>{{ spec.key }}</th>
-                            <td>{{ spec.val }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% endif %}
         </div>
     </div>
 </div>
 
 <!-- ========================================== -->
-<!-- BÌNH LUẬN & ĐÁNH GIÁ (ĐÃ FIX CĂN LỀ & KHOẢNG TRẮNG) -->
+<!-- BÌNH LUẬN & ĐÁNH GIÁ -->
 <!-- ========================================== -->
-
-<!-- TÍNH TOÁN DỮ LIỆU ĐÁNH GIÁ -->
-{% set stats = namespace(total=0, sum=0, s5=0, s4=0, s3=0, s2=0, s1=0) %}
-{% for c in comments %}
-    {% set stats.total = stats.total + 1 %}
-    {% set stats.sum = stats.sum + c.rating %}
-    {% if c.rating == 5 %}{% set stats.s5 = stats.s5 + 1 %}{% endif %}
-    {% if c.rating == 4 %}{% set stats.s4 = stats.s4 + 1 %}{% endif %}
-    {% if c.rating == 3 %}{% set stats.s3 = stats.s3 + 1 %}{% endif %}
-    {% if c.rating == 2 %}{% set stats.s2 = stats.s2 + 1 %}{% endif %}
-    {% if c.rating == 1 %}{% set stats.s1 = stats.s1 + 1 %}{% endif %}
-{% endfor %}
-{% set avg = (stats.sum / stats.total)|round(1) if stats.total > 0 else 0 %}
-
 <div class="mb-5">
     <h4 class="fw-bold mb-4">Đánh giá {{ product.name }}</h4>
 
     <div class="review-overview mb-4">
         <div class="row align-items-center">
 
-            <!-- Cột Điểm Trung Bình -->
             <div class="col-md-3 text-center border-end mb-4 mb-md-0">
-                <div class="rating-score mb-1">{{ avg }}<span class="rating-score-total">/5</span></div>
+                <div class="rating-score mb-1">{{ rating.avg }}<span class="rating-score-total">/5</span></div>
                 <div class="mb-2 fs-5">
                     {% for i in range(5) %}
-                        {% if i < avg|round(0, 'floor') %}<i class="fas fa-star text-warning"></i>
-                        {% elif i < avg %}<i class="fas fa-star-half-alt text-warning"></i>
+                        {% if i < rating.avg|round(0, 'floor') %}<i class="fas fa-star text-warning"></i>
+                        {% elif i < rating.avg %}<i class="fas fa-star-half-alt text-warning"></i>
                         {% else %}<i class="far fa-star text-warning"></i>{% endif %}
                     {% endfor %}
                 </div>
-                <div class="text-muted small mb-3"><strong>{{ stats.total }}</strong> lượt đánh giá</div>
+                <div class="text-muted small mb-3"><strong>{{ rating.total }}</strong> lượt đánh giá</div>
                 <button class="btn btn-danger btn-sm rounded-pill px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#reviewModal">
                     <i class="fas fa-pencil-alt me-1"></i> Viết đánh giá
                 </button>
             </div>
 
-            <!-- Cột Thanh Tiến Trình (Đã căn lề lại chữ '0 đánh giá') -->
             <div class="col-md-5 px-md-4 border-end mb-4 mb-md-0">
-                {% for star, count in [(5, stats.s5), (4, stats.s4), (3, stats.s3), (2, stats.s2), (1, stats.s1)] %}
-                    {% set percent = (count / stats.total * 100) if stats.total > 0 else 0 %}
+                {% for star in [5, 4, 3, 2, 1] %}
                     <div class="star-row">
                         <span class="fw-bold" style="width: 35px; color: #555;">{{ star }} <i class="fas fa-star text-warning"></i></span>
-                        <!-- Thêm mx-3 để thanh tiến trình cách xa chữ 2 bên -->
                         <div class="progress progress-thin flex-grow-1 mx-3">
-                            <div class="progress-bar" style="width: {{ percent }}%"></div>
+                            <div class="progress-bar" style="width: {{ rating.stars[star].pct }}%"></div>
                         </div>
-                        <!-- Cố định chiều rộng cột chữ bên phải thành 80px để không bị dính chữ -->
-                        <span class="text-muted text-end" style="min-width: 80px; font-size: 0.85rem;">{{ count }} đánh giá</span>
+                        <span class="text-muted text-end" style="min-width: 80px; font-size: 0.85rem;">{{ rating.stars[star].count }} đánh giá</span>
                     </div>
                 {% endfor %}
             </div>
 
-            <!-- Cột Đánh giá trải nghiệm -->
+            <!-- HIỂN THỊ ĐẦY ĐỦ PIN & CAMERA -->
             <div class="col-md-4 ps-md-4">
                 <h6 class="fw-bold mb-3">Đánh giá theo trải nghiệm</h6>
+
                 <div class="d-flex justify-content-between align-items-center mb-2 small">
                     <span class="text-dark">Hiệu năng</span>
                     <div>
                         <i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i>
-                        <span class="ms-1 fw-bold text-dark">5/5</span> <span class="text-muted" style="font-size: 0.75rem;">({{ stats.total }} đánh giá)</span>
+                        <span class="ms-1 fw-bold text-dark">5/5</span>
                     </div>
                 </div>
+
                 <div class="d-flex justify-content-between align-items-center mb-2 small">
                     <span class="text-dark">Thời lượng pin</span>
                     <div>
                         <i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i>
-                        <span class="ms-1 fw-bold text-dark">5/5</span> <span class="text-muted" style="font-size: 0.75rem;">({{ stats.total }} đánh giá)</span>
+                        <span class="ms-1 fw-bold text-dark">5/5</span>
                     </div>
                 </div>
-                <div class="d-flex justify-content-between align-items-center small">
+
+                <div class="d-flex justify-content-between align-items-center mb-2 small">
                     <span class="text-dark">Chất lượng camera</span>
                     <div>
-                        <i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star-half-alt text-warning"></i>
-                        <span class="ms-1 fw-bold text-dark">4.8/5</span> <span class="text-muted" style="font-size: 0.75rem;">({{ stats.total }} đánh giá)</span>
+                        <i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i>
+                        <span class="ms-1 fw-bold text-dark">5/5</span>
                     </div>
                 </div>
             </div>
@@ -331,7 +258,6 @@
             </div>
             {% endfor %}
         {% else %}
-            <!-- Căn chỉnh khối hiển thị khi chưa có đánh giá -->
             <div class="text-center py-5 bg-light rounded-3 mt-3 border">
                 <i class="fas fa-comment-slash fa-3x text-muted opacity-25 mb-3"></i>
                 <p class="text-muted mb-0 fw-bold">Chưa có đánh giá nào. Hãy là người đầu tiên!</p>
@@ -340,69 +266,27 @@
     </div>
 </div>
 
-<!-- Modal Ghi Đánh Giá -->
-<div class="modal fade" id="reviewModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow-lg">
-            <div class="modal-header bg-danger text-white rounded-top-4">
-                <h5 class="modal-title fw-bold">Đánh giá {{ product.name }}</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                {% if current_user.is_authenticated %}
-                <form action="/product/{{ product.id }}/comment" method="POST">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <div class="mb-4 text-center">
-                        <label class="form-label text-dark fw-bold mb-2">Bạn cảm thấy sản phẩm này thế nào?</label>
-                        <div class="rating-input justify-content-center">
-                            <input type="radio" name="rating" value="5" id="star5" checked><label for="star5" title="Tuyệt vời">★</label>
-                            <input type="radio" name="rating" value="4" id="star4"><label for="star4" title="Tốt">★</label>
-                            <input type="radio" name="rating" value="3" id="star3"><label for="star3" title="Bình thường">★</label>
-                            <input type="radio" name="rating" value="2" id="star2"><label for="star2" title="Tệ">★</label>
-                            <input type="radio" name="rating" value="1" id="star1"><label for="star1" title="Rất tệ">★</label>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <textarea name="content" class="form-control bg-light" rows="4" placeholder="Xin mời chia sẻ cảm nhận về sản phẩm..." required style="resize: none; border-radius: 12px;"></textarea>
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-danger rounded-pill fw-bold py-2 text-uppercase">Gửi Đánh Giá</button>
-                    </div>
-                </form>
-                {% else %}
-                <div class="text-center py-4">
-                    <i class="fas fa-lock fa-3x text-muted mb-3 opacity-50"></i>
-                    <p class="mb-4 text-muted">Bạn cần đăng nhập để viết đánh giá.</p>
-                    <a href="/login" class="btn btn-primary rounded-pill px-5 fw-bold">Đăng Nhập Ngay</a>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Gợi ý Phụ kiện -->
+<!-- ========================================== -->
+<!-- [KHÔI PHỤC] PHỤ KIỆN GỢI Ý MUA KÈM -->
+<!-- ========================================== -->
+{% if recommendations %}
 <div class="mt-5 mb-5">
-    <div class="d-flex align-items-center mb-4">
-        <h4 class="fw-bold text-uppercase mb-0 text-danger">Gợi ý phụ kiện</h4>
-        <div class="flex-grow-1 ms-3 border-bottom"></div>
-    </div>
-    <div class="row row-cols-2 row-cols-md-4 g-3">
-        {% for item in recommendations %}
+    <h4 class="fw-bold mb-4 border-start border-5 border-danger ps-3">Phụ Kiện Gợi Ý Mua Kèm</h4>
+    <div class="row row-cols-2 row-cols-md-4 g-4">
+        {% for rec in recommendations %}
         <div class="col">
-            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
-                <a href="/product/{{ item.id }}" class="text-center p-3 bg-white position-relative">
-                    <img src="{{ item.image_url }}" class="img-fluid" style="height: 140px; object-fit: contain;" onerror="this.src='https://via.placeholder.com/150'">
+            <div class="card h-100 border-0 shadow-sm rounded-4 text-center p-3" style="transition: 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <a href="/product/{{ rec.id }}">
+                    <img src="{{ rec.image_url }}" class="img-fluid mb-3" style="max-height: 120px;" onerror="this.src='https://via.placeholder.com/150'">
                 </a>
-                <div class="card-body p-3 bg-light">
-                    <h6 class="card-title text-truncate mb-1"><a href="/product/{{ item.id }}" class="text-decoration-none text-dark fw-bold small">{{ item.name }}</a></h6>
-                    <div class="text-danger fw-bold">{{ item.price | vnd }}</div>
-                </div>
+                <h6 class="fw-bold text-truncate"><a href="/product/{{ rec.id }}" class="text-dark text-decoration-none">{{ rec.name }}</a></h6>
+                <p class="text-danger fw-bold mb-0">{{ rec.price | vnd }}</p>
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
+{% endif %}
 
 <script>
     function formatVND(n) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n).replace('₫', 'đ'); }

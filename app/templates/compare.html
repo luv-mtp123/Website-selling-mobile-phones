@@ -65,12 +65,14 @@
             <div class="col-6 border-end p-4 text-center">
                 <h5 class="fw-bold text-primary">{{ p1.name }}</h5>
                 <img src="{{ p1.image_url }}" class="img-fluid my-3" style="max-height: 200px;">
-                <h4 class="text-danger">{{ "{:,.0f}".format(p1.price) }} đ</h4>
+                <!-- Sử dụng filter | vnd thay vì format tay -->
+                <h4 class="text-danger">{{ p1.price | vnd }}</h4>
             </div>
             <div class="col-6 p-4 text-center">
                 <h5 class="fw-bold text-danger">{{ p2.name }}</h5>
                 <img src="{{ p2.image_url }}" class="img-fluid my-3" style="max-height: 200px;">
-                <h4 class="text-danger">{{ "{:,.0f}".format(p2.price) }} đ</h4>
+                <!-- Sử dụng filter | vnd thay vì format tay -->
+                <h4 class="text-danger">{{ p2.price | vnd }}</h4>
             </div>
         </div>
     </div>
@@ -92,12 +94,10 @@
 </div>
 
 <style>
-    /* CSS riêng cho bảng so sánh */
     .ai-result-table table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
     .ai-result-table th, .ai-result-table td { padding: 12px; border: 1px solid #dee2e6; vertical-align: middle; }
     .ai-result-table th { background-color: #f8f9fa; font-weight: bold; text-align: center; font-size: 1.1rem; }
 
-    /* [NEW] Định dạng tỷ lệ cột cho bảng so sánh chi tiết */
     .ai-result-table tr td:nth-child(1), .ai-result-table tr th:nth-child(1) {
         width: 25%;
         background-color: #f8f9fa;
@@ -109,7 +109,6 @@
         width: 37.5%;
         vertical-align: top;
     }
-    /* Đánh dấu chênh lệch xen kẽ cho dễ đọc */
     .ai-result-table tbody tr:nth-of-type(odd) {
         background-color: rgba(0, 0, 0, 0.02);
     }

@@ -430,6 +430,42 @@
 
 # 
 
+## **14. 🌟 Cập Nhật Giao Diện \& Tính Năng Mới Nhất (Hotfixes)**
+
+## 
+
+### **✅ Quản Trị Viên (Admin):**
+
+## 
+
+#### **- Cập nhật lỗi Admin Dashboard: Khôi phục lại Modal Form thêm mới sản phẩm (admin\_dashboard.html), cho phép nhập đầy đủ thông tin (Kho, Giá khuyến mãi, Trạng thái) và lưu vào Database.**
+
+## 
+
+### **✅ Hồ Sơ Thành Viên (User Dashboard):**
+
+## 
+
+#### **- Tab Kho Voucher: Thiết kế giao diện thẻ ưu đãi (Tickets) đẹp mắt, chia bố cục rõ ràng giữa mức giảm và điều kiện áp dụng.**
+
+#### 
+
+#### **- Sổ Bảo Hành Điện Tử: Bổ sung bảng hiển thị danh sách các thiết bị đã mua, số IMEI/Serial ảo và thời gian hiệu lực bảo hành.**
+
+#### 
+
+#### **- 10 Đặc Quyền Hạng Thẻ: Thiết kế dạng lưới (Grid) trực quan hiển thị 10 quyền lợi M-Member (VD: Miễn phí giao hỏa tốc, Lỗi 1 đổi 1, Quà sinh nhật,...).**
+
+#### 
+
+#### **- Cập nhật Form Hồ Sơ: Bổ sung thêm các trường quan trọng gồm Giới tính (Select box) và Ngày tháng năm sinh (Date picker).**
+
+#### 
+
+#### **- Giới Thiệu Nhận Quà (Referral): Tự động tạo mã chia sẻ REF-ID độc quyền cho từng user kèm link chia sẻ. Tích hợp tính năng Copy nhạy bén với thông báo SweetAlert2.**
+
+# 
+
 # **📂 Cấu Trúc Dự Án (Modular MVC)**
 
 # 

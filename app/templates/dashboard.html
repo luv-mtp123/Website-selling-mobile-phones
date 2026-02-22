@@ -24,7 +24,7 @@
     }
     .member-rank-badge { background: linear-gradient(90deg, #ffc107, #ff9800); color: #000; padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border: 2px solid #fff; }
 
-    /* Nút QR Code tích điểm - Ép 1 hàng ngang */
+    /* Nút QR Code tích điểm */
     .btn-qr-scan { background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.5); color: #fff; border-radius: 12px; padding: 12px; width: 100%; font-weight: 800; margin-top: 20px; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: 0.5px; white-space: nowrap; font-size: 0.95rem; }
     .btn-qr-scan:hover { background: #fff; transform: translateY(-2px); color: #a00000;}
 
@@ -34,42 +34,26 @@
     .btn-camera { position: absolute; bottom: -5px; right: -5px; background: #fff; color: #a00000; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,0.4); border: 1px solid #ccc; transition: 0.2s; }
     .btn-camera:hover { transform: scale(1.15); background: #f8f9fa; }
 
-    /* Menu Điều Hướng (CHỮ ĐEN ĐẬM, NỀN NỔI BẬT) */
+    /* Menu Điều Hướng */
     .nav-pills-custom .nav-link {
-        color: #000 !important;
-        background-color: #f8f9fa;
-        font-weight: 800;
-        text-align: left;
-        padding: 14px 20px;
-        border-radius: 12px;
-        margin-bottom: 10px;
-        transition: 0.2s;
-        border: 1px solid #e0e0e0;
-        display: flex;
-        align-items: center;
-        letter-spacing: 0.3px;
+        color: #000 !important; background-color: #f8f9fa; font-weight: 800; text-align: left; padding: 14px 20px;
+        border-radius: 12px; margin-bottom: 10px; transition: 0.2s; border: 1px solid #e0e0e0; display: flex; align-items: center; letter-spacing: 0.3px;
     }
     .nav-pills-custom .nav-link i { width: 35px; text-align: center; color: #000 !important; font-size: 1.25rem; transition: 0.2s; }
     .nav-pills-custom .nav-link:hover { background-color: #e2e6ea; border-color: #ccc; }
-    .nav-pills-custom .nav-link.active {
-        background-color: #ffe5e5;
-        color: #d70018 !important;
-        border: 2px solid #d70018;
-        box-shadow: 0 4px 10px rgba(215,0,24,0.15);
-    }
+    .nav-pills-custom .nav-link.active { background-color: #ffe5e5; color: #d70018 !important; border: 2px solid #d70018; box-shadow: 0 4px 10px rgba(215,0,24,0.15); }
     .nav-pills-custom .nav-link.active i { color: #d70018 !important; }
 
     /* 3. Vùng Nội Dung */
-    .m-member-content { color: #000; }
     .m-member-box { background: #fff; border-radius: 16px; padding: 35px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #e9ecef; margin-bottom: 25px; }
-    .m-member-box-header { font-weight: 900; font-size: 1.4rem; color: #000; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 3px solid #f8f9fa; display: flex; align-items: center; justify-content: space-between; letter-spacing: 0.5px;}
+    .m-member-box-header { font-weight: 900; font-size: 1.4rem; color: #000; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 3px solid #f8f9fa; display: flex; align-items: center; justify-content: space-between;}
 
     /* Progress Bar đa điểm */
     .stepped-progress { position: relative; height: 12px; background: #e9ecef; border-radius: 10px; margin: 35px 15px 55px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); }
     .stepped-progress .progress-bar { background: linear-gradient(90deg, #d70018 0%, #ff4d4d 100%); border-radius: 10px; position: relative; overflow: visible;}
     .step-marker { position: absolute; top: -12px; width: 36px; height: 36px; background: #fff; border: 4px solid #ced4da; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; z-index: 2; color: #666; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
     .step-marker.active { border-color: #d70018; color: #fff; background: #d70018;}
-    .step-label { position: absolute; top: 42px; left: 50%; transform: translateX(-50%); font-size: 0.95rem; font-weight: 800; color: #000; white-space: nowrap; letter-spacing: 0.5px;}
+    .step-label { position: absolute; top: 42px; left: 50%; transform: translateX(-50%); font-size: 0.95rem; font-weight: 800; color: #000; white-space: nowrap;}
 
     /* Box Thống Kê */
     .stat-box { border-radius: 16px; padding: 25px 20px; transition: 0.3s; position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
@@ -79,80 +63,42 @@
     .bg-blue-light { background: #f0f7ff; border-color: #b3d4ff; color: #004085; }
 
     /* Lịch sử đơn hàng */
-    .order-filters .btn { border-radius: 20px; font-weight: 800; padding: 10px 24px; font-size: 0.95rem; border: 2px solid #ced4da; color: #000; margin: 0 12px 12px 0; background: #f8f9fa; letter-spacing: 0.3px;}
-    .order-filters .btn.active, .order-filters .btn:hover { background: #ffe5e5; color: #d70018; border-color: #d70018; }
     .order-item { border: 2px solid #e9ecef; border-radius: 16px; padding: 25px; margin-bottom: 25px; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.03);}
     .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #dee2e6; padding-bottom: 18px; margin-bottom: 20px; }
 
-    /* Bảng quyền lợi nâng cấp rộng rãi hơn */
-    .benefits-table th { background-color: #f8f9fa; color: #333; text-align: center; padding: 18px 15px; font-size: 1.05rem;}
-    .benefits-table td { vertical-align: middle; color: #222; font-weight: 700; padding: 18px 15px; font-size: 1rem; letter-spacing: 0.2px;}
-    .benefits-table .fw-bold.text-danger { font-size: 1.15rem; }
-
     /* Form Cập nhật */
-    .form-control, .form-select { border-radius: 12px; padding: 16px 18px; border: 2px solid #ced4da; background-color: #fff; color: #000 !important; font-weight: 700; font-size: 1rem; letter-spacing: 0.5px;}
+    .form-control, .form-select { border-radius: 12px; padding: 16px 18px; border: 2px solid #ced4da; background-color: #fff; color: #000 !important; font-weight: 700;}
     .form-control:focus, .form-select:focus { background-color: #fff; border-color: #d70018; box-shadow: 0 0 0 0.25rem rgba(215, 0, 24, 0.15); }
     .input-group-text { border-radius: 12px 0 0 12px; border: 2px solid #ced4da; background: #f1f3f5; color: #000; font-weight: 900; border-right: none; padding: 0 20px;}
-    .form-label { color: #000; font-weight: 900; margin-bottom: 12px; font-size: 1.05rem; letter-spacing: 0.3px;}
 
-    /* Voucher & Tradein */
-    .tradein-banner { background: linear-gradient(90deg, #000 0%, #222 100%); color: #ffc107; border-radius: 16px; padding: 35px 30px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; box-shadow: 0 8px 20px rgba(0,0,0,0.2);}
-    .voucher-card { border: 2px solid #ffcccc; border-radius: 12px; display: flex; overflow: hidden; background: #fff; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
-    .voucher-left { background: #ffe5e5; width: 30%; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 20px 15px; border-right: 2px dashed #ff9999; color: #d70018; }
+    /* Voucher Card Mới */
+    .voucher-card { display: flex; border: 2px dashed #ffcccc; border-radius: 16px; overflow: hidden; background: #fff; transition: 0.3s; }
+    .voucher-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(215,0,24,0.15); border-color: #d70018;}
+    .voucher-left { background: linear-gradient(135deg, #ffe5e5, #ffcccc); width: 30%; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 20px 10px; border-right: 2px dashed #d70018; position: relative;}
+    .voucher-left::before, .voucher-left::after { content: ''; position: absolute; width: 20px; height: 20px; background: #fff; border-radius: 50%; right: -11px; z-index: 1;}
+    .voucher-left::before { top: -10px; border-bottom: 2px dashed #d70018;}
+    .voucher-left::after { bottom: -10px; border-top: 2px dashed #d70018;}
+    .voucher-right { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
 
-    /* Thiết lập Avatar mặc định */
+    /* Cấu hình Badge Hạng thẻ & Sổ bảo hành */
+    .benefit-item { border: 1px solid #e9ecef; border-radius: 12px; padding: 20px; text-align: center; transition: 0.3s; background: #f8f9fa; height: 100%;}
+    .benefit-item:hover { background: #fff; border-color: #ffc107; box-shadow: 0 5px 15px rgba(255, 193, 7, 0.2); transform: translateY(-5px);}
+    .benefit-icon { font-size: 2.5rem; margin-bottom: 15px; color: #d70018; }
+
+    .tradein-banner { background: linear-gradient(90deg, #000 0%, #222 100%); color: #ffc107; border-radius: 16px; padding: 35px 30px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
+
     {% set default_avatar = 'https://img.freepik.com/free-vector/cute-horse-holding-gold-coin-cartoon-vector-icon-illustration-animal-nature-icon-concept-isolated_138676-7201.jpg' %}
     {% set current_avatar = current_user.avatar_url if current_user.avatar_url and current_user.avatar_url != 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' else default_avatar %}
 </style>
 
-<!-- Script cực kỳ quan trọng để Menu Tab hoạt động -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- TÍNH TOÁN DỮ LIỆU ĐỂ HIỂN THỊ (JINJA) -->
-{% set stats = namespace(total_spent=0, total_orders=0, pending_orders=0) %}
-{% for o in orders %}
-    {% set stats.total_orders = stats.total_orders + 1 %}
-    {% if o.status == 'Completed' %}{% set stats.total_spent = stats.total_spent + o.total_price %}{% endif %}
-    {% if o.status == 'Pending' %}{% set stats.pending_orders = stats.pending_orders + 1 %}{% endif %}
-{% endfor %}
-
-<!-- Logic phân hạng TÊN MỚI: M-Member -->
-{% set rank_tier = 1 %}
-{% set rank = "M-New" %}
-{% set next_rank = "M-Gold" %}
-{% set needed_for_next = 5000000 - stats.total_spent %}
-{% set progress_percent = (stats.total_spent / 5000000) * 25 %}
-
-{% if stats.total_spent >= 50000000 %}
-    {% set rank_tier = 4 %}
-    {% set rank = "M-Diamond" %}
-    {% set next_rank = "Đã Đạt Cấp Tối Đa" %}
-    {% set needed_for_next = 0 %}
-    {% set progress_percent = 100 %}
-{% elif stats.total_spent >= 20000000 %}
-    {% set rank_tier = 3 %}
-    {% set rank = "M-Platinum" %}
-    {% set next_rank = "M-Diamond" %}
-    {% set needed_for_next = 50000000 - stats.total_spent %}
-    {% set progress_percent = 75 + ((stats.total_spent - 20000000) / 30000000) * 25 %}
-{% elif stats.total_spent >= 5000000 %}
-    {% set rank_tier = 2 %}
-    {% set rank = "M-Gold" %}
-    {% set next_rank = "M-Platinum" %}
-    {% set needed_for_next = 20000000 - stats.total_spent %}
-    {% set progress_percent = 50 + ((stats.total_spent - 5000000) / 15000000) * 25 %}
-{% else %}
-    {% set progress_percent = (stats.total_spent / 5000000) * 25 %}
-{% endif %}
 
 <div class="container py-4 m-member-content">
     <div class="row g-4">
 
-        <!-- CỘT TRÁI: SIDEBAR THÀNH VIÊN -->
+        <!-- CỘT TRÁI: SIDEBAR -->
         <div class="col-lg-3">
             <div class="profile-sidebar">
-
-                <!-- THẺ M-MEMBER ĐỎ ĐẬM -->
                 <div class="member-card text-center">
                     <form action="/profile/update" method="POST" enctype="multipart/form-data" id="avatarForm">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
@@ -162,33 +108,27 @@
                             <input type="file" name="avatar" id="avatarUpload" class="d-none" accept="image/*" onchange="document.getElementById('avatarForm').submit(); previewAvatar(this);">
                         </div>
                     </form>
-
-                    <h5 class="fw-bold mb-3 text-white fs-4" style="letter-spacing: 0.5px;">{{ current_user.full_name or current_user.username }}</h5>
-                    <div class="member-rank-badge d-inline-block"><i class="fas fa-crown me-1 text-dark"></i> HẠNG: {{ rank }}</div>
-
-                    <!-- Nút Mở QR Code Hàng Ngang -->
+                    <h5 class="fw-bold mb-3 text-white fs-4">{{ current_user.full_name or current_user.username }}</h5>
+                    <div class="member-rank-badge d-inline-block"><i class="fas fa-crown me-1 text-dark"></i> HẠNG: {{ member.rank }}</div>
                     <button class="btn-qr-scan text-nowrap" data-bs-toggle="modal" data-bs-target="#qrModal">
-                        <i class="fas fa-qrcode fs-4"></i> MÃ TÍCH ĐIỂM 
+                        <i class="fas fa-qrcode fs-4"></i> MÃ TÍCH ĐIỂM
                     </button>
                 </div>
 
-                <!-- MENU CHỨC NĂNG (MÀU ĐEN ĐẬM 100%) -->
                 <div class="nav flex-column nav-pills nav-pills-custom" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                    <div class="text-dark small fw-bold mb-2 px-2 text-uppercase fs-6 mt-1" style="letter-spacing: 0.5px;">Cá Nhân Của Bạn</div>
+                    <div class="text-dark small fw-bold mb-2 px-2 text-uppercase fs-6 mt-1">Cá Nhân Của Bạn</div>
                     <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#v-pills-home" type="button"><i class="fas fa-home"></i> Tổng quan M-Member</button>
                     <button class="nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-orders" type="button"><i class="fas fa-shopping-bag"></i> Lịch sử mua hàng</button>
                     <button class="nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-vouchers" type="button"><i class="fas fa-ticket-alt"></i> Kho Voucher <span class="badge bg-danger ms-auto rounded-pill fs-6">3</span></button>
                     <button class="nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-warranty" type="button"><i class="fas fa-shield-alt"></i> Sổ bảo hành</button>
 
-                    <div class="text-dark small fw-bold mt-4 mb-2 px-2 text-uppercase fs-6" style="letter-spacing: 0.5px;">Tiện Ích Nâng Cao</div>
+                    <div class="text-dark small fw-bold mt-4 mb-2 px-2 text-uppercase fs-6">Tiện Ích Nâng Cao</div>
                     <button class="nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-tradein" type="button"><i class="fas fa-sync-alt"></i> Thu cũ lên đời</button>
                     <button class="nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-benefits" type="button"><i class="fas fa-gem"></i> Quyền lợi Hạng thẻ</button>
-                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-history" type="button"><i class="fas fa-history"></i> Sản phẩm đã xem</button>
 
-                    <div class="text-dark small fw-bold mt-4 mb-2 px-2 text-uppercase fs-6" style="letter-spacing: 0.5px;">Tài Khoản</div>
+                    <div class="text-dark small fw-bold mt-4 mb-2 px-2 text-uppercase fs-6">Tài Khoản</div>
                     <button class="nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button"><i class="fas fa-user-edit"></i> Chỉnh sửa Hồ sơ</button>
                     <button class="nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-referral" type="button"><i class="fas fa-hand-holding-usd"></i> Giới thiệu nhận quà</button>
-                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-support" type="button"><i class="fas fa-headset"></i> Góp ý, khiếu nại</button>
 
                     <hr class="my-3 border-dark opacity-25">
                     <a href="/logout" class="nav-link text-danger" style="font-weight: 900; background: #fff5f5; border: 2px solid #ffcccc;"><i class="fas fa-sign-out-alt text-danger"></i> Đăng xuất tài khoản</a>
@@ -202,62 +142,54 @@
 
                 <!-- TAB 1: TỔNG QUAN -->
                 <div class="tab-pane fade show active animate__animated animate__fadeIn" id="v-pills-home">
-
-                    <!-- Khối Tổng quan Số liệu & Tiến trình -->
                     <div class="m-member-box">
-                        <div class="m-member-box-header">
-                            <div><i class="fas fa-chart-line me-2 text-danger"></i> Tiến Trình M-Member Của Bạn</div>
-                        </div>
-
-                        <!-- Box Thống Kê (CHỮ ĐEN ĐẬM) -->
+                        <div class="m-member-box-header"><div><i class="fas fa-chart-line me-2 text-danger"></i> Tiến Trình M-Member Của Bạn</div></div>
                         <div class="row g-4 mb-5">
                             <div class="col-md-4">
                                 <div class="stat-box bg-red-light">
                                     <i class="fas fa-receipt bg-icon"></i>
-                                    <h5 class="fw-bold text-dark letter-spacing-1">Tổng Đơn Hàng</h5>
-                                    <h1 class="fw-bold mb-0 mt-3 text-danger">{{ stats.total_orders }}</h1>
+                                    <h5 class="fw-bold text-dark">Tổng Đơn Hàng</h5>
+                                    <h1 class="fw-bold mb-0 mt-3 text-danger">{{ member.total_orders }}</h1>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="stat-box bg-gold-light">
                                     <i class="fas fa-coins bg-icon"></i>
-                                    <h5 class="fw-bold text-dark letter-spacing-1">Chi Tiêu Tích Luỹ</h5>
-                                    <h2 class="fw-bold mb-0 mt-3 text-dark">{{ stats.total_spent | vnd }}</h2>
+                                    <h5 class="fw-bold text-dark">Chi Tiêu Tích Luỹ</h5>
+                                    <h2 class="fw-bold mb-0 mt-3 text-dark">{{ member.total_spent | vnd }}</h2>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="stat-box bg-blue-light">
                                     <i class="fas fa-box-open bg-icon"></i>
-                                    <h5 class="fw-bold text-dark letter-spacing-1">Đơn Đang Chờ</h5>
-                                    <h1 class="fw-bold mb-0 mt-3 text-primary">{{ stats.pending_orders }}</h1>
+                                    <h5 class="fw-bold text-dark">Đơn Đang Chờ</h5>
+                                    <h1 class="fw-bold mb-0 mt-3 text-primary">{{ member.pending_orders }}</h1>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Visual Rank Progress Nâng Cấp -->
                         <div class="mt-4 pt-4 border-top border-2">
                             <div class="d-flex justify-content-between align-items-end mb-4">
                                 <div>
-                                    <div class="text-dark fw-bold fs-5 text-uppercase mb-2" style="letter-spacing: 0.5px;">Hạng hiện tại</div>
-                                    <h3 class="fw-bold text-danger mb-0"><i class="fas fa-medal me-2"></i>{{ rank }}</h3>
+                                    <div class="text-dark fw-bold fs-5 text-uppercase mb-2">Hạng hiện tại</div>
+                                    <h3 class="fw-bold text-danger mb-0"><i class="fas fa-medal me-2"></i>{{ member.rank }}</h3>
                                 </div>
                                 <div class="text-end">
-                                    {% if needed_for_next > 0 %}
-                                        <div class="text-dark fw-bold fs-6 text-uppercase mb-2" style="letter-spacing: 0.5px;">Cần mua thêm để lên <span class="text-primary">{{ next_rank }}</span></div>
-                                        <h3 class="fw-bold text-dark mb-0">{{ needed_for_next | vnd }}</h3>
+                                    {% if member.needed_for_next > 0 %}
+                                        <div class="text-dark fw-bold fs-6 text-uppercase mb-2">Cần mua thêm để lên <span class="text-primary">{{ member.next_rank }}</span></div>
+                                        <h3 class="fw-bold text-dark mb-0">{{ member.needed_for_next | vnd }}</h3>
                                     {% else %}
-                                        <h4 class="fw-bold text-success mb-0"><i class="fas fa-trophy"></i> Bạn là khách hàng Đỉnh Nhất!</h4>
+                                        <h4 class="fw-bold text-success mb-0"><i class="fas fa-trophy"></i> Khách hàng Đỉnh Nhất!</h4>
                                     {% endif %}
                                 </div>
                             </div>
 
                             <div class="stepped-progress">
-                                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: {{ progress_percent }}%"></div>
-                                <!-- Markers -->
-                                <div class="step-marker {% if rank_tier >= 1 %}active{% endif %}" style="left: 0%;"><i class="fas fa-star"></i><div class="step-label">M-New</div></div>
-                                <div class="step-marker {% if rank_tier >= 2 %}active{% endif %}" style="left: 33.33%;"><i class="fas fa-star"></i><div class="step-label">M-Gold</div></div>
-                                <div class="step-marker {% if rank_tier >= 3 %}active{% endif %}" style="left: 66.66%;"><i class="fas fa-star"></i><div class="step-label">M-Plat</div></div>
-                                <div class="step-marker {% if rank_tier >= 4 %}active{% endif %}" style="left: 100%; transform: translateX(-100%);"><i class="fas fa-crown"></i><div class="step-label" style="left: -100%;">M-Diamond</div></div>
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: {{ member.progress_percent }}%"></div>
+                                <div class="step-marker {% if member.rank_tier >= 1 %}active{% endif %}" style="left: 0%;"><i class="fas fa-star"></i><div class="step-label">M-New</div></div>
+                                <div class="step-marker {% if member.rank_tier >= 2 %}active{% endif %}" style="left: 33.33%;"><i class="fas fa-star"></i><div class="step-label">M-Gold</div></div>
+                                <div class="step-marker {% if member.rank_tier >= 3 %}active{% endif %}" style="left: 66.66%;"><i class="fas fa-star"></i><div class="step-label">M-Plat</div></div>
+                                <div class="step-marker {% if member.rank_tier >= 4 %}active{% endif %}" style="left: 100%; transform: translateX(-100%);"><i class="fas fa-crown"></i><div class="step-label" style="left: -100%;">M-Diamond</div></div>
                             </div>
                         </div>
                     </div>
@@ -267,53 +199,41 @@
                 <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-orders">
                     <div class="m-member-box">
                         <div class="m-member-box-header"><span><i class="fas fa-shopping-bag me-2 text-danger"></i> Lịch Sử Mua Hàng</span></div>
-
-                        <div class="order-filters mb-4 pb-4 border-bottom border-2">
-                            <button class="btn active">Tất cả đơn</button>
-                            <button class="btn">Chờ xác nhận</button>
-                            <button class="btn">Đang giao</button>
-                            <button class="btn">Đã giao</button>
-                            <button class="btn">Đã hủy</button>
-                        </div>
-
                         {% if orders %}
                             {% for o in orders %}
                             <div class="order-item">
                                 <div class="order-header d-flex flex-wrap gap-3">
                                     <div class="d-flex align-items-center">
-                                        <span class="badge bg-dark text-white me-3 fs-6 p-2" style="letter-spacing: 1px;">MÃ ĐƠN: #{{ o.id }}</span>
+                                        <span class="badge bg-dark text-white me-3 fs-6 p-2">MÃ ĐƠN: #{{ o.id }}</span>
                                         <span class="text-dark fw-bold fs-6"><i class="far fa-clock me-2"></i>{{ o.date_created.strftime('%d/%m/%Y %H:%M') }}</span>
                                     </div>
                                     <div class="d-flex align-items-center">
-                                        {% if o.status == 'Pending' %}<span class="text-warning fw-bold fs-5" style="letter-spacing: 0.5px;"><i class="fas fa-hourglass-half me-2"></i>Chờ xác nhận</span>
-                                        {% elif o.status == 'Confirmed' %}<span class="text-primary fw-bold fs-5" style="letter-spacing: 0.5px;"><i class="fas fa-check me-2"></i>Đã xác nhận</span>
-                                        {% elif o.status == 'Shipping' %}<span class="text-info fw-bold fs-5" style="letter-spacing: 0.5px;"><i class="fas fa-truck me-2"></i>Đang giao hàng</span>
-                                        {% elif o.status == 'Completed' %}<span class="text-success fw-bold fs-5" style="letter-spacing: 0.5px;"><i class="fas fa-box-open me-2"></i>Giao thành công</span>
-                                        {% else %}<span class="text-danger fw-bold fs-5" style="letter-spacing: 0.5px;"><i class="fas fa-times me-2"></i>Đã hủy</span>{% endif %}
+                                        {% if o.status == 'Pending' %}<span class="text-warning fw-bold fs-5"><i class="fas fa-hourglass-half me-2"></i>Chờ xác nhận</span>
+                                        {% elif o.status == 'Confirmed' %}<span class="text-primary fw-bold fs-5"><i class="fas fa-check me-2"></i>Đã xác nhận</span>
+                                        {% elif o.status == 'Shipping' %}<span class="text-info fw-bold fs-5"><i class="fas fa-truck me-2"></i>Đang giao hàng</span>
+                                        {% elif o.status == 'Completed' %}<span class="text-success fw-bold fs-5"><i class="fas fa-box-open me-2"></i>Giao thành công</span>
+                                        {% else %}<span class="text-danger fw-bold fs-5"><i class="fas fa-times me-2"></i>Đã hủy</span>{% endif %}
                                     </div>
                                 </div>
-
                                 {% for d in o.details %}
                                 <div class="d-flex align-items-center mb-4">
                                     <div class="bg-light border rounded p-3 me-4"><i class="fas fa-mobile-alt fs-2 text-dark"></i></div>
                                     <div class="flex-grow-1">
-                                        <h4 class="fw-bold text-dark mb-2" style="letter-spacing: 0.3px;">{{ d.product_name }}</h4>
+                                        <h4 class="fw-bold text-dark mb-2">{{ d.product_name }}</h4>
                                         <div class="text-dark fw-bold fs-6 opacity-75">Sản phẩm chính hãng</div>
                                         <div class="fw-bold text-dark mt-2 fs-6">Số lượng: x{{ d.quantity }}</div>
                                     </div>
                                     <div class="fw-bold text-danger fs-4">{{ d.price | vnd }}</div>
                                 </div>
                                 {% endfor %}
-
                                 <div class="d-flex justify-content-between align-items-center mt-4 pt-4 border-top border-2 bg-light p-4 rounded-3">
-                                    <div class="text-dark fw-bold fs-5"><i class="fas fa-wallet me-3"></i>Phương thức thanh toán: <span class="text-primary ms-2">{{ o.payment_method|upper }}</span></div>
+                                    <div class="text-dark fw-bold fs-5"><i class="fas fa-wallet me-3"></i>Thanh toán: <span class="text-primary ms-2">{{ o.payment_method|upper }}</span></div>
                                     <div class="fs-4 text-dark fw-bold">Tổng tiền: <span class="text-danger fs-2 ms-3">{{ o.total_price | vnd }}</span></div>
                                 </div>
-
                                 <div class="text-end mt-4">
                                     {% if o.status == 'Pending' %}
                                         {% if o.payment_method == 'banking' %}<a href="/payment/qr/{{ o.id }}" class="btn btn-lg btn-primary px-5 fw-bold me-3 rounded-pill"><i class="fas fa-qrcode me-2"></i> Thanh toán QR</a>{% endif %}
-                                        <a href="/order/cancel/{{ o.id }}" class="btn btn-lg btn-outline-danger px-5 fw-bold rounded-pill" onclick="return confirm('Bạn chắc chắn muốn hủy đơn hàng này?');">Hủy Đơn Hàng</a>
+                                        <a href="/order/cancel/{{ o.id }}" class="btn btn-lg btn-outline-danger px-5 fw-bold rounded-pill" onclick="return confirm('Bạn chắc chắn muốn hủy đơn?');">Hủy Đơn Hàng</a>
                                     {% elif o.status == 'Completed' %}
                                         <a href="/" class="btn btn-lg btn-outline-danger px-5 fw-bold rounded-pill">Mua Lại</a>
                                         <a href="/product/{{ o.details[0].product_id }}" class="btn btn-lg btn-warning px-5 fw-bold rounded-pill text-dark ms-3">Viết Đánh Giá</a>
@@ -331,7 +251,126 @@
                     </div>
                 </div>
 
-                <!-- TAB 3: THÔNG TIN CÁ NHÂN -->
+                <!-- [CẬP NHẬT] TAB 3: KHO VOUCHER -->
+                <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-vouchers">
+                    <div class="m-member-box bg-light">
+                        <div class="m-member-box-header"><span><i class="fas fa-ticket-alt me-2 text-danger"></i> Kho Voucher Của Bạn</span></div>
+                        <div class="row g-4 mt-2">
+                            <!-- Voucher 1 -->
+                            <div class="col-md-6">
+                                <div class="voucher-card shadow-sm">
+                                    <div class="voucher-left text-center">
+                                        <i class="fas fa-percent fs-1 mb-2"></i>
+                                        <h5 class="fw-bold mb-0">10%</h5>
+                                    </div>
+                                    <div class="voucher-right">
+                                        <h5 class="fw-bold text-dark mb-1">Giảm 10% Đơn hàng Mới</h5>
+                                        <small class="text-muted d-block mb-3">Áp dụng cho mọi sản phẩm. Tối đa 500k.</small>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-warning text-dark px-3 py-2 border border-danger">HSD: 30/12/2026</span>
+                                            <button class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">Dùng Ngay</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Voucher 2 -->
+                            <div class="col-md-6">
+                                <div class="voucher-card shadow-sm">
+                                    <div class="voucher-left text-center" style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); border-right-color: #0d6efd; color: #0d6efd;">
+                                        <i class="fas fa-truck fs-1 mb-2"></i>
+                                        <h5 class="fw-bold mb-0">FREE</h5>
+                                    </div>
+                                    <div class="voucher-right">
+                                        <h5 class="fw-bold text-dark mb-1">Miễn Phí Vận Chuyển</h5>
+                                        <small class="text-muted d-block mb-3">Dành riêng cho hạng thẻ M-Member của bạn.</small>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-light text-dark border px-3 py-2">HSD: 15/06/2026</span>
+                                            <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold">Dùng Ngay</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Voucher 3 -->
+                            <div class="col-md-6">
+                                <div class="voucher-card shadow-sm">
+                                    <div class="voucher-left text-center" style="background: linear-gradient(135deg, #fff3cd, #ffecb3); border-right-color: #ffc107; color: #d39e00;">
+                                        <i class="fas fa-gift fs-1 mb-2"></i>
+                                        <h5 class="fw-bold mb-0">QUÀ</h5>
+                                    </div>
+                                    <div class="voucher-right">
+                                        <h5 class="fw-bold text-dark mb-1">Tặng Tai Nghe Bluetooth</h5>
+                                        <small class="text-muted d-block mb-3">Áp dụng khi mua điện thoại từ 10 Triệu.</small>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-light text-dark border px-3 py-2">HSD: 01/05/2026</span>
+                                            <button class="btn btn-warning text-dark btn-sm rounded-pill px-3 fw-bold">Dùng Ngay</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- [CẬP NHẬT] TAB 4: SỔ BẢO HÀNH -->
+                <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-warranty">
+                    <div class="m-member-box">
+                        <div class="m-member-box-header"><span><i class="fas fa-shield-alt me-2 text-success"></i> Sổ Bảo Hành Điện Tử</span></div>
+                        <div class="table-responsive mt-4">
+                            <table class="table table-bordered table-hover align-middle text-center">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th>Số IMEI / Serial</th>
+                                        <th>Ngày kích hoạt</th>
+                                        <th>Hạn bảo hành</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if orders %}
+                                        <!-- Giả lập dữ liệu bảo hành từ đơn hàng đã hoàn thành -->
+                                        {% for o in orders if o.status == 'Completed' %}
+                                            {% for d in o.details %}
+                                            <tr>
+                                                <td class="fw-bold text-primary">{{ d.product_name }}</td>
+                                                <td><code class="text-dark">IMEI-{{ o.id }}{{ d.product_id }}XYZ</code></td>
+                                                <td>{{ o.date_created.strftime('%d/%m/%Y') }}</td>
+                                                <td class="text-danger fw-bold">31/12/2026</td>
+                                                <td><span class="badge bg-success">Đang hiệu lực</span></td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr><td colspan="5" class="py-4 text-muted fw-bold">Chưa có thiết bị nào đang được bảo hành.</td></tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- [CẬP NHẬT] TAB 5: 10 ĐẶC QUYỀN HẠNG THẺ -->
+                <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-benefits">
+                    <div class="m-member-box">
+                        <div class="m-member-box-header"><span><i class="fas fa-gem me-2 text-warning"></i> 10 Đặc Quyền Hạng Thẻ: <span class="text-danger">{{ member.rank }}</span></span></div>
+                        <p class="text-muted mb-4">Các quyền lợi độc quyền dưới đây được áp dụng tự động cho tài khoản của bạn trên toàn hệ thống MobileStore.</p>
+
+                        <div class="row g-3">
+                            <div class="col-md-6"><div class="benefit-item"><i class="fas fa-truck benefit-icon text-success"></i><h5 class="fw-bold text-dark">1. Miễn phí Giao Hỏa Tốc</h5><p class="small text-muted mb-0">Giao nhanh 2H nội thành.</p></div></div>
+                            <div class="col-md-6"><div class="benefit-item"><i class="fas fa-birthday-cake benefit-icon text-danger"></i><h5 class="fw-bold text-dark">2. Quà tặng Sinh Nhật</h5><p class="small text-muted mb-0">Nhận ngay Voucher 500K.</p></div></div>
+                            <div class="col-md-6"><div class="benefit-item"><i class="fas fa-sync benefit-icon text-primary"></i><h5 class="fw-bold text-dark">3. Lỗi 1 Đổi 1 (30 Ngày)</h5><p class="small text-muted mb-0">Đổi máy mới ngay nếu có lỗi NSX.</p></div></div>
+                            <div class="col-md-6"><div class="benefit-item"><i class="fas fa-headset benefit-icon text-info"></i><h5 class="fw-bold text-dark">4. Ưu tiên CSKH VIP</h5><p class="small text-muted mb-0">Tổng đài viên ưu tiên nhấc máy 24/7.</p></div></div>
+                            <div class="col-md-6"><div class="benefit-item"><i class="fas fa-mobile-alt benefit-icon text-dark"></i><h5 class="fw-bold text-dark">5. Miễn phí dán màn hình</h5><p class="small text-muted mb-0">Tặng 2 lần dán chống xước mỗi năm.</p></div></div>
+                            <div class="col-md-6"><div class="benefit-item"><i class="fas fa-percent benefit-icon text-warning"></i><h5 class="fw-bold text-dark">6. Giảm 20% Phụ Kiện</h5><p class="small text-muted mb-0">Giảm giá vĩnh viễn mọi loại ốp lưng, sạc.</p></div></div>
+                            <div class="col-md-6"><div class="benefit-item"><i class="fas fa-recycle benefit-icon text-success"></i><h5 class="fw-bold text-dark">7. Trợ giá Thu Cũ +2 Triệu</h5><p class="small text-muted mb-0">Định giá cao hơn thị trường 15%.</p></div></div>
+                            <div class="col-md-6"><div class="benefit-item"><i class="fas fa-ticket-alt benefit-icon text-danger"></i><h5 class="fw-bold text-dark">8. Vé VIP Sự Kiện Mới</h5><p class="small text-muted mb-0">Ưu tiên thư mời trải nghiệm sản phẩm.</p></div></div>
+                            <div class="col-md-6"><div class="benefit-item"><i class="fas fa-coins benefit-icon text-warning"></i><h5 class="fw-bold text-dark">9. Nhân Đôi Tích Điểm</h5><p class="small text-muted mb-0">Mua 1 được 2 điểm tích luỹ M-Point.</p></div></div>
+                            <div class="col-md-6"><div class="benefit-item"><i class="fas fa-tools benefit-icon text-secondary"></i><h5 class="fw-bold text-dark">10. Vệ sinh máy Miễn phí</h5><p class="small text-muted mb-0">Bảo dưỡng, vệ sinh thiết bị trọn đời.</p></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- [CẬP NHẬT] TAB 6: CHỈNH SỬA HỒ SƠ (THÊM GIỚI TÍNH & NGÀY SINH) -->
                 <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-profile">
                     <div class="m-member-box">
                         <div class="m-member-box-header"><span><i class="fas fa-user-edit me-2 text-info"></i> Cập Nhật Hồ Sơ Của Bạn</span></div>
@@ -339,7 +378,7 @@
                         <form action="/profile/update" method="POST" class="mt-4">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-                            <h5 class="fw-bold mb-4 text-danger text-uppercase"><i class="fas fa-id-card me-2"></i>Thông tin liên hệ</h5>
+                            <h5 class="fw-bold mb-4 text-danger text-uppercase"><i class="fas fa-id-card me-2"></i>Thông tin cơ bản</h5>
                             <div class="row mb-5 g-4">
                                 <div class="col-md-6">
                                     <label class="form-label">Họ và tên đầy đủ</label>
@@ -354,12 +393,31 @@
                                         <span class="input-group-text"><i class="fas fa-at fs-5 text-dark"></i></span>
                                         <input type="text" class="form-control bg-light text-dark" value="{{ current_user.username }}" readonly>
                                     </div>
-                                    <small class="text-dark fw-bold mt-2 d-block">* Tên đăng nhập không thể thay đổi</small>
+                                </div>
+                                <!-- THÊM GIỚI TÍNH -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Giới tính</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-venus-mars fs-5 text-dark"></i></span>
+                                        <select name="gender" class="form-select">
+                                            <option value="Nam">Nam</option>
+                                            <option value="Nữ">Nữ</option>
+                                            <option value="Khác">Khác</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <!-- THÊM NGÀY SINH -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Ngày tháng năm sinh</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-calendar-alt fs-5 text-dark"></i></span>
+                                        <input type="date" name="dob" class="form-control" value="2000-01-01">
+                                    </div>
                                 </div>
                             </div>
 
-                            <h5 class="fw-bold mb-4 text-danger text-uppercase border-top border-2 pt-5"><i class="fas fa-user-shield me-2"></i>Thông tin bảo mật</h5>
-                            <div class="row mb-5 g-4">
+                            <h5 class="fw-bold mb-4 text-danger text-uppercase border-top border-2 pt-5"><i class="fas fa-user-shield me-2"></i>Thông tin liên hệ</h5>
+                            <div class="row mb-4 g-4">
                                 <div class="col-md-6">
                                     <label class="form-label">Email liên hệ</label>
                                     <div class="input-group">
@@ -374,21 +432,6 @@
                                         <input type="text" class="form-control" placeholder="Cập nhật số điện thoại nhận hàng...">
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Ngày sinh</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-calendar-alt fs-5 text-dark"></i></span>
-                                        <input type="date" class="form-control text-dark fw-bold">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Giới tính</label>
-                                    <select class="form-select text-dark fw-bold">
-                                        <option value="male">Nam</option>
-                                        <option value="female">Nữ</option>
-                                        <option value="other">Khác</option>
-                                    </select>
-                                </div>
                             </div>
 
                             <div class="d-grid gap-3 d-md-flex justify-content-md-end border-top border-2 pt-4 mt-3">
@@ -399,48 +442,30 @@
                     </div>
                 </div>
 
-                <!-- TAB VOUCHER -->
-                <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-vouchers">
-                    <div class="m-member-box">
-                        <div class="m-member-box-header d-flex justify-content-between">
-                            <span><i class="fas fa-ticket-alt me-2 text-danger"></i> Kho Voucher Của Bạn</span>
-                        </div>
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <div class="voucher-card border-2">
-                                    <div class="voucher-left">
-                                        <i class="fas fa-shipping-fast fs-1 mb-2"></i><div class="fw-bold text-center fs-5">FREE<br>SHIP</div>
-                                    </div>
-                                    <div class="p-4 flex-grow-1">
-                                        <h4 class="fw-bold text-dark mb-2">Mã Vận Chuyển</h4>
-                                        <div class="text-dark fw-bold mb-3 fs-6">Giảm tối đa 50.000đ</div>
-                                        <div class="d-flex justify-content-between align-items-center mt-3">
-                                            <span class="text-danger fw-bold">HSD: 30/12/2026</span>
-                                            <button class="btn btn-danger fw-bold rounded-pill px-4">Dùng</button>
-                                        </div>
-                                    </div>
-                                </div>
+                <!-- [CẬP NHẬT] TAB 7: GIỚI THIỆU NHẬN QUÀ -->
+                <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-referral">
+                    <div class="m-member-box text-center p-5">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3214/3214695.png" width="120" class="mb-4">
+                        <h2 class="fw-bold text-danger mb-3">Giới thiệu bạn bè - Nhận quà liền tay!</h2>
+                        <p class="text-dark fs-5 mb-4">Nhận ngay Voucher <span class="fw-bold text-danger">200K</span> cho mỗi người bạn đăng ký và hoàn thành đơn hàng đầu tiên qua link của bạn.</p>
+
+                        <div class="bg-light p-4 rounded-4 border-2 mx-auto" style="max-width: 600px;">
+                            <label class="fw-bold mb-2 text-dark fs-6 text-uppercase">Mã chia sẻ của bạn</label>
+                            <div class="input-group mb-4 shadow-sm">
+                                <input type="text" class="form-control form-control-lg text-center fw-bold text-danger bg-white" id="refCode" value="REF-{{ current_user.id }}XBN" readonly>
+                                <button class="btn btn-outline-danger px-4 fw-bold" onclick="copyText('refCode', 'Đã copy Mã chia sẻ!')"><i class="fas fa-copy me-2"></i>Copy</button>
                             </div>
-                            <div class="col-md-6">
-                                <div class="voucher-card border-2">
-                                    <div class="voucher-left">
-                                        <i class="fas fa-gift fs-1 mb-2"></i><div class="fw-bold text-center fs-4">-100K</div>
-                                    </div>
-                                    <div class="p-4 flex-grow-1">
-                                        <h4 class="fw-bold text-dark mb-2">Giảm Phụ Kiện</h4>
-                                        <div class="text-dark fw-bold mb-3 fs-6">Áp dụng cho ốp, sạc</div>
-                                        <div class="d-flex justify-content-between align-items-center mt-3">
-                                            <span class="text-danger fw-bold">HSD: 15/04/2026</span>
-                                            <button class="btn btn-danger fw-bold rounded-pill px-4">Dùng</button>
-                                        </div>
-                                    </div>
-                                </div>
+
+                            <label class="fw-bold mb-2 text-dark fs-6 text-uppercase">Đường link giới thiệu</label>
+                            <div class="input-group shadow-sm">
+                                <input type="text" class="form-control text-primary bg-white" id="refLink" value="https://mobilestore.com/register?ref=REF-{{ current_user.id }}XBN" readonly>
+                                <button class="btn btn-outline-primary px-4 fw-bold" onclick="copyText('refLink', 'Đã copy Đường link!')"><i class="fas fa-link me-2"></i>Copy Link</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- TAB THU CŨ -->
+                <!-- TAB THU CŨ & TRADEIN GIỮ NGUYÊN -->
                 <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-tradein">
                     <div class="tradein-banner">
                         <div>
@@ -449,7 +474,6 @@
                         </div>
                         <a href="/trade-in" class="btn btn-warning btn-lg fw-bold rounded-pill px-5 text-dark"><i class="fas fa-plus-circle me-2"></i> Báo Giá Ngay</a>
                     </div>
-
                     <div class="m-member-box">
                         <div class="m-member-box-header"><span><i class="fas fa-sync-alt me-2 text-warning"></i> Lịch Sử Báo Giá Thu Cũ</span></div>
                         {% if tradeins %}
@@ -485,61 +509,12 @@
                     </div>
                 </div>
 
-                <!-- TAB QUYỀN LỢI (BỔ SUNG THÊM 5 QUYỀN LỢI ĐỈNH CAO) -->
-                <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-benefits">
-                    <div class="m-member-box">
-                        <div class="m-member-box-header"><span><i class="fas fa-gem me-2 text-warning"></i> Bảng Đặc Quyền M-Member</span></div>
-                        <div class="table-responsive mt-4">
-                            <table class="table table-bordered benefits-table border-dark align-middle">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th class="fs-5 p-3">Quyền Lợi</th>
-                                        <th class="text-center p-3 fs-5">M-New</th>
-                                        <th class="text-center p-3 fs-5">M-Gold</th>
-                                        <th class="text-center p-3 fs-5">M-Platinum</th>
-                                        <th class="text-center p-3 fs-5 text-warning">M-Diamond</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td class="fw-bold p-3 text-primary">Bao xài 1 đổi 1</td><td class="text-center fw-bold p-3">30 Ngày</td><td class="text-center fw-bold p-3">30 Ngày</td><td class="text-center fw-bold p-3">45 Ngày</td><td class="text-center fw-bold text-danger fs-5 p-3">60 Ngày</td></tr>
-                                    <tr><td class="fw-bold p-3 text-primary">Dán màn hình miễn phí</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3">2 Lần/Năm</td><td class="text-center fw-bold text-danger fs-5 p-3"><i class="fas fa-infinity me-1"></i> Free</td></tr>
-                                    <tr><td class="fw-bold p-3 text-primary">Ưu đãi mua sắm sớm (Early Bird)</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3"><i class="fas fa-check text-success fs-4"></i></td><td class="text-center fw-bold text-danger fs-5 p-3">Có + Quà VIP</td></tr>
-                                    <tr><td class="fw-bold p-3 text-primary">Hỗ trợ kỹ thuật tại nhà</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold text-danger fs-5 p-3"><i class="fas fa-check text-success fs-4 me-1"></i> 2 Lần/Năm</td></tr>
-                                    <tr><td class="fw-bold p-3 text-primary">Quà tri ân dịp Lễ/Tết</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3">Hộp quà Tiêu chuẩn</td><td class="text-center fw-bold text-danger fs-5 p-3">Hộp quà VVIP</td></tr>
-
-                                    <!-- 5 Đặc quyền mới bổ sung -->
-                                    <tr><td class="fw-bold p-3 text-primary">Máy dùng tạm khi bảo hành</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3"><i class="fas fa-check text-success fs-4"></i></td><td class="text-center fw-bold text-danger fs-5 p-3">Có (Máy Flagship)</td></tr>
-                                    <tr><td class="fw-bold p-3 text-primary">Phòng chờ VVIP tại Store</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold text-danger fs-5 p-3"><i class="fas fa-check text-success fs-4 me-1"></i> Có Barista</td></tr>
-                                    <tr><td class="fw-bold p-3 text-primary">Nâng cấp phần mềm & cài App</td><td class="text-center fw-bold p-3"><i class="fas fa-check text-success fs-4"></i></td><td class="text-center fw-bold p-3"><i class="fas fa-check text-success fs-4"></i></td><td class="text-center fw-bold p-3"><i class="fas fa-check text-success fs-4"></i></td><td class="text-center fw-bold text-danger fs-5 p-3"><i class="fas fa-check text-success fs-4 me-1"></i> Tại nhà</td></tr>
-                                    <tr><td class="fw-bold p-3 text-primary">Vé mời Offline Công nghệ</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3">Ghế tiêu chuẩn</td><td class="text-center fw-bold text-danger fs-5 p-3">Ghế VIP + Quà</td></tr>
-                                    <tr><td class="fw-bold p-3 text-primary">Thanh toán M-Pay giảm thêm</td><td class="text-center fw-bold p-3">1%</td><td class="text-center fw-bold p-3">2%</td><td class="text-center fw-bold p-3">3%</td><td class="text-center fw-bold text-danger fs-5 p-3">5%</td></tr>
-
-                                    <!-- Giữ nguyên các đặc quyền gốc -->
-                                    <tr><td class="fw-bold p-3">Tích điểm mua sắm</td><td class="text-center fw-bold p-3">0.5%</td><td class="text-center fw-bold p-3">1%</td><td class="text-center fw-bold p-3">1.5%</td><td class="text-center fw-bold text-danger fs-5 p-3">2%</td></tr>
-                                    <tr><td class="fw-bold p-3">Trợ giá Thu cũ</td><td class="text-center fw-bold p-3">+300K</td><td class="text-center fw-bold p-3">+500K</td><td class="text-center fw-bold p-3">+1.000K</td><td class="text-center fw-bold text-danger fs-5 p-3">+2.000K</td></tr>
-                                    <tr><td class="fw-bold p-3">Giảm giá phụ kiện</td><td class="text-center fw-bold p-3">1%</td><td class="text-center fw-bold p-3">3%</td><td class="text-center fw-bold p-3">5%</td><td class="text-center fw-bold text-danger fs-5 p-3">10%</td></tr>
-                                    <tr><td class="fw-bold p-3">Miễn phí vận chuyển</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3"><i class="fas fa-check text-success fs-4"></i> 10km</td><td class="text-center fw-bold p-3"><i class="fas fa-check text-success fs-4"></i> 20km</td><td class="text-center fw-bold text-danger fs-5 p-3"><i class="fas fa-check text-success fs-4"></i> Toàn quốc</td></tr>
-                                    <tr><td class="fw-bold p-3">Vệ sinh máy miễn phí</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3"><i class="fas fa-check text-success fs-4"></i></td><td class="text-center fw-bold p-3"><i class="fas fa-check text-success fs-4"></i></td><td class="text-center fw-bold text-danger fs-5 p-3"><i class="fas fa-check text-success fs-4"></i> Free</td></tr>
-                                    <tr><td class="fw-bold p-3">Quà sinh nhật</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3">100K</td><td class="text-center fw-bold p-3">300K</td><td class="text-center fw-bold text-danger fs-5 p-3">500K</td></tr>
-                                    <tr><td class="fw-bold p-3">Tổng đài VIP ưu tiên</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3">-</td><td class="text-center fw-bold p-3"><i class="fas fa-check text-success fs-4"></i></td><td class="text-center fw-bold text-danger fs-5 p-3"><i class="fas fa-check text-success fs-4"></i> Free</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Các tab Demo để menu không bị trống -->
-                <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-warranty"><div class="m-member-box"><h3 class="fw-bold text-dark text-center py-5">Tính năng Sổ Bảo Hành đang được nâng cấp!</h3></div></div>
-                <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-history"><div class="m-member-box"><h3 class="fw-bold text-dark text-center py-5">Chưa có sản phẩm nào được xem gần đây.</h3></div></div>
-                <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-referral"><div class="m-member-box"><h3 class="fw-bold text-dark text-center py-5">Nhận ngay 200K khi giới thiệu bạn bè mua sắm! <br><br> Link của bạn: <span class="text-primary">mobilestore.vn/ref/{{ current_user.username }}</span></h3></div></div>
-                <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-support"><div class="m-member-box"><h3 class="fw-bold text-dark text-center py-5">Tổng đài CSKH VIP: 1900 9999 (Phím 1)</h3></div></div>
-
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal QR Code RỘNG 480PX (VỪA VẶN) CÓ ĐỒNG HỒ ĐẾM NGƯỢC -->
+<!-- Modal QR Code -->
 <div class="modal fade" id="qrModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
         <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -551,8 +526,6 @@
                 <h5 class="fw-bold text-dark mb-4">Đưa mã này cho nhân viên thu ngân</h5>
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=MB-{{ current_user.id }}999X" alt="QR Code" class="img-fluid border-2 border-dark p-2 rounded-3 shadow-sm mb-4" style="width: 260px; height: 260px;">
                 <h2 class="fw-bold text-danger letter-spacing-2 mb-4">MB-{{ current_user.id }}999X</h2>
-
-                <!-- Hiệu ứng đếm ngược ở đây -->
                 <div class="text-dark fs-5 fw-bold bg-light py-3 rounded-pill mt-3 border border-2 mx-4">
                     <i class="fas fa-sync fa-spin me-2"></i> Làm mới sau <span id="qr-countdown" class="text-danger fs-3 mx-1">60</span>s
                 </div>
@@ -562,20 +535,16 @@
 </div>
 
 <script>
-    // Logic đếm ngược 60s cho mã QR Code
     let timeLeft = 60;
     const countdownEl = document.getElementById('qr-countdown');
     if (countdownEl) {
         setInterval(() => {
             timeLeft--;
-            if (timeLeft <= 0) {
-                timeLeft = 60; // reset lại 60s
-            }
+            if (timeLeft <= 0) timeLeft = 60;
             countdownEl.innerText = timeLeft;
-        }, 1000); // 1000ms = 1 giây
+        }, 1000);
     }
 
-    // Xử lý logic load ảnh Avatar
     function previewAvatar(input) {
         if (input.files && input.files[0]) {
             var reader = new FileReader();
@@ -584,6 +553,19 @@
             }
             reader.readAsDataURL(input.files[0]);
         }
+    }
+
+    function copyText(elementId, successMessage) {
+        var copyText = document.getElementById(elementId);
+        copyText.select();
+        copyText.setSelectionRange(0, 99999); // Mobile
+        document.execCommand('copy');
+
+        // Dùng SweetAlert2 để báo thành công
+        Swal.fire({
+            toast: true, position: 'top-end', icon: 'success',
+            title: successMessage, showConfirmButton: false, timer: 2000
+        });
     }
 </script>
 {% endblock %}

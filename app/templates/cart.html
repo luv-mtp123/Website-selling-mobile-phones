@@ -3,7 +3,7 @@
 {% block content %}
 <h2 class="mb-4 text-primary fw-bold"><i class="fas fa-shopping-cart"></i> Giỏ hàng của bạn</h2>
 
-{% if cart|length > 0 %}
+{% if cart_items|length > 0 %}
 <div class="row">
     <div class="col-md-8">
         <div class="card shadow-sm border-0 rounded-3">
@@ -20,7 +20,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for id, item in cart.items() %}
+                            <!-- [REFACTOR] Sử dụng dữ liệu tính sẵn (subtotal) từ backend -->
+                            {% for item in cart_items %}
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center">
@@ -31,14 +32,14 @@
                                 <td>{{ item.price | vnd }}</td>
                                 <td>
                                     <div class="input-group input-group-sm">
-                                        <a href="/cart/update/{{ id }}/decrease" class="btn btn-outline-secondary">-</a>
+                                        <a href="/cart/update/{{ item.id }}/decrease" class="btn btn-outline-secondary">-</a>
                                         <input type="text" class="form-control text-center" value="{{ item.quantity }}" readonly style="max-width: 40px;">
-                                        <a href="/cart/update/{{ id }}/increase" class="btn btn-outline-secondary">+</a>
+                                        <a href="/cart/update/{{ item.id }}/increase" class="btn btn-outline-secondary">+</a>
                                     </div>
                                 </td>
-                                <td class="text-danger fw-bold">{{ (item.price * item.quantity) | vnd }}</td>
+                                <td class="text-danger fw-bold">{{ item.subtotal | vnd }}</td>
                                 <td>
-                                    <a href="/cart/update/{{ id }}/delete" class="text-danger" onclick="return confirm('Xóa sản phẩm này?')"><i class="fas fa-trash-alt"></i></a>
+                                    <a href="/cart/update/{{ item.id }}/delete" class="text-danger" onclick="return confirm('Xóa sản phẩm này?')"><i class="fas fa-trash-alt"></i></a>
                                 </td>
                             </tr>
                             {% endfor %}

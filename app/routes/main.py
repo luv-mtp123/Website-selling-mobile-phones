@@ -14,7 +14,7 @@ from sqlalchemy import or_, and_
 from app.extensions import db, csrf
 from app.models import Product, Order, OrderDetail, AICache, TradeInRequest, Comment
 
-# [FIX] Import local_analyze_intent từ utils (đã chuyển hàm này sang utils)
+# Import Utils
 from app.utils import (
     analyze_search_intents,
     local_analyze_intent,
@@ -23,24 +23,21 @@ from app.utils import (
     validate_image_file,
     build_product_context,
     generate_chatbot_response,
-    search_vector_db # [NEW] Bổ sung hàm Vector Search
+    search_vector_db
 )
 
 main_bp = Blueprint('main', __name__)
 
+
 # --- AI Cache Helper ---
 def cached_ai_call(func, *args):
     try:
-        # [FIX] Đổi key suffix sang v16_compare_conclusion để buộc AI sinh lại bảng có phần Kết Luận
         cache_key_content = str(args) + "_v16_compare_conclusion"
         key = hashlib.md5(cache_key_content.encode()).hexdigest()
 
         cached = AICache.query.filter_by(prompt_hash=key).first()
         if cached:
-            # Kiểm tra xem cache có phải là JSON hay text thường
-            # Đặc biệt với so sánh (HTML), ta trả về text trực tiếp
             try:
-                # Nếu là JSON (cho search intent)
                 if '{' in cached.response_text and '}' in cached.response_text:
                     return json.loads(cached.response_text)
                 return cached.response_text
@@ -49,14 +46,11 @@ def cached_ai_call(func, *args):
     except Exception as e:
         print(f"Cache Error: {e}")
 
-    # Gọi hàm thực thi (Call API)
     res = func(*args)
 
-    # Nếu thành công thì lưu cache
     if res:
         try:
             val = json.dumps(res) if isinstance(res, (dict, list)) else str(res)
-            # Chỉ lưu nếu chưa tồn tại
             if not AICache.query.filter_by(prompt_hash=key).first():
                 db.session.add(AICache(prompt_hash=key, response_text=val))
                 db.session.commit()
@@ -78,76 +72,56 @@ def home():
     ai_msg = ""
     products = []
 
-    # Query gốc
     base_query = Product.query.filter_by(is_active=True)
 
-    # ---------------------------------------------------------
-    # 1. XỬ LÝ TÌM KIẾM (AI + LOCAL FALLBACK)
-    # ---------------------------------------------------------
     if q and len(q.split()) >= 1 and not brand_arg:
         ai_data = None
 
-        # Chỉ gọi AI nếu query dài >= 2 từ (tiết kiệm quota)
         if len(q.split()) >= 2:
             ai_data = cached_ai_call(analyze_search_intents, q)
 
-        # [QUAN TRỌNG] Nếu AI trả về None (do lỗi 429/Quota), dùng Local Logic
         if not ai_data:
-            print("⚠️ AI Quota Limit/Error -> Chuyển sang Phân tích Nội bộ (Local)")
             ai_data = local_analyze_intent(q)
             if ai_data:
                 ai_msg = "🔍 Tìm kiếm thông minh (Local Mode)"
 
-        # Áp dụng bộ lọc từ dữ liệu phân tích (AI hoặc Local)
         if ai_data:
             query = base_query
 
-            # Lọc Hãng
             if ai_data.get('brand'):
                 query = query.filter(Product.brand.ilike(f"%{ai_data['brand']}%"))
                 ai_msg += f" | Hãng: {ai_data['brand']}"
 
-            # Lọc Loại
             if ai_data.get('category'):
                 query = query.filter(Product.category.ilike(f"{ai_data['category']}"))
                 cat_vn = "Điện thoại" if ai_data['category'] == 'phone' else "Phụ kiện"
                 ai_msg += f" | Loại: {cat_vn}"
 
-            # Lọc Keyword (Tìm trong Tên hoặc Mô tả)
             if ai_data.get('keyword'):
                 kw = ai_data['keyword']
-                # [HYBRID SEARCH] Dùng Vector DB để hiểu ngữ nghĩa từ lóng (như "pin trâu")
                 vector_ids = search_vector_db(kw, n_results=20)
 
                 if vector_ids:
-                    # Nếu Vector hiểu được, ép CSDL chỉ tìm trong các ID phù hợp ngữ nghĩa
                     ids = [int(i) for i in vector_ids if i.isdigit()]
                     query = query.filter(Product.id.in_(ids))
                 else:
-                    # Nếu Vector DB lỗi/không bật, quay về tìm chuỗi thông thường
                     query = query.filter(or_(
                         Product.name.ilike(f"%{kw}%"),
                         Product.description.ilike(f"%{kw}%")
                     ))
                 ai_msg += f" | Yêu cầu: {kw}"
 
-            # Lọc Giá
             if ai_data.get('min_price'):
                 query = query.filter(Product.price >= int(ai_data['min_price']))
             if ai_data.get('max_price'):
                 query = query.filter(Product.price <= int(ai_data['max_price']))
 
-            # Sort
             if ai_data.get('sort'):
                 sort_arg = ai_data['sort']
 
             products = query.all()
 
-    # ---------------------------------------------------------
-    # 2. FALLBACK CUỐI CÙNG (Nếu cả AI và Local Logic đều không ra kết quả)
-    # ---------------------------------------------------------
     if not products and q:
-        # [NEW FALLBACK] Thử tìm kiếm toàn bộ câu bằng Vector Search (Ngữ nghĩa)
         vector_ids = search_vector_db(q, n_results=8)
         if vector_ids:
             ids = [int(i) for i in vector_ids if i.isdigit()]
@@ -155,37 +129,29 @@ def home():
             if products:
                 ai_msg = "🧠 Kết quả theo ngữ nghĩa (Vector AI)"
 
-        # Nếu Vector DB vẫn không ra, dùng tìm kiếm từ khóa (ĐỔI OR THÀNH AND)
         if not products:
             search_words = q.split()
-            # Bổ sung thêm các từ rác cần loại bỏ
             stop_words = ['mua', 'tìm', 'giá', 'rẻ', 'cho', 'cần', 'dưới', 'khoảng', 'củ', 'triệu']
             keywords = [w for w in search_words if w.lower() not in stop_words]
 
-        if keywords:
-            # [QUAN TRỌNG] Dùng 'and_' thay vì 'or_' để tránh hiện kết quả rác
-            # Phải chứa cả từ "samsung" VÀ chữ "pin" thì mới hiển thị
-            conditions = [Product.name.ilike(f"%{word}%") for word in keywords]
-            products = base_query.filter(and_(*conditions)).all()
-            if products:
-                ai_msg = "🔍 Kết quả tương tự (Tìm kiếm mở rộng)"
-    # ---------------------------------------------------------
-    # 3. TRƯỜNG HỢP MẶC ĐỊNH
-    # ---------------------------------------------------------
+            if keywords:
+                conditions = [Product.name.ilike(f"%{word}%") for word in keywords]
+                products = base_query.filter(and_(*conditions)).all()
+                if products:
+                    ai_msg = "🔍 Kết quả tương tự (Tìm kiếm mở rộng)"
+
     elif not q:
         query = base_query
         if brand_arg:
             query = query.filter(Product.brand == brand_arg)
         products = query.all()
 
-    # 4. Sắp xếp kết quả
     if products:
         if sort_arg == 'price_asc':
             products.sort(key=lambda x: x.sale_price if x.is_sale else x.price)
         elif sort_arg == 'price_desc':
             products.sort(key=lambda x: x.sale_price if x.is_sale else x.price, reverse=True)
 
-    # Dữ liệu bổ trợ
     brands = [b[0] for b in db.session.query(Product.brand).distinct().all()]
     hot_products = Product.query.filter_by(is_active=True, is_sale=True).limit(4).all()
 
@@ -197,6 +163,116 @@ def home():
         ai_message=ai_msg,
         hot_products=hot_products
     )
+
+
+@main_bp.route('/product/<int:id>')
+def product_detail(id):
+    p = Product.query.filter_by(id=id, is_active=True).first_or_404()
+    try:
+        p.colors_list = json.loads(p.colors) if p.colors else []
+        p.versions_list = json.loads(p.versions) if p.versions else []
+    except:
+        p.colors_list, p.versions_list = [], []
+
+    recs = Product.query.filter(Product.category == 'accessory', Product.is_active == True).limit(4).all()
+    comments = Comment.query.options(joinedload(Comment.user)).filter_by(product_id=id).order_by(
+        Comment.created_at.desc()).all()
+
+    # [REFACTOR] Tính toán Rating Logic ở Backend thay vì HTML
+    rating_stats = {
+        'total': 0, 'avg': 0,
+        'stars': {5: {'count': 0, 'pct': 0}, 4: {'count': 0, 'pct': 0}, 3: {'count': 0, 'pct': 0},
+                  2: {'count': 0, 'pct': 0}, 1: {'count': 0, 'pct': 0}}
+    }
+
+    if comments:
+        rating_stats['total'] = len(comments)
+        sum_rating = sum(c.rating for c in comments)
+        rating_stats['avg'] = round(sum_rating / rating_stats['total'], 1)
+
+        for c in comments:
+            if c.rating in rating_stats['stars']:
+                rating_stats['stars'][c.rating]['count'] += 1
+
+        for star in rating_stats['stars']:
+            rating_stats['stars'][star]['pct'] = (rating_stats['stars'][star]['count'] / rating_stats['total']) * 100
+
+    return render_template('detail.html', product=p, recommendations=recs, comments=comments, rating=rating_stats)
+
+
+@main_bp.route('/product/<int:id>/comment', methods=['POST'])
+@login_required
+def add_comment(id):
+    content = request.form.get('content', '').strip()
+    rating = request.form.get('rating', default=5, type=int)
+    if rating not in [1, 2, 3, 4, 5]: rating = 5
+    if content:
+        db.session.add(Comment(user_id=current_user.id, product_id=id, content=content, rating=rating))
+        db.session.commit()
+        flash('Cảm ơn bạn đã đánh giá!', 'success')
+    return redirect(url_for('main.product_detail', id=id))
+
+
+@main_bp.route('/cart')
+def view_cart():
+    cart = session.get('cart', {})
+    total = 0
+    enriched_cart = []
+
+    # [REFACTOR] Tính toán subtotal ngay ở backend
+    for sid, item in cart.items():
+        subtotal = item['price'] * item['quantity']
+        total += subtotal
+
+        item_copy = item.copy()
+        item_copy['id'] = sid
+        item_copy['subtotal'] = subtotal
+        enriched_cart.append(item_copy)
+
+    return render_template('cart.html', cart_items=enriched_cart, total_amount=total)
+
+
+@main_bp.route('/cart/add/<int:id>', methods=['POST'])
+def add_to_cart(id):
+    p = Product.query.filter_by(id=id, is_active=True).first_or_404()
+    if p.stock_quantity <= 0:
+        flash('Hết hàng!', 'danger')
+        return redirect(request.referrer)
+    cart = session.get('cart', {})
+    sid = str(id)
+    if cart.get(sid, {}).get('quantity', 0) + 1 > p.stock_quantity:
+        flash(f'Kho chỉ còn {p.stock_quantity} sản phẩm.', 'warning')
+        return redirect(request.referrer)
+
+    if sid in cart:
+        cart[sid]['quantity'] += 1
+    else:
+        cart[sid] = {'name': p.name, 'price': p.sale_price if p.is_sale else p.price, 'image': p.image_url,
+                     'quantity': 1}
+
+    session['cart'] = cart
+    flash('Đã thêm vào giỏ!', 'success')
+    return redirect(request.referrer or url_for('main.home'))
+
+
+@main_bp.route('/cart/update/<int:id>/<action>')
+def update_cart(id, action):
+    cart = session.get('cart', {})
+    sid = str(id)
+    if sid in cart:
+        if action == 'increase':
+            p = db.session.get(Product, id)
+            if p and cart[sid]['quantity'] + 1 <= p.stock_quantity:
+                cart[sid]['quantity'] += 1
+            else:
+                flash('Quá số lượng tồn kho.', 'warning')
+        elif action == 'decrease':
+            cart[sid]['quantity'] -= 1
+            if cart[sid]['quantity'] <= 0: del cart[sid]
+        elif action == 'delete':
+            del cart[sid]
+    session['cart'] = cart
+    return redirect(url_for('main.view_cart'))
 
 
 @main_bp.route('/checkout', methods=['GET', 'POST'])
@@ -260,85 +336,6 @@ def checkout():
     return render_template('checkout.html', cart=cart, total=total)
 
 
-# --- CÁC ROUTE KHÁC ---
-
-@main_bp.route('/product/<int:id>')
-def product_detail(id):
-    p = Product.query.filter_by(id=id, is_active=True).first_or_404()
-    try:
-        p.colors_list = json.loads(p.colors) if p.colors else []
-        p.versions_list = json.loads(p.versions) if p.versions else []
-    except:
-        p.colors_list, p.versions_list = [], []
-    recs = Product.query.filter(Product.category == 'accessory', Product.is_active == True).limit(4).all()
-    comments = Comment.query.options(joinedload(Comment.user)).filter_by(product_id=id).order_by(
-        Comment.created_at.desc()).all()
-    return render_template('detail.html', product=p, recommendations=recs, comments=comments)
-
-
-@main_bp.route('/product/<int:id>/comment', methods=['POST'])
-@login_required
-def add_comment(id):
-    content = request.form.get('content', '').strip()
-    rating = request.form.get('rating', default=5, type=int)
-    if rating not in [1, 2, 3, 4, 5]: rating = 5
-    if content:
-        db.session.add(Comment(user_id=current_user.id, product_id=id, content=content, rating=rating))
-        db.session.commit()
-        flash('Cảm ơn bạn đã đánh giá!', 'success')
-    return redirect(url_for('main.product_detail', id=id))
-
-
-@main_bp.route('/cart')
-def view_cart():
-    cart = session.get('cart', {})
-    total = sum(i['price'] * i['quantity'] for i in cart.values())
-    return render_template('cart.html', cart=cart, total_amount=total)
-
-
-@main_bp.route('/cart/add/<int:id>', methods=['POST'])
-def add_to_cart(id):
-    p = Product.query.filter_by(id=id, is_active=True).first_or_404()
-    if p.stock_quantity <= 0:
-        flash('Hết hàng!', 'danger')
-        return redirect(request.referrer)
-    cart = session.get('cart', {})
-    sid = str(id)
-    if cart.get(sid, {}).get('quantity', 0) + 1 > p.stock_quantity:
-        flash(f'Kho chỉ còn {p.stock_quantity} sản phẩm.', 'warning')
-        return redirect(request.referrer)
-
-    if sid in cart:
-        cart[sid]['quantity'] += 1
-    else:
-        cart[sid] = {'name': p.name, 'price': p.sale_price if p.is_sale else p.price, 'image': p.image_url,
-                     'quantity': 1}
-
-    session['cart'] = cart
-    flash('Đã thêm vào giỏ!', 'success')
-    return redirect(request.referrer or url_for('main.home'))
-
-
-@main_bp.route('/cart/update/<int:id>/<action>')
-def update_cart(id, action):
-    cart = session.get('cart', {})
-    sid = str(id)
-    if sid in cart:
-        if action == 'increase':
-            p = db.session.get(Product, id)
-            if p and cart[sid]['quantity'] + 1 <= p.stock_quantity:
-                cart[sid]['quantity'] += 1
-            else:
-                flash('Quá số lượng tồn kho.', 'warning')
-        elif action == 'decrease':
-            cart[sid]['quantity'] -= 1
-            if cart[sid]['quantity'] <= 0: del cart[sid]
-        elif action == 'delete':
-            del cart[sid]
-    session['cart'] = cart
-    return redirect(url_for('main.view_cart'))
-
-
 @main_bp.route('/payment/qr/<int:order_id>')
 @login_required
 def payment_qr(order_id):
@@ -360,7 +357,6 @@ def payment_qr(order_id):
     account_no = "9999999999"
     account_name = "MOBILE STORE"
     content = f"THANHTOAN DONHANG {order.id}"
-    # [FIX] Đã sửa đường dẫn QR Code: Loại bỏ markdown syntax thừa []()
     qr_url = f"https://img.vietqr.io/image/{bank_id}-{account_no}-compact2.png?amount={order.total_price}&addInfo={content}&accountName={account_name}"
 
     return render_template('payment_qr.html', order=order, qr_url=qr_url, remaining_seconds=int(remaining_seconds))
@@ -451,7 +447,6 @@ def compare_page():
                 p2 = db.session.get(Product, int(id2))
 
                 if p1 and p2:
-                    # [FALLBACK] Nếu AI lỗi 429, hiển thị thông báo
                     res = cached_ai_call(get_comparison_result, p1.name, p1.price, p1.description or "", p2.name,
                                          p2.price, p2.description or "")
                     if not res:
@@ -468,7 +463,49 @@ def dashboard():
     my_orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.date_created.desc()).all()
     my_tradeins = TradeInRequest.query.filter_by(user_id=current_user.id).order_by(
         TradeInRequest.created_at.desc()).all()
-    return render_template('dashboard.html', orders=my_orders, tradeins=my_tradeins)
+
+    # [REFACTOR] Tính toán toàn bộ Logic M-Member Rank ở Backend
+    total_spent = sum(o.total_price for o in my_orders if o.status == 'Completed')
+    pending_orders = sum(1 for o in my_orders if o.status == 'Pending')
+    total_orders = len(my_orders)
+
+    rank_tier = 1
+    rank = "M-New"
+    next_rank = "M-Gold"
+    needed_for_next = 5000000 - total_spent
+    progress_percent = (total_spent / 5000000) * 25
+
+    if total_spent >= 50000000:
+        rank_tier = 4;
+        rank = "M-Diamond";
+        next_rank = "Đã Đạt Cấp Tối Đa"
+        needed_for_next = 0;
+        progress_percent = 100
+    elif total_spent >= 20000000:
+        rank_tier = 3;
+        rank = "M-Platinum";
+        next_rank = "M-Diamond"
+        needed_for_next = 50000000 - total_spent
+        progress_percent = 75 + ((total_spent - 20000000) / 30000000) * 25
+    elif total_spent >= 5000000:
+        rank_tier = 2;
+        rank = "M-Gold";
+        next_rank = "M-Platinum"
+        needed_for_next = 20000000 - total_spent
+        progress_percent = 50 + ((total_spent - 5000000) / 15000000) * 25
+
+    member_stats = {
+        'total_spent': total_spent,
+        'pending_orders': pending_orders,
+        'total_orders': total_orders,
+        'rank_tier': rank_tier,
+        'rank': rank,
+        'next_rank': next_rank,
+        'needed_for_next': needed_for_next,
+        'progress_percent': progress_percent
+    }
+
+    return render_template('dashboard.html', orders=my_orders, tradeins=my_tradeins, member=member_stats)
 
 
 @main_bp.route('/profile/update', methods=['POST'])
@@ -487,28 +524,20 @@ def chatbot_api():
     msg = request.json.get('message', '').strip()
     if not msg: return jsonify({'response': "Mời bạn hỏi ạ!"})
 
-    # 1. Rule-based Response (Luôn chạy được)
     keywords = {"địa chỉ": "📍 123 Đường Tết, Q1, TP.HCM", "bảo hành": "🛡️ 12 tháng chính hãng."}
     for k, v in keywords.items():
         if k in msg.lower(): return jsonify({'response': v})
 
-    # 2. AI Response with MEMORY (Session)
     try:
-        # [NEW] Lấy lịch sử chat từ Session
         chat_history = session.get('chat_history', [])
-
-        # Gọi hàm AI có truyền lịch sử
         response = generate_chatbot_response(msg, chat_history)
         final_response = response or "AI đang nghỉ Tết (Hết quota), bạn thử lại sau hoặc dùng tìm kiếm nhé! 🧧"
 
-        # [NEW] Cập nhật lịch sử
         chat_history.append({'user': msg, 'ai': final_response})
 
-        # Giữ lại 4 cặp hội thoại (8 câu) gần nhất để tiết kiệm Session & Token
         if len(chat_history) > 4:
             chat_history = chat_history[-4:]
 
-        # Lưu lại vào Session
         session['chat_history'] = chat_history
 
         return jsonify({'response': final_response})

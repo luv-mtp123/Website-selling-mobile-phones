@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="text-center p-5 bg-white shadow-sm rounded-4 border-top border-5 border-danger" style="max-width: 600px; width: 100%;">
+        
+        <!-- Icon cảnh báo động -->
+        <div class="mb-4">
+            {% if error_code == "404" %}
+                <i class="fas fa-search-minus text-warning" style="font-size: 5rem;"></i>
+            {% elif error_code == "403" %}
+                <i class="fas fa-user-shield text-danger" style="font-size: 5rem;"></i>
+            {% else %}
+                <i class="fas fa-exclamation-triangle text-secondary" style="font-size: 5rem;"></i>
+            {% endif %}
+        </div>
+
+        <!-- Mã lỗi siêu to -->
+        <h1 class="display-1 fw-bold text-dark mb-0" style="letter-spacing: -2px;">{{ error_code }}</h1>
+        
+        <!-- Tiêu đề lỗi -->
+        <h3 class="fw-bold text-danger mt-3 mb-3">{{ error_title }}</h3>
+        
+        <!-- Thông báo chi tiết -->
+        <p class="text-muted fs-6 mb-4 px-3" style="line-height: 1.6;">
+            {{ error_msg }}
+        </p>
+
+        <!-- Nút quay về -->
+        <div class="d-flex justify-content-center gap-3">
+            <button onclick="history.back()" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
+                <i class="fas fa-arrow-left me-2"></i> Quay lại
+            </button>
+            <a href="/" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm">
+                <i class="fas fa-home me-2"></i> Về Trang chủ
+            </a>
+        </div>
+        
+        <!-- Chữ ký hỗ trợ -->
+        <div class="mt-5 pt-3 border-top small text-muted">
+            Nếu bạn cho rằng đây là lỗi hệ thống, vui lòng liên hệ <a href="#" class="text-danger fw-bold text-decoration-none">Hotline: 1900 xxxx</a>.
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -498,6 +498,22 @@
 
 # 
 
+## **15. ⚙️ Nâng Cấp Hệ Thống Backend \& Tiện Ích (Core System)**
+
+## 
+
+#### **- Hệ Thống Chạy Ngầm (Background Tasks): Tích hợp luồng chạy ngầm (tasks.py) tự động quét cơ sở dữ liệu mỗi 5 phút. Tự động chuyển các đơn hàng ở trạng thái "Pending" (Chờ thanh toán) quá hạn 15 phút sang "Cancelled" và hoàn trả lại số lượng sản phẩm vào kho, ngăn chặn tình trạng giam hàng ảo.**
+
+#### 
+
+#### **- Xử Lý Lỗi Toàn Cục (Global Error Handling): Xây dựng module errors.py bắt và xử lý các lỗi hệ thống phổ biến (404 Not Found, 403 Forbidden, 500 Internal Server Error). Thay vì hiển thị trang lỗi mặc định của máy chủ, hệ thống sẽ trả về trang giao diện error.html thân thiện, chuyên nghiệp giúp giữ chân khách hàng.**
+
+#### 
+
+#### **- Công Cụ Sao Lưu Dữ Liệu (Auto Backup): Tích hợp script backup\_db.py cho phép Admin sao lưu an toàn toàn bộ cơ sở dữ liệu (.db). Hệ thống tự động tìm file, copy, và nén thành file .zip gọn nhẹ kèm theo mốc thời gian (timestamp) chi tiết để dễ dàng phục hồi khi cần thiết.**
+
+# 
+
 # **📂 Cấu Trúc Dự Án (Modular MVC)**
 
 # 
@@ -507,6 +523,8 @@
 #### **│**
 
 #### **├── run.py                  # (ENTRY POINT) File chạy chính**
+
+#### **├── backup\_db.py            # (UTILS) Script tự động sao lưu Database**
 
 #### **├── run\_tests.py            # (TEST RUNNER) Script chạy toàn bộ test**
 
@@ -545,6 +563,10 @@
 #### **├── models.py           # Database Models**
 
 #### **├── utils.py            # AI Logic \& Helpers**
+
+#### **├── tasks.py            # Hệ thống quét và chạy ngầm**
+
+#### **├── errors.py           # Bộ xử lý lỗi toàn cục**
 
 #### **│**
 

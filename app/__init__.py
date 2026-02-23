@@ -9,7 +9,9 @@ from .models import User, Product, AICache
 
 def create_app(test_config=None):
     app = Flask(__name__)
-
+    # 1. Import file lỗi và file task
+    from .errors import errors_bp
+    from .tasks import start_background_tasks
     # 1. Cấu hình App & Load .env
     # (Load thủ công vì file này nằm trong thư mục con app/)
     env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
@@ -77,6 +79,10 @@ def create_app(test_config=None):
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
+
+    app.register_blueprint(errors_bp)
+    if not app.config.get('TESTING'):
+        start_background_tasks(app)
 
     return app
 

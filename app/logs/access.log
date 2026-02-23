@@ -184,3 +184,13 @@
 [2026-02-23 21:40:37,817] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 12.21ms
 [2026-02-23 21:40:55,906] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 15454.86ms
 [2026-02-23 21:41:02,775] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 7.0ms
+[2026-02-23 21:59:16,518] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 21:59:16,518] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-23 21:59:27,217] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 23.27ms
+[2026-02-23 21:59:29,610] INFO in system_logger: IP: 127.0.0.1 | GET /product/10 | Status: 200 | Time: 45.48ms
+[2026-02-23 21:59:40,429] INFO in system_logger: IP: 127.0.0.1 | GET /dashboard | Status: 200 | Time: 22.76ms
+[2026-02-23 21:59:46,743] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 7.0ms
+[2026-02-23 21:59:49,844] INFO in system_logger: IP: 127.0.0.1 | GET /product/23 | Status: 200 | Time: 4.99ms
+[2026-02-23 21:59:56,076] INFO in system_logger: IP: 127.0.0.1 | GET /trade-in | Status: 200 | Time: 6.1ms
+[2026-02-23 21:59:56,102] INFO in system_logger: IP: 127.0.0.1 | GET /trade-in | Status: 200 | Time: 1.0ms
+[2026-02-23 21:59:57,845] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.03ms

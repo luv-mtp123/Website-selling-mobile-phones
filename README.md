@@ -290,15 +290,11 @@
 
 # 
 
-#### **wsgi.py: Entry Point độc lập cho Production.**
+#### **run\_windows\_prod.py: Entry Point độc lập cho Production chạy môi trường Windows.**
 
 #### 
 
-#### **Procfile: Cấu hình cho Gunicorn (Linux/Heroku/Render).**
-
-#### 
-
-#### **Waitress: Hỗ trợ chạy server trên môi trường Windows.**
+#### **Waitress: Hỗ trợ chạy server trên môi trường Windows siêu nhẹ và chịu tải cao.**
 
 # 
 
@@ -594,9 +590,7 @@
 
 #### **├── rag\_sync.py             # (AI SYNC) Script đồng bộ Vector DB (ChromaDB)**
 
-#### **├── wsgi.py                 # (PROD ENTRY) File chạy cho máy chủ thực tế**
-
-#### **├── Procfile                # Cấu hình Web Server (Gunicorn)**
+#### **├── run\_windows\_prod.py   # Khởi chạy Server Production cho Windows** 
 
 #### **├── migrations/             # (NEW) Thư mục chứa file migration DB**
 
@@ -740,11 +734,19 @@
 
 ## 
 
-## **Bước 6: Chạy Production (Windows)**
+## **Bước 6: Chạy Production (Chế độ Doanh nghiệp trên Windows)**
 
 ## 
 
-#### **waitress-serve --port=5000 wsgi:app**
+#### **Hệ điều hành Windows không hỗ trợ Gunicorn, vì vậy dự án đã thiết lập hệ thống máy chủ Waitress WSGI có khả năng chịu tải cao, hỗ trợ đa luồng (multi-threading).**
+
+#### 
+
+#### **Chỉ cần chạy lệnh sau để bật Server chuẩn Production:**
+
+#### 
+
+#### **py run\_windows\_prod.py**
 
 # 
 

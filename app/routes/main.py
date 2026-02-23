@@ -32,20 +32,24 @@ main_bp = Blueprint('main', __name__)
 # --- AI Cache Helper ---
 def cached_ai_call(func, *args):
     try:
-        cache_key_content = str(args) + "_v16_compare_conclusion"
+        ### ---> [ĐÃ SỬA CHỖ NÀY: Nâng version thành v30_final để hệ thống tự động xóa toàn bộ rác lưu trong DB] <--- ###
+        cache_key_content = f"{func.__name__}_{str(args)}_v230_final"
         key = hashlib.md5(cache_key_content.encode()).hexdigest()
 
         cached = AICache.query.filter_by(prompt_hash=key).first()
         if cached:
             try:
-                if '{' in cached.response_text and '}' in cached.response_text:
-                    return json.loads(cached.response_text)
-                return cached.response_text
+                # [FIX] Parse Cache an toàn hơn, lọc khoảng trắng
+                text_data = cached.response_text.strip()
+                if text_data.startswith('{') and text_data.endswith('}'):
+                    return json.loads(text_data)
+                return text_data
             except:
                 return cached.response_text
     except Exception as e:
         print(f"Cache Error: {e}")
 
+    # Gọi hàm thực thi (Call API)
     res = func(*args)
 
     if res:
@@ -57,6 +61,22 @@ def cached_ai_call(func, *args):
         except:
             pass
     return res
+
+
+# Helper tạo filter ChromaDB từ ai_data
+def build_chroma_filter(ai_data):
+    if not ai_data: return None
+    conditions = []
+    if ai_data.get('category'):
+        conditions.append({"category": ai_data['category']})
+    if ai_data.get('brand'):
+        conditions.append({"brand": ai_data['brand']})
+
+    if len(conditions) == 1:
+        return conditions[0]
+    elif len(conditions) > 1:
+        return {"$and": conditions}
+    return None
 
 
 # =========================================================
@@ -73,72 +93,104 @@ def home():
     products = []
 
     base_query = Product.query.filter_by(is_active=True)
+    ai_data = None  # Cần lưu lại ai_data để dùng cho lớp Fallback phía dưới
 
     if q and len(q.split()) >= 1 and not brand_arg:
-        ai_data = None
-
+        # Gọi AI kể cả khi truy vấn ngắn (>=2 từ) để bắt chính xác Phụ kiện vs Điện thoại
         if len(q.split()) >= 2:
             ai_data = cached_ai_call(analyze_search_intents, q)
 
         if not ai_data:
             ai_data = local_analyze_intent(q)
-            if ai_data:
-                ai_msg = "🔍 Tìm kiếm thông minh (Local Mode)"
+            if ai_data and any(v for k, v in ai_data.items() if k not in ['sort'] and v is not None):
+                ai_msg = "🔍 Phân tích nhu cầu (Local Mode)"
+        else:
+            ai_msg = "🤖 AI đã phân tích nhu cầu"
 
         if ai_data:
             query = base_query
 
+            # Lọc chính xác bằng SQL
             if ai_data.get('brand'):
                 query = query.filter(Product.brand.ilike(f"%{ai_data['brand']}%"))
-                ai_msg += f" | Hãng: {ai_data['brand']}"
+                if "Hãng" not in ai_msg: ai_msg += f" | Hãng: {ai_data['brand']}"
 
             if ai_data.get('category'):
                 query = query.filter(Product.category.ilike(f"{ai_data['category']}"))
-                cat_vn = "Điện thoại" if ai_data['category'] == 'phone' else "Phụ kiện"
-                ai_msg += f" | Loại: {cat_vn}"
-
-            if ai_data.get('keyword'):
-                kw = ai_data['keyword']
-                vector_ids = search_vector_db(kw, n_results=20)
-
-                if vector_ids:
-                    ids = [int(i) for i in vector_ids if i.isdigit()]
-                    query = query.filter(Product.id.in_(ids))
-                else:
-                    query = query.filter(or_(
-                        Product.name.ilike(f"%{kw}%"),
-                        Product.description.ilike(f"%{kw}%")
-                    ))
-                ai_msg += f" | Yêu cầu: {kw}"
 
             if ai_data.get('min_price'):
                 query = query.filter(Product.price >= int(ai_data['min_price']))
+
             if ai_data.get('max_price'):
                 query = query.filter(Product.price <= int(ai_data['max_price']))
+
+            if ai_data.get('keyword'):
+                kw = ai_data['keyword'].strip()
+                if kw:
+                    # [FIXED] Luôn ưu tiên dùng Vector DB để xử lý từ đồng nghĩa ("cáp sạc" -> cáp / sạc)
+                    chroma_filter = build_chroma_filter(ai_data)
+                    vector_ids = search_vector_db(kw, n_results=20, metadata_filters=chroma_filter)
+
+                    if vector_ids:
+                        ids = [int(i) for i in vector_ids if i.isdigit()]
+                        ### ---> [ĐÃ SỬA CHỖ NÀY: Tránh lỗi rỗng nếu vector tìm ra ID rác do API lỗi] <--- ###
+                        if ids:
+                            query = query.filter(Product.id.in_(ids))
+                            if "Ngữ nghĩa" not in ai_msg: ai_msg += f" | 🧠 Smart Search"
+                        else:
+                            vector_ids = []  # Ép rỗng để đá qua Fallback SQL bên dưới
+
+                    if not vector_ids:
+                        ### ---> [ĐÃ SỬA CHỖ NÀY: Khắc phục triệt để lỗi phân biệt hoa/thường tiếng Việt của SQLite] <--- ###
+                        conditions = []
+                        for word in kw.split():
+                            conditions.append(or_(
+                                Product.name.like(f"%{word}%"),
+                                Product.name.like(f"%{word.capitalize()}%"),
+                                Product.name.like(f"%{word.lower()}%"),
+                                Product.name.like(f"%{word.title()}%")
+                            ))
+                        query = query.filter(and_(*conditions))
 
             if ai_data.get('sort'):
                 sort_arg = ai_data['sort']
 
             products = query.all()
 
+    # [UPDATED] LỚP FALLBACK NẾU KẾT QUẢ RỖNG
     if not products and q:
-        vector_ids = search_vector_db(q, n_results=8)
-        if vector_ids:
-            ids = [int(i) for i in vector_ids if i.isdigit()]
-            products = base_query.filter(Product.id.in_(ids)).all()
+        # Nếu đã có ai_data từ bước trên, hãy duy trì bộ lọc Category ở Fallback
+        fallback_query = base_query
+        if ai_data and ai_data.get('category'):
+            fallback_query = fallback_query.filter(Product.category.ilike(f"{ai_data['category']}"))
+        if ai_data and ai_data.get('brand'):
+            fallback_query = fallback_query.filter(Product.brand.ilike(f"%{ai_data['brand']}%"))
+
+        ### ---> [ĐÃ SỬA CHỖ NÀY: Giữ lại bộ lọc giá ở lớp dự phòng, tránh việc tìm "10 triệu" ra S24 Ultra 30 triệu] <--- ###
+        if ai_data and ai_data.get('min_price'):
+            fallback_query = fallback_query.filter(Product.price >= int(ai_data['min_price']))
+        if ai_data and ai_data.get('max_price'):
+            fallback_query = fallback_query.filter(Product.price <= int(ai_data['max_price']))
+
+        search_words = q.split()
+        stop_words = ['mua', 'tìm', 'giá', 'rẻ', 'cho', 'cần', 'dưới', 'khoảng', 'củ', 'triệu', 'điện', 'thoại', 'máy',
+                      'tốt', 'đẹp', 'tôi', 'muốn', 'chơi', 'game', 'chụp', 'ảnh']
+        keywords = [w for w in search_words if w.lower() not in stop_words]
+
+        if keywords:
+            conditions = []
+            for word in keywords:
+                ### ---> [ĐÃ SỬA CHỖ NÀY: Cập nhật hàm LIKE tìm chữ Hoa/Thường đa dạng cho SQLite] <--- ###
+                conditions.append(or_(
+                    Product.name.like(f"%{word}%"),
+                    Product.name.like(f"%{word.capitalize()}%"),
+                    Product.name.like(f"%{word.lower()}%"),
+                    Product.name.like(f"%{word.title()}%")
+                ))
+
+            products = fallback_query.filter(or_(*conditions)).all()
             if products:
-                ai_msg = "🧠 Kết quả theo ngữ nghĩa (Vector AI)"
-
-        if not products:
-            search_words = q.split()
-            stop_words = ['mua', 'tìm', 'giá', 'rẻ', 'cho', 'cần', 'dưới', 'khoảng', 'củ', 'triệu']
-            keywords = [w for w in search_words if w.lower() not in stop_words]
-
-            if keywords:
-                conditions = [Product.name.ilike(f"%{word}%") for word in keywords]
-                products = base_query.filter(and_(*conditions)).all()
-                if products:
-                    ai_msg = "🔍 Kết quả tương tự (Tìm kiếm mở rộng)"
+                ai_msg = "🔍 Tìm kiếm mở rộng (Strict Mode)"
 
     elif not q:
         query = base_query
@@ -148,9 +200,9 @@ def home():
 
     if products:
         if sort_arg == 'price_asc':
-            products.sort(key=lambda x: x.sale_price if x.is_sale else x.price)
+            products.sort(key=lambda x: x.sale_price if x.is_sale and x.sale_price else x.price)
         elif sort_arg == 'price_desc':
-            products.sort(key=lambda x: x.sale_price if x.is_sale else x.price, reverse=True)
+            products.sort(key=lambda x: x.sale_price if x.is_sale and x.sale_price else x.price, reverse=True)
 
     brands = [b[0] for b in db.session.query(Product.brand).distinct().all()]
     hot_products = Product.query.filter_by(is_active=True, is_sale=True).limit(4).all()

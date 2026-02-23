@@ -8,6 +8,9 @@ from chromadb.utils import embedding_functions
 from flask import url_for
 from itsdangerous import URLSafeTimedSerializer
 
+### ---> [ĐÃ SỬA CHỖ NÀY: Tắt cảnh báo Telemetry của ChromaDB] <--- ###
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+
 # --- CẤU HÌNH ---
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
@@ -29,16 +32,18 @@ except Exception as e:
 # Hàm tạo Embedding dùng Gemini (Wrapper cho ChromaDB)
 class GeminiEmbeddingFunction(embedding_functions.EmbeddingFunction):
     def __call__(self, input: list[str]) -> list[list[float]]:
-        model = 'models/embedding-001'
+        ### ---> [ĐÃ SỬA CHỖ NÀY: Cập nhật sang model Embedding mới nhất của Google vì bản 001 đã bị 404] <--- ###
+        model = 'models/text-embedding-004'
         embeddings = []
         for text in input:
             try:
                 # Gọi API Google để lấy vector (768 chiều)
                 res = genai.embed_content(model=model, content=text, task_type="retrieval_document")
                 embeddings.append(res['embedding'])
-            except:
-                # Fallback vector rỗng nếu lỗi (để không crash app)
-                embeddings.append([0.0] * 768)
+            except Exception as e:
+                ### ---> [ĐÃ SỬA CHỖ NÀY: Bắt lỗi API Hết Quota để không tạo Vector rác, giúp App nhảy qua SQL an toàn] <--- ###
+                print(f"❌ Embedding API Error (Quota?): {e}")
+                raise ValueError("API Hết Quota hoặc Lỗi")
         return embeddings
 
 
@@ -81,26 +86,32 @@ def send_reset_email_simulation(to_email, token):
 
 # --- [NEW] VECTOR SEARCH FUNCTIONS ---
 
-def search_vector_db(query_text, n_results=5):
+def search_vector_db(query_text, n_results=5, metadata_filters=None):
     """
-    Tìm kiếm ngữ nghĩa bằng Vector Database.
-    Input: Câu hỏi tự nhiên (VD: 'máy nào chụp ảnh đẹp')
-    Output: Danh sách ID sản phẩm phù hợp nhất.
+    Tìm kiếm bằng Vector Database CÓ KẾT HỢP BỘ LỌC (Metadata Filtering).
+    metadata_filters format ChromaDB: {"category": "phone"} hoặc {"$and": [{"category": "phone"}, {"brand": "Apple"}]}
     """
     if not product_collection or not GEMINI_API_KEY:
         return []
 
     try:
-        results = product_collection.query(
-            query_texts=[query_text],
-            n_results=n_results
-        )
-        # Chroma trả về dict of lists, cần lấy list IDs đầu tiên
-        # results['ids'][0] chứa danh sách ID tìm thấy
-        found_ids = results['ids'][0]
-        return found_ids  # Trả về list ID (dạng string)
+        query_params = {
+            "query_texts": [query_text],
+            "n_results": n_results
+        }
+
+        # Thêm bộ lọc nếu có để ép VectorDB không bị nhầm lẫn ĐT và Phụ kiện
+        if metadata_filters:
+            query_params["where"] = metadata_filters
+
+        results = product_collection.query(**query_params)
+
+        if results['ids'] and len(results['ids']) > 0:
+            return results['ids'][0]
+        return []
     except Exception as e:
-        print(f"Vector Search Error: {e}")
+        ### ---> [ĐÃ SỬA CHỖ NÀY: Nếu gọi Vector lỗi do hết API, in log và trả về rỗng để kích hoạt SQL Fallback] <--- ###
+        print(f"⚠️ Vector Search Skipped: {e}")
         return []
 
 
@@ -149,45 +160,37 @@ def call_gemini_api(prompt, system_instruction=None):
 
 
 def build_product_context(user_query):
-    """
-    TRUE RAG FLOW:
-    1. Vector Search (Tìm ý hiểu)
-    2. Fallback Keyword Search (Tìm chính xác)
-    3. Query DB lấy dữ liệu realtime (Tồn kho, Giá mới)
-    """
+    # Sử dụng intent parsing để lấy category trước khi search DB
+    ai_data = local_analyze_intent(user_query)
+    filter_dict = {}
+    if ai_data and ai_data.get('category'):
+        filter_dict["category"] = ai_data['category']
+
+    # Vector search có lọc category
+    vector_ids = search_vector_db(user_query, n_results=10, metadata_filters=filter_dict if filter_dict else None)
+
     from app.models import Product
-
-    # Bước 1: Tìm ID sản phẩm bằng Vector Search (Semantic)
-    # Ví dụ: "máy pin trâu" -> Vector DB trả về ID của Samsung M34, iPhone 15 Plus
-    vector_ids = search_vector_db(user_query)
-
     products = []
+
     if vector_ids:
-        # Chuyển ID string về int để query SQL
         ids = [int(i) for i in vector_ids if i.isdigit()]
-        # Fetch từ DB để đảm bảo lấy đúng Tồn kho/Giá hiện tại (tránh dữ liệu vector bị cũ)
         products = Product.query.filter(Product.id.in_(ids), Product.is_active == True).all()
 
-    # Bước 2: Fallback - Nếu Vector không ra, dùng tìm kiếm từ khóa LIKE (SQL)
     if not products:
         user_query_lower = user_query.lower()
-        products = Product.query.filter(
-            Product.name.ilike(f"%{user_query_lower}%"),
-            Product.is_active == True
-        ).limit(3).all()
+        query = Product.query.filter(Product.name.ilike(f"%{user_query_lower}%"), Product.is_active == True)
+        if filter_dict:
+            query = query.filter_by(category=filter_dict['category'])
+        products = query.limit(3).all()
 
     if not products:
         return "Hiện tại hệ thống không tìm thấy sản phẩm nào phù hợp trong kho."
 
-    # Bước 3: Format dữ liệu để trả về cho AI (Context Window)
     context_text = "--- KHO HÀNG THỰC TẾ (Đã lọc theo nhu cầu) ---\n"
     for p in products:
         price = "{:,.0f} đ".format(p.sale_price if p.is_sale else p.price).replace(",", ".")
         status = f"Sẵn hàng ({p.stock_quantity})" if p.stock_quantity > 0 else "Hết hàng"
-
-        # Chỉ lấy 150 ký tự mô tả để tiết kiệm token
         desc_short = (p.description or "")[:150].replace('\n', ' ')
-
         context_text += f"- ID:{p.id} | {p.name} ({p.brand}) | Giá: {price} | Tình trạng: {status}\n"
         context_text += f"  Chi tiết: {desc_short}...\n"
 
@@ -217,41 +220,44 @@ def generate_chatbot_response(user_msg, chat_history=[]):
 
 # [FIXED & UPGRADED] Cải thiện hàm phân tích ý định tìm kiếm
 def analyze_search_intents(query):
+    # Cập nhật Prompt khắt khe hơn để phân biệt Điện thoại và Phụ kiện
     system_instruction = """
     Bạn là hệ thống trích xuất dữ liệu tìm kiếm cho Website bán điện thoại MobileStore.
     Nhiệm vụ: Phân tích câu hỏi của khách và trả về CHỈ MỘT chuỗi JSON hợp lệ. Không giải thích thêm.
 
-    Quy tắc quy đổi tiền: 'triệu' hoặc 'củ' = 1,000,000 VNĐ. 'trăm' = 100,000 VNĐ.
+    Quy tắc:
+    1. Giá: 'triệu' hoặc 'củ' = 1,000,000. 'trăm' = 100,000.
+    2. Category: 
+       - BẮT BUỘC ĐIỀN 'accessory' nếu truy vấn chứa: ốp, sạc, tai nghe, cáp, kính, cường lực, giá đỡ, loa, dây đeo, airpods, buds...
+       - BẮT BUỘC ĐIỀN 'phone' nếu truy vấn là tên dòng máy (ví dụ: 'iphone 15', 's24 ultra', 'redmi note 13') hoặc chứa từ 'điện thoại', 'máy'.
+       - KHÔNG được nhầm lẫn. Ví dụ: "ốp lưng iphone 15" -> accessory. "iphone 15" -> phone.
 
-    Định dạng JSON yêu cầu (Nếu không xác định được trường nào thì để giá trị là null):
+    Định dạng JSON yêu cầu (Nếu không xác định được, để null):
     {
-        "brand": "Tên hãng viết hoa chữ đầu (ví dụ: Apple, Samsung, Xiaomi, Oppo, Vivo...)",
-        "category": "Điền 'phone' nếu tìm điện thoại. Điền 'accessory' nếu tìm ốp lưng, sạc, cáp, tai nghe.",
-        "min_price": Số nguyên (ví dụ: 5000000),
-        "max_price": Số nguyên (ví dụ: 10000000),
-        "keyword": "Đặc điểm kỹ thuật hoặc dòng máy (ví dụ: 'pro max', 'pin', 'camera'). KHÔNG lấy nguyên văn từ lóng như 'pin trâu', 'chụp ảnh đẹp' mà hãy dịch thành thuật ngữ 'pin', 'camera'.",
-        "sort": "Điền 'price_asc' nếu muốn tìm rẻ nhất. Điền 'price_desc' nếu muốn tìm đắt nhất/cao cấp nhất."
+        "brand": "Apple, Samsung, Xiaomi, Oppo, Vivo, Asus, Google, Realme...",
+        "category": "phone hoặc accessory",
+        "min_price": Số nguyên,
+        "max_price": Số nguyên,
+        "keyword": "Từ khóa chính (Bỏ các từ: tìm, mua, điện thoại, giá rẻ...)",
+        "sort": "price_asc hoặc price_desc hoặc null"
     }
 
     === VÍ DỤ MẪU ===
-    Input: "tìm điện thoại samsung dưới 10 củ pin trâu"
-    Output: {"brand": "Samsung", "category": "phone", "min_price": null, "max_price": 10000000, "keyword": "pin", "sort": null}
+    Input: "ốp lưng iphone 15 pro max"
+    Output: {"brand": "Apple", "category": "accessory", "min_price": null, "max_price": null, "keyword": "ốp lưng iphone 15 pro max", "sort": null}
 
-    Input: "ốp lưng iphone rẻ nhất"
-    Output: {"brand": "Apple", "category": "accessory", "min_price": null, "max_price": null, "keyword": "ốp lưng", "sort": "price_asc"}
+    Input: "tìm s24 ultra"
+    Output: {"brand": "Samsung", "category": "phone", "min_price": null, "max_price": null, "keyword": "s24 ultra", "sort": null}
 
-    Input: "điện thoại tầm 5 đến 7 triệu chụp ảnh đẹp"
-    Output: {"brand": null, "category": "phone", "min_price": 5000000, "max_price": 7000000, "keyword": "camera", "sort": null}
+    Input: "cáp sạc"
+    Output: {"brand": null, "category": "accessory", "min_price": null, "max_price": null, "keyword": "cáp sạc", "sort": null}
     """
 
     prompt = f"Câu hỏi của khách: '{query}'\n\nTrả về JSON:"
-
-    # Truyền system_instruction vào API
     res = call_gemini_api(prompt, system_instruction=system_instruction)
     if not res: return None
 
     try:
-        # Làm sạch kết quả trả về để đảm bảo parse được JSON
         clean = re.sub(r"```json|```", "", res).strip()
         match = re.search(r"\{.*\}", clean, re.DOTALL)
         if match:
@@ -263,19 +269,40 @@ def analyze_search_intents(query):
 
 
 def local_analyze_intent(query):
-    # Hàm này vẫn giữ nguyên như phiên bản cũ để làm fallback
     query = query.lower()
-    data = {'brand': None, 'category': None, 'keyword': query, 'min_price': None, 'max_price': None, 'sort': None}
-    brands = {'iphone': 'Apple', 'samsung': 'Samsung', 'oppo': 'Oppo', 'xiaomi': 'Xiaomi'}
+    data = {'brand': None, 'category': None, 'keyword': '', 'min_price': None, 'max_price': None, 'sort': None}
+
+    # 1. Tách Brand
+    brands = {'iphone': 'Apple', 'apple': 'Apple', 'samsung': 'Samsung', 'oppo': 'Oppo', 'xiaomi': 'Xiaomi',
+              'vivo': 'Vivo'}
     for k, v in brands.items():
-        if k in query: data['brand'] = v
-    if any(x in query for x in ['ốp', 'sạc', 'tai nghe']):
+        if k in query:
+            data['brand'] = v
+            query = query.replace(k, '')  # Gỡ tên hãng khỏi query để làm sạch
+
+    # 2. Phân loại Category
+    accessory_kws = ['ốp', 'sạc', 'tai nghe', 'cáp', 'kính', 'cường lực', 'giá đỡ', 'loa', 'dây đeo', 'airpods']
+    phone_kws = ['điện thoại', 'máy', 'smartphone', 'phone']
+    if any(x in query for x in accessory_kws):
         data['category'] = 'accessory'
-    elif any(x in query for x in ['điện thoại', 'máy']):
+    elif any(x in query for x in phone_kws):
         data['category'] = 'phone'
-    if 'dưới' in query and 'triệu' in query:
-        nums = re.findall(r'\d+', query)
-        if nums: data['max_price'] = int(nums[0]) * 1000000
+
+    # 3. Tách Giá (Price) và gỡ chữ ra khỏi query
+    ### ---> [ĐÃ SỬA CHỖ NÀY: Bắt giá tiền thông minh hơn, không cần phải gõ chữ "dưới", lấy thẳng con số gắn với triệu/củ] <--- ###
+    price_match = re.search(r'(\d+)\s*(triệu|củ)', query)
+    if price_match:
+        val = int(price_match.group(1))
+        if val < 1000: data['max_price'] = val * 1000000
+        query = re.sub(r'\d+\s*(triệu|củ)', '', query)  # Xóa phần giá khỏi text
+
+    # 4. Làm sạch Keyword (Loại bỏ toàn bộ stop_words đàm thoại để Database đọc được chữ chính)
+    stop_words = ['tôi', 'muốn', 'mua', 'tìm', 'cho', 'cần', 'dưới', 'khoảng', 'điện', 'thoại', 'máy', 'tốt', 'đẹp',
+                  'giá', 'chơi', 'game', 'chụp', 'ảnh', 'rẻ']
+    words = query.split()
+    kw_words = [w for w in words if w not in stop_words]
+
+    data['keyword'] = " ".join(kw_words).strip()
     return data
 
 

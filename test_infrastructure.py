@@ -1,6 +1,7 @@
 import unittest
 import time
 from app import create_app
+from app.extensions import db
 from app.security_firewall import MobileStoreFirewall
 from app.notification_worker import BackgroundJobWorker
 
@@ -16,11 +17,15 @@ class InfrastructureTestCase(unittest.TestCase):
         # 1. Khởi tạo App ảo dùng cho việc test
         self.app = create_app({
             'TESTING': True,
-            'WTF_CSRF_ENABLED': False
+            'WTF_CSRF_ENABLED': False,
+            'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:'  # [FIX] Khai báo dùng DB trên RAM
         })
         self.client = self.app.test_client()
         self.app_context = self.app.app_context()
         self.app_context.push()
+
+        # [FIX] Bắt buộc phải tạo các bảng ảo để khi gọi request '/' không bị lỗi thiếu bảng Product
+        db.create_all()
 
         # 2. ÉP KHỞI ĐỘNG FIREWALL
         # (Vì trong __init__.py, khi TESTING=True thì Firewall tự động tắt)
@@ -36,8 +41,10 @@ class InfrastructureTestCase(unittest.TestCase):
         self.worker.start_worker(self.app)
 
     def tearDown(self):
-        # Dọn dẹp an toàn: Tắt worker thread và pop context
+        # Dọn dẹp an toàn: Tắt worker thread, drop bảng và pop context
         self.worker.stop_worker()
+        db.session.remove()
+        db.drop_all()
         self.app_context.pop()
 
     # ==========================================

@@ -5,20 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3173c2d7-cc29-4323-83c7-0baca6ea3dee" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/app/custom_exceptions.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/notification_worker.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/security_firewall.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/log_analyzer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test_admin.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test_infrastructure.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/logs/access.log" beforeDir="false" afterPath="$PROJECT_DIR$/app/logs/access.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/system_logger.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/system_logger.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/instance/mobilestore.db" beforeDir="false" afterPath="$PROJECT_DIR$/instance/mobilestore.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test_integration_system.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_integration_system.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test_security.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_security.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_infrastructure.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_infrastructure.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

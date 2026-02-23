@@ -178,9 +178,19 @@
                     {% endfor %}
                 </div>
                 <div class="text-muted small mb-3"><strong>{{ rating.total }}</strong> lượt đánh giá</div>
-                <button class="btn btn-danger btn-sm rounded-pill px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#reviewModal">
-                    <i class="fas fa-pencil-alt me-1"></i> Viết đánh giá
-                </button>
+
+                <!-- [SỬA CHỖ NÀY: Xử lý logic nút Viết đánh giá (Bắt buộc đăng nhập)] -->
+                {% if current_user.is_authenticated %}
+                    <button class="btn btn-danger btn-sm rounded-pill px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                        <i class="fas fa-pencil-alt me-1"></i> Viết đánh giá
+                    </button>
+                {% else %}
+                    <a href="/login" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold shadow-sm">
+                        <i class="fas fa-sign-in-alt me-1"></i> Đăng nhập để đánh giá
+                    </a>
+                {% endif %}
+                <!-- ==================================================================== -->
+
             </div>
 
             <div class="col-md-5 px-md-4 border-end mb-4 mb-md-0">
@@ -287,6 +297,53 @@
     </div>
 </div>
 {% endif %}
+
+<!-- ================================================================================= -->
+<!-- [THÊM CHỖ NÀY: Khung Modal để nhập nội dung Đánh giá (chỉ hiện khi đã đăng nhập)] -->
+<!-- ================================================================================= -->
+{% if current_user.is_authenticated %}
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <!-- Action được trỏ chính xác về Route nhận POST trong main.py -->
+            <form action="/product/{{ product.id }}/comment" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                <div class="modal-header bg-danger text-white rounded-top-4">
+                    <h5 class="modal-title fw-bold" id="reviewModalLabel"><i class="fas fa-star me-2"></i>Đánh giá {{ product.name }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <label class="fw-bold mb-2 text-dark">Chất lượng sản phẩm</label>
+                        <!-- Hệ thống sao sử dụng CSS đảo ngược có sẵn ở trên -->
+                        <div class="rating-input d-flex justify-content-center flex-row-reverse">
+                            <input type="radio" name="rating" id="star5" value="5" checked><label for="star5" class="fas fa-star"></label>
+                            <input type="radio" name="rating" id="star4" value="4"><label for="star4" class="fas fa-star"></label>
+                            <input type="radio" name="rating" id="star3" value="3"><label for="star3" class="fas fa-star"></label>
+                            <input type="radio" name="rating" id="star2" value="2"><label for="star2" class="fas fa-star"></label>
+                            <input type="radio" name="rating" id="star1" value="1"><label for="star1" class="fas fa-star"></label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="fw-bold mb-2 text-dark">Chia sẻ trải nghiệm của bạn</label>
+                        <textarea name="content" class="form-control rounded-3 bg-light" rows="4" placeholder="Sản phẩm này dùng có tốt không? Pin, camera như thế nào?..." required></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow"><i class="fas fa-paper-plane me-1"></i> Gửi đánh giá</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+<!-- ================================================================================= -->
+
 
 <script>
     function formatVND(n) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n).replace('₫', 'đ'); }

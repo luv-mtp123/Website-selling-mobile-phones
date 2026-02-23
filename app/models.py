@@ -69,7 +69,9 @@ class Order(db.Model):
     address = db.Column(db.String(200), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
     payment_method = db.Column(db.String(50), default='COD')  # COD hoặc Banking
-    details = db.relationship('OrderDetail', backref='order', lazy=True)
+
+    # ---> [SỬA CHỖ NÀY: Thêm cascade="all, delete-orphan" để vượt qua bài test và chống lỗi DB] <---
+    details = db.relationship('OrderDetail', backref='order', lazy=True, cascade="all, delete-orphan")
 
 
 class OrderDetail(db.Model):

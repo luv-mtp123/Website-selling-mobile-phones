@@ -229,17 +229,16 @@ def product_detail(id):
         p.colors_list, p.versions_list = [], []
 
     # ==============================================================================================
-    # ---> [ĐÃ SỬA CHỖ NÀY: Thuật toán AI Recommendation (Collaborative Filtering)] <---
-    # Phân tích hành vi: Khách mua sản phẩm này (id) thì thường mua kèm phụ kiện gì trong cùng Order?
+    # ---> [ĐÃ SỬA CHỖ NÀY: Xóa .subquery() để khắc phục cảnh báo SAWarning của SQLAlchemy 2.0] <---
     # ==============================================================================================
 
-    # 1. Tìm tất cả các OrderID (Giỏ hàng) đã từng chứa sản phẩm này
-    related_order_ids_subquery = db.session.query(OrderDetail.order_id).filter_by(product_id=id).subquery()
+    # 1. Tìm tất cả các OrderID (Giỏ hàng) đã từng chứa sản phẩm này (Không dùng .subquery() nữa)
+    related_order_ids_query = db.session.query(OrderDetail.order_id).filter_by(product_id=id)
 
     # 2. Tìm các sản phẩm (Phụ kiện) xuất hiện nhiều nhất trong các Giỏ hàng đó
     recommendation_query = db.session.query(Product, func.sum(OrderDetail.quantity).label('total_bought')) \
         .join(OrderDetail, Product.id == OrderDetail.product_id) \
-        .filter(OrderDetail.order_id.in_(related_order_ids_subquery)) \
+        .filter(OrderDetail.order_id.in_(related_order_ids_query)) \
         .filter(Product.id != id) \
         .filter(Product.category == 'accessory') \
         .filter(Product.is_active == True) \
@@ -255,9 +254,6 @@ def product_detail(id):
 
     # ==============================================================================================
 
-    # =========================================================================
-    # ---> [SỬA CHỖ NÀY: TÁCH RIÊNG ĐÁNH GIÁ (rating > 0) VÀ HỎI ĐÁP (rating == 0)] <---
-    # =========================================================================
     # 1. Lấy Bình luận đánh giá (có sao)
     comments = Comment.query.options(joinedload(Comment.user)).filter(
         Comment.product_id == id, Comment.parent_id == None, Comment.rating > 0
@@ -267,7 +263,6 @@ def product_detail(id):
     questions = Comment.query.options(joinedload(Comment.user)).filter_by(
         product_id=id, parent_id=None, rating=0
     ).order_by(Comment.created_at.desc()).all()
-    # =========================================================================
 
     # [REFACTOR] Tính toán Rating Logic ở Backend thay vì HTML
     rating_stats = {
@@ -288,7 +283,6 @@ def product_detail(id):
         for star in rating_stats['stars']:
             rating_stats['stars'][star]['pct'] = (rating_stats['stars'][star]['count'] / rating_stats['total']) * 100
 
-    # ---> Truyền thêm biến questions sang giao diện <---
     return render_template('detail.html', product=p, recommendations=recs, comments=comments, questions=questions,
                            rating=rating_stats)
 

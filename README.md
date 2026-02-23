@@ -330,6 +330,14 @@
 
 #### 
 
+#### **🧠 Tích hợp Data Science (Pandas): Áp dụng thư viện Pandas để phân tích dữ liệu thực tế, tìm ra "Khung giờ vàng" (Peak Hour) chốt đơn nhiều nhất và Sản phẩm bán chạy nhất tháng.**
+
+#### 
+
+#### **📑 Xuất Báo Cáo Excel Thông Minh: Sử dụng Pandas kết hợp openpyxl để render tự động file Excel báo cáo doanh thu, tự động căn chỉnh độ rộng cột và định dạng tiền tệ chuyên nghiệp cho Admin tải về.**
+
+#### 
+
 #### **📉 Biểu Đồ (Chart.js):**
 
 #### 
@@ -442,6 +450,10 @@
 
 ## 
 
+#### **- Nâng cấp Admin Dashboard với Pandas: Hiển thị thêm các insight dữ liệu thực tế (Khung giờ vàng, Sản phẩm mua nhiều) thay vì chỉ báo cáo thô, tích hợp nút Xuất file Excel doanh thu chuyên nghiệp.**
+
+## 
+
 ### **✅ Hồ Sơ Thành Viên (User Dashboard):**
 
 ## 
@@ -538,7 +550,7 @@
 
 # 
 
-#### **pip install -r requirements.txt**
+#### **py -m pip install -r requirements.txt**
 
 # 
 

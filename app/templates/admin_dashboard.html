@@ -13,7 +13,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<h2 class="mb-4 text-primary fw-bold"><i class="fas fa-chart-line"></i> Dashboard Thống Kê</h2>
+<!-- [NEW/EDIT: Chuyển title thành thẻ flex để nhét thêm nút Xuất Excel] -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0 text-primary fw-bold"><i class="fas fa-chart-line"></i> Dashboard Thống Kê</h2>
+    <a href="/admin/export/report" class="btn btn-success fw-bold shadow-sm rounded-pill px-4">
+        <i class="fas fa-file-excel me-2"></i> Xuất Báo Cáo Doanh Thu
+    </a>
+</div>
 
 <div class="row mb-4 g-3">
     <div class="col-md-3">
@@ -70,6 +76,29 @@
     </div>
 </div>
 
+<!-- ======================================================================= -->
+<!-- [NEW: THỂ HIỆN PANDAS DATA SCIENCE INSIGHTS GIAO DIỆN] -->
+<!-- ======================================================================= -->
+<div class="row mb-4 g-3">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-3 bg-white border-start border-4 border-info h-100">
+            <div class="card-body">
+                <h6 class="text-info fw-bold mb-2"><i class="fas fa-brain me-1"></i> AI & Data Insight: Khung giờ vàng</h6>
+                <p class="mb-0 text-muted">Hệ thống phân tích cho thấy khách hàng thường xuyên "chốt đơn" nhiều nhất vào khoảng: <strong class="text-dark fs-5">{{ peak_hour }}</strong></p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-3 bg-white border-start border-4 border-danger h-100">
+            <div class="card-body">
+                <h6 class="text-danger fw-bold mb-2"><i class="fas fa-fire me-1"></i> Sản phẩm HOT nhất tháng</h6>
+                <p class="mb-0 text-muted">Dữ liệu tháng này ghi nhận mặt hàng đang được mua nhiều nhất là: <strong class="text-dark fs-5">{{ best_month_product }}</strong></p>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ======================================================================= -->
+
 <div class="row mb-5 g-4">
     <div class="col-lg-8">
         <div class="card shadow-sm border-0 h-100">
@@ -94,7 +123,7 @@
 
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3">
-                <h6 class="m-0 fw-bold text-warning"><i class="fas fa-crown me-1"></i> Top Bán Chạy</h6>
+                <h6 class="m-0 fw-bold text-warning"><i class="fas fa-crown me-1"></i> Top Bán Chạy (Toàn thời gian)</h6>
             </div>
             <ul class="list-group list-group-flush small">
                 {% for prod in top_products %}

@@ -9,3 +9,5 @@ gunicorn
 numpy<2.0
 chromadb==0.4.22
 google-generativeai>=0.3.0
+pandas
+openpyxl

@@ -162,3 +162,25 @@
 [2026-02-23 21:07:50,641] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.0ms
 [2026-02-23 21:15:18,904] INFO in system_logger: MobileStore Audit Logging System Started.
 [2026-02-23 21:15:18,906] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-23 21:39:33,201] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 21:39:33,201] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-23 21:39:36,090] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 21:39:36,093] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-23 21:39:36,184] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 24.0ms
+[2026-02-23 21:39:40,275] INFO in system_logger: IP: 127.0.0.1 | GET /product/5 | Status: 200 | Time: 45.99ms
+[2026-02-23 21:39:43,192] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.99ms
+[2026-02-23 21:39:45,264] INFO in system_logger: IP: 127.0.0.1 | GET /product/1 | Status: 200 | Time: 4.0ms
+[2026-02-23 21:39:49,546] INFO in system_logger: IP: 127.0.0.1 | GET /product/1 | Status: 200 | Time: 5.04ms
+[2026-02-23 21:39:57,676] INFO in system_logger: IP: 127.0.0.1 | GET /product/14 | Status: 200 | Time: 1.0ms
+[2026-02-23 21:40:02,243] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 3.98ms
+[2026-02-23 21:40:06,273] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 272.91ms
+[2026-02-23 21:40:16,672] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2157.17ms
+[2026-02-23 21:40:18,377] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2328.44ms
+[2026-02-23 21:40:21,796] INFO in system_logger: IP: 127.0.0.1 | GET /logout | Status: 302 | Time: 1.0ms
+[2026-02-23 21:40:21,812] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.0ms
+[2026-02-23 21:40:23,012] INFO in system_logger: IP: 127.0.0.1 | GET /login | Status: 200 | Time: 1.0ms
+[2026-02-23 21:40:27,180] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 124.25ms
+[2026-02-23 21:40:27,237] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 36.47ms
+[2026-02-23 21:40:37,817] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 12.21ms
+[2026-02-23 21:40:55,906] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 15454.86ms
+[2026-02-23 21:41:02,775] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 7.0ms

@@ -5,15 +5,22 @@ from sqlalchemy import func, desc
 from datetime import datetime, timedelta
 from app.extensions import db
 
-### ---> [ĐÃ SỬA CHỖ NÀY: Import thêm bảng Comment] <--- ###
 from app.models import Product, User, Order, TradeInRequest, OrderDetail, Comment
-
 import json
 from app.utils import sync_product_to_vector_db
 
-# [NEW: Import các thư viện Data Science và xử lý file]
 import pandas as pd
 import io
+
+# ---> [NEW] IMPORT HẰNG SỐ HỆ THỐNG <---
+from app.constants import (
+    ORDER_STATUS_COMPLETED,
+    ORDER_STATUS_CANCELLED,
+    VALID_ORDER_STATUSES,
+    TRADEIN_STATUS_APPROVED,
+    TRADEIN_STATUS_REJECTED,
+    SystemMessages
+)
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -33,16 +40,12 @@ def dashboard():
     tradeins = TradeInRequest.query.options(joinedload(TradeInRequest.user)).order_by(
         TradeInRequest.created_at.desc()).all()
 
-    # =========================================================================
-    # ---> [NEW: LẤY DANH SÁCH BÌNH LUẬN TỪ DATABASE ĐỂ HIỂN THỊ] <---
-    # =========================================================================
     comments = Comment.query.options(joinedload(Comment.user), joinedload(Comment.product)).order_by(
         Comment.created_at.desc()).all()
-    # =========================================================================
 
-    total_revenue = db.session.query(func.sum(Order.total_price)).filter(Order.status == 'Completed').scalar() or 0
+    # Sử dụng Hằng số thay vì text cứng 'Completed'
+    total_revenue = db.session.query(func.sum(Order.total_price)).filter(Order.status == ORDER_STATUS_COMPLETED).scalar() or 0
 
-    # [REFACTOR] Đếm trực tiếp trong DB thay vì truyền array sang HTML dùng `|length`
     total_orders_count = Order.query.count()
     total_products_count = Product.query.count()
     total_users_count = User.query.count()
@@ -55,7 +58,7 @@ def dashboard():
         func.date(Order.date_created),
         func.sum(Order.total_price)
     ).filter(
-        Order.status == 'Completed',
+        Order.status == ORDER_STATUS_COMPLETED,
         Order.date_created >= seven_days_ago
     ).group_by(func.date(Order.date_created)).all()
 
@@ -77,47 +80,35 @@ def dashboard():
     top_products = db.session.query(
         OrderDetail.product_name,
         func.sum(OrderDetail.quantity).label('total_qty')
-    ).join(Order).filter(Order.status == 'Completed').group_by(OrderDetail.product_name).order_by(
+    ).join(Order).filter(Order.status == ORDER_STATUS_COMPLETED).group_by(OrderDetail.product_name).order_by(
         desc('total_qty')).limit(5).all()
 
-    # =========================================================================
-    # [NEW: TÍCH HỢP DATA SCIENCE VỚI PANDAS LẤY INSIGHT]
-    # =========================================================================
     best_month_product = "Chưa có dữ liệu"
     peak_hour = "Chưa có dữ liệu"
 
-    # Lấy dữ liệu thô từ DB
     completed_orders = db.session.query(
         Order.id, Order.date_created, OrderDetail.product_name, OrderDetail.quantity
-    ).join(OrderDetail).filter(Order.status == 'Completed').all()
+    ).join(OrderDetail).filter(Order.status == ORDER_STATUS_COMPLETED).all()
 
     if completed_orders:
-        # Chuyển đổi thành Pandas DataFrame
         df = pd.DataFrame(completed_orders, columns=['order_id', 'date_created', 'product_name', 'quantity'])
-
-        # Đảm bảo cột date_created là định dạng datetime
         df['date_created'] = pd.to_datetime(df['date_created'])
 
-        # INSIGHT 1: Khung giờ khách hàng chốt đơn nhiều nhất (Peak Hour)
         df['hour'] = df['date_created'].dt.hour
         if not df['hour'].empty:
-            peak_hour_val = df['hour'].mode()[0]  # Lấy giờ xuất hiện nhiều nhất (mode)
+            peak_hour_val = df['hour'].mode()[0]
             peak_hour = f"{peak_hour_val}:00 - {peak_hour_val + 1}:00"
 
-        # INSIGHT 2: Sản phẩm bán chạy nhất trong THÁNG HIỆN TẠI
         current_month = datetime.now().month
         current_year = datetime.now().year
 
-        # Lọc df theo tháng và năm hiện tại
         this_month_df = df[
             (df['date_created'].dt.month == current_month) & (df['date_created'].dt.year == current_year)]
 
         if not this_month_df.empty:
-            # Dùng GroupBy phân tích nhóm
             top_product_series = this_month_df.groupby('product_name')['quantity'].sum().sort_values(ascending=False)
             if not top_product_series.empty:
                 best_month_product = f"{top_product_series.index[0]} ({top_product_series.iloc[0]} máy)"
-    # =========================================================================
 
     return render_template(
         'admin_dashboard.html',
@@ -125,7 +116,7 @@ def dashboard():
         users=users,
         orders=orders,
         tradeins=tradeins,
-        comments=comments, # ---> [ĐÃ SỬA CHỖ NÀY: Truyền biến comments sang file HTML] <---
+        comments=comments,
         total_revenue=total_revenue,
         total_orders_count=total_orders_count,
         total_products_count=total_products_count,
@@ -134,59 +125,43 @@ def dashboard():
         chart_dates=json.dumps(chart_dates),
         chart_revenues=json.dumps(chart_revenues),
         top_products=top_products,
-        best_month_product=best_month_product,  # [NEW] Truyền biến
-        peak_hour=peak_hour  # [NEW] Truyền biến
+        best_month_product=best_month_product,
+        peak_hour=peak_hour
     )
 
 
-# =========================================================================
-# [NEW: ROUTE XUẤT BÁO CÁO DOANH THU CHUYÊN NGHIỆP VỚI PANDAS & OPENPYXL]
-# =========================================================================
 @admin_bp.route('/admin/export/report')
 @login_required
 def export_revenue_report():
     if current_user.role != 'admin':
         abort(403)
 
-    # 1. Query toàn bộ đơn hàng hoàn thành kèm thông tin Khách
     orders = db.session.query(
         Order.id, Order.date_created, Order.total_price, Order.payment_method, Order.status,
         User.full_name, User.username
-    ).outerjoin(User, Order.user_id == User.id).filter(Order.status == 'Completed').order_by(
+    ).outerjoin(User, Order.user_id == User.id).filter(Order.status == ORDER_STATUS_COMPLETED).order_by(
         Order.date_created.desc()).all()
 
     if not orders:
         flash("Chưa có đơn hàng nào hoàn thành để xuất báo cáo.", "warning")
         return redirect(url_for('admin.dashboard'))
 
-    # 2. Xử lý dữ liệu bằng Pandas
     df = pd.DataFrame(orders,
                       columns=['Mã Đơn', 'Ngày Đặt', 'Tổng Tiền', 'Thanh Toán', 'Trạng Thái', 'Tên Khách', 'Username'])
 
-    # Làm sạch dữ liệu Khách hàng (Ưu tiên Full name, nếu không có dùng Username)
     df['Khách Hàng'] = df['Tên Khách'].combine_first(df['Username'])
     df = df.drop(columns=['Tên Khách', 'Username'])
-
-    # Format lại Datetime
     df['Ngày Đặt'] = pd.to_datetime(df['Ngày Đặt']).dt.strftime('%d/%m/%Y %H:%M')
-
-    # Sắp xếp lại thứ tự cột cho đẹp
     df = df[['Mã Đơn', 'Khách Hàng', 'Ngày Đặt', 'Thanh Toán', 'Tổng Tiền', 'Trạng Thái']]
 
-    # 3. Render ra Excel In-memory (Không cần lưu file rác xuống ổ cứng máy chủ)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, sheet_name='Báo Cáo Doanh Thu', index=False)
-
-        # Tinh chỉnh giao diện Excel bằng OpenPyXL
         worksheet = writer.sheets['Báo Cáo Doanh Thu']
-
-        # Định dạng cột Tiền (Cột E / Index 5)
         for row in range(2, len(df) + 2):
             cell = worksheet.cell(row=row, column=5)
             cell.number_format = '#,##0 "VNĐ"'
 
-        # Tự động dãn cột (Auto-fit Column Width)
         for col in worksheet.columns:
             max_length = 0
             column_letter = col[0].column_letter
@@ -200,8 +175,6 @@ def export_revenue_report():
             worksheet.column_dimensions[column_letter].width = adjusted_width
 
     output.seek(0)
-
-    # Tên file động theo thời gian xuất
     timestamp = datetime.now().strftime("%d%m%Y_%H%M")
     filename = f"Bao_Cao_Doanh_Thu_Thang_{datetime.now().month}_{timestamp}.xlsx"
 
@@ -213,29 +186,26 @@ def export_revenue_report():
     )
 
 
-# =========================================================================
-
-
 @admin_bp.route('/admin/order/update/<int:id>/<status>')
 def update_order_status(id, status):
     order = Order.query.options(joinedload(Order.details)).get_or_404(id)
     old_status = order.status
-    valid_statuses = ['Pending', 'Confirmed', 'Shipping', 'Completed', 'Cancelled']
+    valid_statuses = VALID_ORDER_STATUSES
 
     if status not in valid_statuses:
-        flash('Trạng thái không hợp lệ.', 'danger')
+        flash(SystemMessages.INVALID_STATUS, 'danger')
         return redirect(url_for('admin.dashboard'))
 
-    if old_status in ['Completed', 'Cancelled']:
-        flash('Đơn hàng đã kết thúc, không thể thay đổi.', 'warning')
+    if old_status in [ORDER_STATUS_COMPLETED, ORDER_STATUS_CANCELLED]:
+        flash(SystemMessages.ORDER_ENDED, 'warning')
         return redirect(url_for('admin.dashboard'))
 
-    if status == 'Cancelled' and old_status != 'Cancelled':
+    if status == ORDER_STATUS_CANCELLED and old_status != ORDER_STATUS_CANCELLED:
         for detail in order.details:
             product = db.session.get(Product, detail.product_id)
             if product:
                 product.stock_quantity += detail.quantity
-        flash('Đã hủy đơn và hoàn trả số lượng về kho.', 'info')
+        flash(SystemMessages.ORDER_REFUNDED, 'info')
 
     order.status = status
     db.session.commit()
@@ -268,7 +238,7 @@ def add_product():
 
         sync_product_to_vector_db(new_product)
 
-        flash(f'Thêm sản phẩm {name} thành công!', 'success')
+        flash(f'{SystemMessages.PRODUCT_ADD_SUCCESS} ({name})', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Lỗi khi thêm sản phẩm: {str(e)}', 'danger')
@@ -303,7 +273,7 @@ def edit_product(id):
             db.session.commit()
             sync_product_to_vector_db(product)
 
-            flash('Cập nhật thông tin thành công!', 'success')
+            flash(SystemMessages.PRODUCT_UPDATE_SUCCESS, 'success')
             return redirect(url_for('admin.dashboard'))
         except Exception as e:
             db.session.rollback()
@@ -320,7 +290,7 @@ def delete_product(id):
     product = Product.query.get_or_404(id)
     db.session.delete(product)
     db.session.commit()
-    flash('Đã xóa sản phẩm khỏi hệ thống.', 'success')
+    flash(SystemMessages.PRODUCT_DELETE_SUCCESS, 'success')
     return redirect(url_for('admin.dashboard'))
 
 
@@ -333,13 +303,13 @@ def update_tradein():
 
     req = TradeInRequest.query.get_or_404(req_id)
     if action == 'approve':
-        req.status = 'Approved'
+        req.status = TRADEIN_STATUS_APPROVED
         req.valuation_price = price
         req.admin_note = note or "Đã định giá."
     elif action == 'reject':
-        req.status = 'Rejected'
+        req.status = TRADEIN_STATUS_REJECTED
         req.admin_note = note or "Không đạt yêu cầu."
 
     db.session.commit()
-    flash('Đã xử lý yêu cầu thu cũ.', 'success')
+    flash(SystemMessages.TRADEIN_PROCESSED, 'success')
     return redirect(url_for('admin.dashboard'))

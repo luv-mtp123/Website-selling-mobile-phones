@@ -562,6 +562,18 @@
 
 # 
 
+## **19. 🧱 Chuẩn Hóa Mã Nguồn \& Clean Code (Refactoring)**
+
+## 
+
+#### **- Hệ Thống Hằng Số Tập Trung (Constants Manager): Tạo file constants.py để tách toàn bộ các chuỗi văn bản cứng (hardcode strings) như: Trạng thái đơn hàng, Từ khóa AI, Cấu hình Chatbot, và Thông báo lỗi ra khỏi logic chính. Giúp mã nguồn tuân thủ triệt để nguyên tắc SOLID, dễ dàng bảo trì và đồng bộ đa ngôn ngữ sau này.**
+
+#### 
+
+#### **- Refactor Controllers (main.py \& admin.py): Cập nhật toàn bộ logic xử lý chính để import và sử dụng các biến hằng số từ constants.py. Loại bỏ 100% "magic strings" (chuỗi rác) trong mã nguồn, giúp code an toàn hơn, tránh sai sót do gõ nhầm text và chuẩn bị sẵn sàng cho các đợt scale-up hệ thống lớn.**
+
+# 
+
 # **📂 Cấu Trúc Dự Án (Modular MVC)**
 
 # 
@@ -576,7 +588,7 @@
 
 #### **├── backup\_db.py            # (UTILS) Script tự động sao lưu Database**
 
-#### **├── log\_analyzer.py         # (UTILS) Phân tích nhật ký hệ thống** 
+#### **├── log\_analyzer.py         # (UTILS) Phân tích nhật ký hệ thống**
 
 #### **├── run\_tests.py            # (TEST RUNNER) Script chạy toàn bộ test**
 
@@ -635,6 +647,8 @@
 #### **├── security\_firewall.py  # Tường lửa bảo mật WAF (Chống DDoS/XSS)**
 
 #### **├── notification\_worker.py # Hàng đợi xử lý tác vụ nền (Queue)**
+
+#### **├── constants.py        # Quản lý hằng số hệ thống (Clean Code)**
 
 #### **│**
 

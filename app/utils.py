@@ -8,6 +8,8 @@ from chromadb.utils import embedding_functions
 from flask import url_for
 from itsdangerous import URLSafeTimedSerializer
 
+### ---> [ĐÃ XÓA CHỖ NÀY: Import thư viện gửi Email (smtplib, MIMEText) và Threading] <--- ###
+
 ### ---> [ĐÃ SỬA CHỖ NÀY: Tắt cảnh báo Telemetry của ChromaDB] <--- ###
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
 
@@ -351,3 +353,29 @@ def get_comparison_result(p1_name, p1_price, p1_desc, p2_name, p2_price, p2_desc
 
     res = call_gemini_api(prompt, system_instruction=system_instruction)
     return re.sub(r"```html|```", "", res).strip() if res else None
+
+
+# =================================================================================
+# [NEW: CHỨC NĂNG NLP & SENTIMENT ANALYSIS - PHÂN TÍCH CẢM XÚC]
+# =================================================================================
+
+def analyze_sentiment(text):
+    """
+    Sử dụng AI phân tích cảm xúc của đoạn đánh giá.
+    Chỉ trả về 1 trong 3 trạng thái: POSITIVE, NEGATIVE, NEUTRAL.
+    """
+    system_instruction = (
+        "Bạn là hệ thống NLP phân tích cảm xúc đánh giá khách hàng về điện thoại/phụ kiện. "
+        "Dựa vào nội dung bình luận, hãy phân loại và CHỈ TRẢ VỀ ĐÚNG 1 TỪ DUY NHẤT bằng tiếng Anh: "
+        "POSITIVE (khen ngợi, tốt), NEGATIVE (chê bai, máy lỗi, giật lag, thái độ tệ), hoặc NEUTRAL (bình thường, trung lập)."
+    )
+    prompt = f"Phân tích bình luận sau: '{text}'"
+
+    res = call_gemini_api(prompt, system_instruction=system_instruction)
+    if res:
+        res = res.strip().upper()
+        if "NEGATIVE" in res: return "NEGATIVE"
+        if "POSITIVE" in res: return "POSITIVE"
+    return "NEUTRAL"
+
+### ---> [ĐÃ XÓA CHỖ NÀY: Hàm send_admin_alert_email_async đã được gỡ bỏ theo yêu cầu] <--- ###

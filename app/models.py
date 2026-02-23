@@ -2,6 +2,7 @@ from flask_login import UserMixin
 from .extensions import db
 from datetime import datetime, timezone
 
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
@@ -13,7 +14,6 @@ class User(UserMixin, db.Model):
     # Quan hệ
     orders = db.relationship('Order', backref='user', lazy=True)
     trade_ins = db.relationship('TradeInRequest', backref='user', lazy=True)
-    # [NEW] Quan hệ với Comment
     comments = db.relationship('Comment', backref='user', lazy=True)
 
     avatar_url = db.Column(db.String(500), default='https://cdn-icons-png.flaticon.com/512/3135/3135715.png')
@@ -35,11 +35,9 @@ class Product(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     stock_quantity = db.Column(db.Integer, default=10)
 
-    # [NEW] Quan hệ với Comment (Xóa sản phẩm -> Xóa luôn comment)
     comments = db.relationship('Comment', backref='product', lazy=True, cascade="all, delete-orphan")
 
 
-# [NEW] Bảng Bình Luận & Đánh Giá
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -47,6 +45,19 @@ class Comment(db.Model):
     content = db.Column(db.Text, nullable=False)
     rating = db.Column(db.Integer, default=5)  # 1 đến 5 sao
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # =========================================================================
+    # ---> [NEW: Thêm khóa ngoại tự trỏ để hỗ trợ tính năng Trả lời (Reply)] <---
+    # =========================================================================
+    parent_id = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=True)
+    replies = db.relationship(
+        'Comment',
+        backref=db.backref('parent', remote_side=[id]),
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="Comment.created_at.asc()"
+    )
+    # =========================================================================
 
 
 class Order(db.Model):
@@ -57,7 +68,6 @@ class Order(db.Model):
     status = db.Column(db.String(50), default='Pending')
     address = db.Column(db.String(200), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
-    # [NEW] Thêm phương thức thanh toán
     payment_method = db.Column(db.String(50), default='COD')  # COD hoặc Banking
     details = db.relationship('OrderDetail', backref='order', lazy=True)
 

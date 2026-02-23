@@ -4,7 +4,10 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import func, desc
 from datetime import datetime, timedelta
 from app.extensions import db
-from app.models import Product, User, Order, TradeInRequest, OrderDetail
+
+### ---> [ĐÃ SỬA CHỖ NÀY: Import thêm bảng Comment] <--- ###
+from app.models import Product, User, Order, TradeInRequest, OrderDetail, Comment
+
 import json
 from app.utils import sync_product_to_vector_db
 
@@ -29,6 +32,13 @@ def dashboard():
     orders = Order.query.options(joinedload(Order.user)).order_by(Order.date_created.desc()).all()
     tradeins = TradeInRequest.query.options(joinedload(TradeInRequest.user)).order_by(
         TradeInRequest.created_at.desc()).all()
+
+    # =========================================================================
+    # ---> [NEW: LẤY DANH SÁCH BÌNH LUẬN TỪ DATABASE ĐỂ HIỂN THỊ] <---
+    # =========================================================================
+    comments = Comment.query.options(joinedload(Comment.user), joinedload(Comment.product)).order_by(
+        Comment.created_at.desc()).all()
+    # =========================================================================
 
     total_revenue = db.session.query(func.sum(Order.total_price)).filter(Order.status == 'Completed').scalar() or 0
 
@@ -115,6 +125,7 @@ def dashboard():
         users=users,
         orders=orders,
         tradeins=tradeins,
+        comments=comments, # ---> [ĐÃ SỬA CHỖ NÀY: Truyền biến comments sang file HTML] <---
         total_revenue=total_revenue,
         total_orders_count=total_orders_count,
         total_products_count=total_products_count,

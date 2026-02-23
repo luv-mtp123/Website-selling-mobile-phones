@@ -8,7 +8,7 @@ from flask import Blueprint, render_template, request, session, redirect, url_fo
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, func, desc
 
 # Import Extensions & Models
 from app.extensions import db, csrf
@@ -23,7 +23,9 @@ from app.utils import (
     validate_image_file,
     build_product_context,
     generate_chatbot_response,
-    search_vector_db
+    search_vector_db,
+    analyze_sentiment
+    ### ---> [ĐÃ XÓA CHỖ NÀY: Hàm gửi email (send_admin_alert_email_async)] <--- ###
 )
 
 main_bp = Blueprint('main', __name__)
@@ -226,9 +228,46 @@ def product_detail(id):
     except:
         p.colors_list, p.versions_list = [], []
 
-    recs = Product.query.filter(Product.category == 'accessory', Product.is_active == True).limit(4).all()
-    comments = Comment.query.options(joinedload(Comment.user)).filter_by(product_id=id).order_by(
-        Comment.created_at.desc()).all()
+    # ==============================================================================================
+    # ---> [ĐÃ SỬA CHỖ NÀY: Thuật toán AI Recommendation (Collaborative Filtering)] <---
+    # Phân tích hành vi: Khách mua sản phẩm này (id) thì thường mua kèm phụ kiện gì trong cùng Order?
+    # ==============================================================================================
+
+    # 1. Tìm tất cả các OrderID (Giỏ hàng) đã từng chứa sản phẩm này
+    related_order_ids_subquery = db.session.query(OrderDetail.order_id).filter_by(product_id=id).subquery()
+
+    # 2. Tìm các sản phẩm (Phụ kiện) xuất hiện nhiều nhất trong các Giỏ hàng đó
+    recommendation_query = db.session.query(Product, func.sum(OrderDetail.quantity).label('total_bought')) \
+        .join(OrderDetail, Product.id == OrderDetail.product_id) \
+        .filter(OrderDetail.order_id.in_(related_order_ids_subquery)) \
+        .filter(Product.id != id) \
+        .filter(Product.category == 'accessory') \
+        .filter(Product.is_active == True) \
+        .group_by(Product.id) \
+        .order_by(desc('total_bought')) \
+        .limit(4).all()
+
+    recs = [item[0] for item in recommendation_query]
+
+    # Fallback: Nếu điện thoại mới ra chưa ai mua kèm phụ kiện, lấy đại 4 phụ kiện random
+    if not recs:
+        recs = Product.query.filter(Product.category == 'accessory', Product.is_active == True).limit(4).all()
+
+    # ==============================================================================================
+
+    # =========================================================================
+    # ---> [SỬA CHỖ NÀY: TÁCH RIÊNG ĐÁNH GIÁ (rating > 0) VÀ HỎI ĐÁP (rating == 0)] <---
+    # =========================================================================
+    # 1. Lấy Bình luận đánh giá (có sao)
+    comments = Comment.query.options(joinedload(Comment.user)).filter(
+        Comment.product_id == id, Comment.parent_id == None, Comment.rating > 0
+    ).order_by(Comment.created_at.desc()).all()
+
+    # 2. Lấy Câu hỏi Hỏi Đáp (không có sao, rating = 0)
+    questions = Comment.query.options(joinedload(Comment.user)).filter_by(
+        product_id=id, parent_id=None, rating=0
+    ).order_by(Comment.created_at.desc()).all()
+    # =========================================================================
 
     # [REFACTOR] Tính toán Rating Logic ở Backend thay vì HTML
     rating_stats = {
@@ -249,19 +288,53 @@ def product_detail(id):
         for star in rating_stats['stars']:
             rating_stats['stars'][star]['pct'] = (rating_stats['stars'][star]['count'] / rating_stats['total']) * 100
 
-    return render_template('detail.html', product=p, recommendations=recs, comments=comments, rating=rating_stats)
+    # ---> Truyền thêm biến questions sang giao diện <---
+    return render_template('detail.html', product=p, recommendations=recs, comments=comments, questions=questions,
+                           rating=rating_stats)
 
 
 @main_bp.route('/product/<int:id>/comment', methods=['POST'])
 @login_required
 def add_comment(id):
     content = request.form.get('content', '').strip()
-    rating = request.form.get('rating', default=5, type=int)
-    if rating not in [1, 2, 3, 4, 5]: rating = 5
+
+    # ---> [SỬA CHỖ NÀY: Xử lý thêm cờ is_question để lưu Hỏi Đáp với rating=0] <---
+    is_question = request.form.get('is_question') == 'true'
+    parent_id = request.form.get('parent_id', type=int)
+
+    if is_question or parent_id:
+        final_rating = 0  # Câu hỏi hoặc câu trả lời thì không có sao (rating=0)
+    else:
+        rating = request.form.get('rating', default=5, type=int)
+        if rating not in [1, 2, 3, 4, 5]: rating = 5
+        final_rating = rating
+
     if content:
-        db.session.add(Comment(user_id=current_user.id, product_id=id, content=content, rating=rating))
+        new_comment = Comment(
+            user_id=current_user.id,
+            product_id=id,
+            content=content,
+            rating=final_rating,
+            parent_id=parent_id
+        )
+        db.session.add(new_comment)
         db.session.commit()
-        flash('Cảm ơn bạn đã đánh giá!', 'success')
+
+        # Chỉ phân tích cảm xúc (sentiment) cho đánh giá chính để hiển thị trên Admin
+        if not parent_id and not is_question:
+            sentiment_result = analyze_sentiment(content)
+
+        if parent_id:
+            flash('Đã gửi câu trả lời!', 'success')
+        elif is_question:
+            flash('Đã gửi câu hỏi thành công!', 'success')
+        else:
+            flash('Cảm ơn bạn đã đánh giá!', 'success')
+
+    # Nếu người trả lời là Admin, hãy quay lại trang Admin thay vì trang sản phẩm
+    if request.form.get('source') == 'admin':
+        return redirect(url_for('admin.dashboard'))
+
     return redirect(url_for('main.product_detail', id=id))
 
 

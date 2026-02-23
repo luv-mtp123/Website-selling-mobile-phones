@@ -454,6 +454,26 @@
 
 ## 
 
+#### **- Giao diện Tabs Admin (MỚI): Chỉnh sửa CSS giúp các nút Tab (Sản phẩm, Đơn hàng, Thu cũ...) hiển thị chữ đen đậm, viền nổi bật không bị chìm vào nền trắng.**
+
+#### 
+
+#### **- Quản lý Đánh giá \& Trả lời (MỚI): Bảng quản lý bình luận được nâng cấp, phân loại rõ ràng (Tích cực/Tiêu cực/Câu hỏi). Bổ sung tính năng "Trả lời" trực tiếp ngay trong trang quản trị, gỡ bỏ hoàn toàn gửi cảnh báo qua Email (SMTP) để tránh làm nặng web.**
+
+#### 
+
+### **✅ Chi Tiết Sản Phẩm (Product Detail):**
+
+#### 
+
+#### **- Hệ thống Hỏi \& Đáp (Q\&A) chuẩn CellphoneS (MỚI): Thiết kế một khu vực Hỏi \& Đáp hoàn toàn độc lập với phần đánh giá sao. Khách hàng có thể đặt câu hỏi và nhận phản hồi trực tiếp từ Admin (có dán nhãn Quản Trị Viên nổi bật). Hỗ trợ trả lời lồng nhau (Nested replies) cực kỳ chuyên nghiệp.**
+
+#### 
+
+#### **- Trick Database Thông minh (MỚI): Tái sử dụng bảng Comment với cấu trúc logic linh hoạt (rating = 0 cho Hỏi đáp, rating > 0 cho Đánh giá), giúp mở rộng hệ thống lớn mà không cần đụng chạm, sửa đổi cấu trúc Database (tránh được lỗi Constraint đặc thù của SQLite).**
+
+## 
+
 ### **✅ Hồ Sơ Thành Viên (User Dashboard):**
 
 ## 
@@ -572,19 +592,19 @@
 
 #### **# 1. Khởi tạo môi trường migration (chỉ chạy lần đầu)**
 
-#### **flask db init**
+#### **py -m flask db init**
 
 #### 
 
 #### **# 2. Tạo file migration từ Models**
 
-#### **flask db migrate -m "Initial migration"**
+#### **py -m flask db migrate -m "Initial migration"**
 
 #### 
 
 #### **# 3. Áp dụng vào Database**
 
-#### **flask db upgrade**
+#### **py -m flask db upgrade**
 
 # 
 
@@ -596,7 +616,7 @@
 
 #### 
 
-#### **python rag\_sync.py**
+#### **py rag\_sync.py**
 
 # 
 
@@ -604,7 +624,7 @@
 
 ## 
 
-#### **python run.py**
+#### **py run.py**
 
 ## 
 

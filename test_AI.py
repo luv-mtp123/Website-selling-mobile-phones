@@ -9,9 +9,12 @@ import unittest
 import json
 from unittest.mock import patch, MagicMock
 from app import create_app, db
-from app.models import User, Product
-# [FIX] Import local_analyze_intent từ app.utils
-from app.utils import get_comparison_result, local_analyze_intent, build_product_context
+
+### ---> [ĐÃ SỬA CHỖ NÀY: Import thêm User, Order, OrderDetail để tạo Data Test Gợi ý] <--- ###
+from app.models import User, Product, Order, OrderDetail
+
+### ---> [ĐÃ SỬA CHỖ NÀY: Import thêm hàm analyze_sentiment] <--- ###
+from app.utils import get_comparison_result, local_analyze_intent, build_product_context, analyze_sentiment
 from flask import session
 
 
@@ -22,6 +25,8 @@ class AIFeaturesTestCase(unittest.TestCase):
     2. RAG (Retrieval-Augmented Generation) - AI đọc DB
     3. Chatbot Memory (Hội thoại theo ngữ cảnh)
     4. Product Comparison (So sánh)
+    5. Sentiment Analysis (Phân tích cảm xúc)
+    6. Recommendation System (Gợi ý mua kèm)
     """
 
     def setUp(self):
@@ -57,6 +62,28 @@ class AIFeaturesTestCase(unittest.TestCase):
 
         db.session.add_all([p1, p2, p3])
         db.session.commit()
+
+        # Lưu ID để xài cho bài Test số 6
+        self.p1_id = p1.id
+        self.p3_id = p3.id
+
+        ### ---> [NEW: GIẢ LẬP HÀNH VI NGƯỜI DÙNG ĐỂ TEST THUẬT TOÁN GỢI Ý (RECOMMENDATION)] <--- ###
+        # Tạo 1 User giả
+        u1 = User(username='testuser', email='test@mail.com', password='123', full_name='Test User')
+        db.session.add(u1)
+        db.session.commit()
+
+        # Tạo 1 Order: Khách mua iPhone 15 (p1) CÙNG VỚI Ốp lưng (p3)
+        o1 = Order(user_id=u1.id, total_price=35500000, address='HCM', phone='0123', status='Completed')
+        db.session.add(o1)
+        db.session.commit()
+
+        # Chi tiết giỏ hàng
+        od1 = OrderDetail(order_id=o1.id, product_id=p1.id, product_name=p1.name, quantity=1, price=p1.price)
+        od2 = OrderDetail(order_id=o1.id, product_id=p3.id, product_name=p3.name, quantity=1, price=p3.price)
+        db.session.add_all([od1, od2])
+        db.session.commit()
+        ### ----------------------------------------------------------------------------------- ###
 
     # --- TEST 1: LOCAL INTELLIGENCE (Logic nội bộ) ---
     def test_local_search_intent_parsing(self):
@@ -130,7 +157,7 @@ class AIFeaturesTestCase(unittest.TestCase):
             # [QUAN TRỌNG] Kiểm tra Prompt gửi đi lần 2 phải chứa lịch sử lần 1
             # Lấy arguments mà code đã gọi call_gemini_api
             args, kwargs = mock_gemini.call_args
-            prompt_text = args[0] # The prompt string is the first positional argument
+            prompt_text = args[0]  # The prompt string is the first positional argument
 
             # Prompt gửi đi phải chứa câu hỏi cũ để AI hiểu từ "Nó"
             self.assertIn("LỊCH SỬ HỘI THOẠI", prompt_text)
@@ -162,6 +189,55 @@ class AIFeaturesTestCase(unittest.TestCase):
         # [ĐÃ SỬA]: Thay đổi từ "Chỉ trả về code HTML" thành một cụm từ thực sự tồn tại
         # trong chuỗi prompt được định nghĩa tại app/utils.py
         self.assertIn("CHỈ TRẢ VỀ MÃ HTML", sent_prompt)  # Kiểm tra instruction quan trọng
+
+    ### ============================================================================== ###
+    ### ---> [NEW: TEST 5 - KIỂM TRA PHÂN TÍCH CẢM XÚC ĐÁNH GIÁ CỦA AI] <--- ###
+    @patch('app.utils.call_gemini_api')
+    def test_sentiment_analysis(self, mock_gemini):
+        """
+        Kiểm tra hệ thống đọc và phân loại cảm xúc (NLP) từ comment.
+        """
+        print("\n[AI Test 5] Testing Sentiment Analysis (Phân tích cảm xúc NLP)...")
+
+        # Kịch bản 1: AI phát hiện bình luận CHÊ (Negative)
+        mock_gemini.return_value = "NEGATIVE"
+        res_bad = analyze_sentiment("Máy quá tệ, giật lag, pin hụt như uống nước lã!")
+        self.assertEqual(res_bad, "NEGATIVE")
+
+        # Kịch bản 2: AI phát hiện bình luận KHEN (Positive)
+        mock_gemini.return_value = "POSITIVE"
+        res_good = analyze_sentiment("Sản phẩm dùng rất ngon, nhân viên nhiệt tình, 10 điểm!")
+        self.assertEqual(res_good, "POSITIVE")
+
+        # Kịch bản 3: AI phát hiện bình luận TRUNG LẬP (Neutral)
+        mock_gemini.return_value = "NEUTRAL"
+        res_neutral = analyze_sentiment("Tôi mới mua, chưa xài nhiều nên chưa rõ.")
+        self.assertEqual(res_neutral, "NEUTRAL")
+
+    ### ---> [NEW: TEST 6 - KIỂM TRA THUẬT TOÁN GỢI Ý MUA KÈM (MARKET BASKET)] <--- ###
+    def test_recommendation_system(self):
+        """
+        Kiểm tra thuật toán Collaborative Filtering.
+        Mục tiêu: Khi truy cập iPhone 15, hệ thống phải phát hiện ra trong quá khứ
+        có người từng mua iPhone 15 kèm Ốp lưng, từ đó gợi ý cái Ốp lưng ra giao diện.
+        """
+        print("\n[AI Test 6] Testing Collaborative Filtering (Recommendation System)...")
+
+        # Truy cập vào trang chi tiết sản phẩm p1 (iPhone 15)
+        with self.client:
+            response = self.client.get(f'/product/{self.p1_id}')
+            html_data = response.data.decode('utf-8')
+
+            # Kiểm tra xem giao diện có render khối "Phụ Kiện Gợi Ý Mua Kèm" hay không
+            self.assertIn("Phụ Kiện Gợi Ý Mua Kèm", html_data)
+
+            # Kiểm tra xem "Ốp lưng iPhone 15" có được moi lên để gợi ý hay không
+            # (Vì ở hàm create_sample_data, chúng ta đã giả lập o1 mua kèm 2 món này)
+            self.assertIn("Ốp lưng iPhone 15", html_data)
+
+            # Đảm bảo điện thoại khác KHÔNG BỊ lọt vào danh sách phụ kiện
+            self.assertNotIn("Samsung Galaxy A05", html_data)
+    ### ============================================================================== ###
 
 
 if __name__ == '__main__':

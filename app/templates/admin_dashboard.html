@@ -9,11 +9,32 @@
     .stat-card { transition: transform 0.2s; }
     .stat-card:hover { transform: translateY(-5px); }
     .chart-container { position: relative; height: 300px; width: 100%; }
+
+    /* ========================================================================= */
+    /* ---> CSS Ép màu chữ đen đậm cho các tab không bị chìm <--- */
+    /* ========================================================================= */
+    #pills-tab .nav-link {
+        color: #212529 !important; /* Đen chuẩn */
+        font-weight: 900 !important; /* Dày nhất */
+        background-color: #f8f9fa; /* Nền nhạt để tách biệt với nền trắng phía sau */
+        border: 1px solid #ced4da; /* Viền xám bọc quanh nút */
+        margin-right: 8px;
+        transition: 0.2s;
+    }
+    #pills-tab .nav-link:hover {
+        background-color: #e9ecef;
+    }
+    #pills-tab .nav-link.active {
+        color: #ffffff !important;
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+        box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
+    }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- [NEW/EDIT: Chuyển title thành thẻ flex để nhét thêm nút Xuất Excel] -->
+<!-- Chuyển title thành thẻ flex để nhét thêm nút Xuất Excel -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="mb-0 text-primary fw-bold"><i class="fas fa-chart-line"></i> Dashboard Thống Kê</h2>
     <a href="/admin/export/report" class="btn btn-success fw-bold shadow-sm rounded-pill px-4">
@@ -76,9 +97,7 @@
     </div>
 </div>
 
-<!-- ======================================================================= -->
-<!-- [NEW: THỂ HIỆN PANDAS DATA SCIENCE INSIGHTS GIAO DIỆN] -->
-<!-- ======================================================================= -->
+<!-- THỂ HIỆN PANDAS DATA SCIENCE INSIGHTS GIAO DIỆN -->
 <div class="row mb-4 g-3">
     <div class="col-md-6">
         <div class="card border-0 shadow-sm rounded-3 bg-white border-start border-4 border-info h-100">
@@ -97,7 +116,6 @@
         </div>
     </div>
 </div>
-<!-- ======================================================================= -->
 
 <div class="row mb-5 g-4">
     <div class="col-lg-8">
@@ -140,10 +158,11 @@
 </div>
 
 <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-    <li class="nav-item"><button class="nav-link active fw-bold" data-bs-toggle="pill" data-bs-target="#pills-product">Sản phẩm</button></li>
-    <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="pill" data-bs-target="#pills-order">Đơn hàng</button></li>
-    <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="pill" data-bs-target="#pills-user">Người dùng</button></li>
-    <li class="nav-item"><button class="nav-link fw-bold text-success" data-bs-toggle="pill" data-bs-target="#pills-tradein">Thu cũ đổi mới</button></li>
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pills-product">Sản phẩm</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-order">Đơn hàng</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-user">Người dùng</button></li>
+    <li class="nav-item"><button class="nav-link text-success border-success" data-bs-toggle="pill" data-bs-target="#pills-tradein"><i class="fas fa-sync-alt me-1"></i> Thu cũ đổi mới</button></li>
+    <li class="nav-item"><button class="nav-link text-danger border-danger" data-bs-toggle="pill" data-bs-target="#pills-comments"><i class="fas fa-star me-1"></i> Quản lý Đánh giá</button></li>
 </ul>
 
 <div class="tab-content" id="pills-tabContent">
@@ -285,11 +304,204 @@
             </div>
         </div>
     </div>
+
+    <!-- TAB THU CŨ -->
+    <div class="tab-pane fade" id="pills-tradein">
+        <div class="card shadow border-0 rounded-4 overflow-hidden mb-5">
+            <div class="card-header bg-white p-3">
+                <h5 class="mb-0 fw-bold">Yêu cầu Thu cũ đổi mới</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">ID</th>
+                                <th>Khách hàng</th>
+                                <th>Tên thiết bị</th>
+                                <th>Tình trạng</th>
+                                <th>Hình ảnh</th>
+                                <th>Trạng thái</th>
+                                <th>Định giá</th>
+                                <th>Xử lý</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in tradeins %}
+                            <tr>
+                                <td class="ps-4 fw-bold">#{{ t.id }}</td>
+                                <td>{{ t.user.full_name or t.user.username }}</td>
+                                <td class="fw-bold text-primary">{{ t.device_name }}</td>
+                                <td><small>{{ t.condition }}</small></td>
+                                <td>
+                                    <a href="{{ t.image_proof }}" target="_blank">
+                                        <img src="{{ t.image_proof }}" width="50" height="50" class="rounded border" style="object-fit:cover;">
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'warning' if t.status=='Pending' else 'success' if t.status=='Approved' else 'danger' }}">{{ t.status }}</span>
+                                </td>
+                                <td class="fw-bold text-danger">{{ t.valuation_price | vnd }}</td>
+                                <td>
+                                    {% if t.status == 'Pending' %}
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#tradeinModal{{ t.id }}">Định giá</button>
+
+                                    <!-- Modal Định giá -->
+                                    <div class="modal fade" id="tradeinModal{{ t.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <form action="/admin/tradein/update" method="POST">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    <input type="hidden" name="id" value="{{ t.id }}">
+                                                    <div class="modal-header bg-primary text-white">
+                                                        <h5 class="modal-title">Định giá thiết bị</h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Mức giá đề xuất (VNĐ)</label>
+                                                            <input type="number" name="valuation_price" class="form-control" required>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Ghi chú (Tùy chọn)</label>
+                                                            <textarea name="admin_note" class="form-control" rows="2"></textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="submit" name="action" value="reject" class="btn btn-danger">Từ chối</button>
+                                                        <button type="submit" name="action" value="approve" class="btn btn-success">Chấp nhận</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <small class="text-muted">{{ t.admin_note }}</small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted">Chưa có yêu cầu nào.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="pills-comments">
+        <div class="card shadow border-0 rounded-4 overflow-hidden mb-5">
+            <div class="card-header bg-white p-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-comments text-primary me-2"></i> Quản lý Đánh giá / Hỏi Đáp Khách hàng</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4" style="width: 5%;">ID</th>
+                                <th style="width: 25%;">Sản phẩm</th>
+                                <th style="width: 15%;">Người dùng</th>
+                                <th style="width: 15%;">Loại / Đánh giá</th>
+                                <th style="width: 25%;">Nội dung</th>
+                                <th style="width: 15%;">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in comments %}
+                            <tr>
+                                <td class="ps-4 fw-bold text-muted">#{{ c.id }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ c.product.image_url }}" style="width: 40px; height: 40px; object-fit: cover;" class="rounded border me-2" onerror="this.src='https://via.placeholder.com/40'">
+                                        <a href="/product/{{ c.product_id }}" target="_blank" class="fw-bold text-primary text-decoration-none" style="font-size: 0.9rem;">{{ c.product.name }}</a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">
+                                        {{ c.user.full_name or c.user.username }}
+                                        {% if c.user.role == 'admin' %}<span class="badge bg-danger ms-1">Admin</span>{% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if not c.parent_id %}
+                                        <!-- PHÂN BIỆT ĐÁNH GIÁ CÓ SAO VÀ CÂU HỎI -->
+                                        {% if c.rating == 0 %}
+                                            <span class="badge bg-info text-dark border"><i class="fas fa-question-circle"></i> Câu hỏi (Hỏi & Đáp)</span>
+                                        {% else %}
+                                            <div class="text-warning small">
+                                                {% for i in range(c.rating) %}<i class="fas fa-star"></i>{% endfor %}
+                                                {% for i in range(5 - c.rating) %}<i class="far fa-star"></i>{% endfor %}
+                                            </div>
+                                            {% if c.rating <= 2 %}<span class="badge bg-danger mt-1">Tiêu cực</span>
+                                            {% elif c.rating >= 4 %}<span class="badge bg-success mt-1">Tích cực</span>
+                                            {% else %}<span class="badge bg-secondary mt-1">Trung lập</span>{% endif %}
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-light border text-dark"><i class="fas fa-reply"></i> Đây là câu trả lời</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <p class="mb-0 text-dark" style="font-size: 0.9rem; white-space: pre-wrap; word-break: break-word;">{{ c.content }}</p>
+                                </td>
+                                <td>
+                                    <div class="text-muted small mb-2">{{ c.created_at.strftime('%d/%m %H:%M') }}</div>
+                                    <!-- Nút Mở Modal Trả Lời cho Admin -->
+                                    <button class="btn btn-sm btn-outline-primary fw-bold" onclick="setAdminReply('{{ c.product_id }}', '{{ c.id }}', '{{ c.user.full_name or c.user.username }}')" data-bs-toggle="modal" data-bs-target="#adminReplyModal">
+                                        <i class="fas fa-reply me-1"></i> Trả lời
+                                    </button>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    <i class="fas fa-comment-slash fa-2x mb-2 opacity-50"></i><br>
+                                    Chưa có bài đánh giá nào trên hệ thống.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- ============================================= -->
-<!-- MODAL THÊM SẢN PHẨM MỚI (BẢN FIX LỖI THIẾU FORM) -->
+<!-- MODAL ADMIN TRẢ LỜI BÌNH LUẬN -->
 <!-- ============================================= -->
+<div class="modal fade" id="adminReplyModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <form id="adminReplyForm" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="parent_id" id="adminReplyParentId" value=""/>
+                <input type="hidden" name="source" value="admin"/> <!-- Cờ để redirect đúng về admin -->
+
+                <div class="modal-header bg-primary text-white rounded-top-4">
+                    <h5 class="modal-title fw-bold" id="adminReplyTitle"><i class="fas fa-reply me-2"></i>Trả lời Khách hàng</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <label class="form-label fw-bold">Nội dung phản hồi (Dưới tư cách Admin Shop):</label>
+                    <textarea name="content" class="form-control bg-light border" rows="4" placeholder="Cảm ơn quý khách..." required></textarea>
+                </div>
+
+                <div class="modal-footer bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow"><i class="fas fa-paper-plane me-1"></i> Phản hồi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL THÊM SẢN PHẨM MỚI -->
 <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content border-0 rounded-4 shadow-lg">
@@ -362,12 +574,18 @@
     </div>
 </div>
 
-<!-- Dữ liệu an toàn cho JS để tránh lỗi SyntaxError -->
 <script id="chart-dates-data" type="application/json">{{ chart_dates | default('[]', true) | safe }}</script>
 <script id="chart-rev-data" type="application/json">{{ chart_revenues | default('[]', true) | safe }}</script>
 <script id="status-data" type="application/json">{{ status_data | tojson }}</script>
 
 <script>
+    // Logic setup Form Reply Admin
+    function setAdminReply(productId, commentId, userName) {
+        document.getElementById('adminReplyForm').action = '/product/' + productId + '/comment';
+        document.getElementById('adminReplyParentId').value = commentId;
+        document.getElementById('adminReplyTitle').innerHTML = '<i class="fas fa-reply me-2"></i>Trả lời: ' + userName;
+    }
+
     // Logic Sắp xếp bảng Sản phẩm
     let sortOrders = {};
     function sortProductTable(n, type) {
@@ -397,12 +615,9 @@
 
         try {
             const dateContent = document.getElementById('chart-dates-data').innerHTML.trim();
-            // Nối chuỗi '{' và '{' để Jinja2 không biên dịch nhầm trong lúc preview code HTML
             if (!dateContent.startsWith('{' + '{') && dateContent !== '') chartLabels = JSON.parse(dateContent);
-
             const revContent = document.getElementById('chart-rev-data').innerHTML.trim();
             if (!revContent.startsWith('{' + '{') && revContent !== '') chartData = JSON.parse(revContent);
-
             const statusContent = document.getElementById('status-data').innerHTML.trim();
             if (!statusContent.startsWith('{' + '{') && statusContent !== '') statusDataRaw = JSON.parse(statusContent);
         } catch (e) {
@@ -412,24 +627,13 @@
         const ctxRevenue = document.getElementById('revenueChart').getContext('2d');
         const revenueChart = new Chart(ctxRevenue, {
             type: 'line',
-            data: {
-                labels: chartLabels,
-                datasets: [{
-                    label: 'Doanh thu (VNĐ)',
-                    data: chartData,
-                    borderColor: '#0d6efd',
-                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
+            data: { labels: chartLabels, datasets: [{ label: 'Doanh thu (VNĐ)', data: chartData, borderColor: '#0d6efd', backgroundColor: 'rgba(13, 110, 253, 0.1)', fill: true, tension: 0.4 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
         });
 
         const ctxStatus = document.getElementById('statusChart').getContext('2d');
         const labels = Object.keys(statusDataRaw);
         const data = Object.values(statusDataRaw);
-
         const colors = { 'Pending': '#ffc107', 'Confirmed': '#0d6efd', 'Shipping': '#0dcaf0', 'Completed': '#198754', 'Cancelled': '#6c757d' };
         const bgColors = labels.map(l => colors[l] || '#ccc');
 

@@ -5,10 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3173c2d7-cc29-4323-83c7-0baca6ea3dee" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/app/analytics_engine.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/vector_manager.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/stress_test.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/recommendation_ml.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/system_logger.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/competitor_scraper.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test_ml.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/instance/mobilestore.db" beforeDir="false" afterPath="$PROJECT_DIR$/instance/mobilestore.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

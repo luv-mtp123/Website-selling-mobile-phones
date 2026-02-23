@@ -30,7 +30,7 @@
 
 # 
 
-## **✅ Sửa Lỗi Xung Đột Khởi Tạo Database (Migration):**
+### **✅ Sửa Lỗi Xung Đột Khởi Tạo Database (Migration):**
 
 ## 
 
@@ -530,6 +530,22 @@
 
 # 
 
+## **17. 🕷️ Trí Tuệ Nhân Tạo \& Phân Tích Chuyên Sâu (Advanced ML \& Tracking)**
+
+# 
+
+#### **- Hệ Thống Học Máy Gợi Ý Sản Phẩm (ML Recommender): Xây dựng thuật toán Lọc Cộng Tác (Collaborative Filtering) trong file recommendation\_ml.py sử dụng Đại số tuyến tính của Numpy và Pandas. Hệ thống có khả năng tự động học hỏi từ hàng ngàn lịch sử giỏ hàng của người dùng để sinh ra Ma trận Độ Tương Đồng (Item-Item Similarity Matrix), từ đó đưa ra quyết định gợi ý mua kèm (Cross-sell) cực kỳ chuẩn xác.**
+
+#### 
+
+#### **- Hệ Thống Audit Log Chuyên Nghiệp (System Logger): Triển khai file system\_logger.py cấu hình RotatingFileHandler của Python. Tự động ghi lại nhật ký toàn bộ vòng đời của hệ thống (Access Log, Security Warning, Response Time). Chống tràn bộ nhớ bằng cơ chế tự động xoay vòng file log (max 5MB/file), hỗ trợ cực tốt cho quy trình DevOps \& Traceability.**
+
+#### 
+
+#### **- Robot Cào Dữ Liệu Đối Thủ (Competitor Web Scraper): Ứng dụng kỹ thuật Web Scraping với BeautifulSoup/Requests trong file competitor\_scraper.py. Tạo lập các kịch bản bot giả lập trình duyệt (Bypass Anti-bot) để tự động quét giá trị trường, so sánh độ chênh lệch giá của sản phẩm nội bộ so với đối thủ và xuất báo cáo tự động cho Admin.**
+
+# 
+
 # **📂 Cấu Trúc Dự Án (Modular MVC)**
 
 # 
@@ -539,6 +555,8 @@
 #### **│**
 
 #### **├── run.py                  # (ENTRY POINT) File chạy chính**
+
+#### **├── competitor\_scraper.py   # (BOT) Robot thu thập dữ liệu giá đối thủ**
 
 #### **├── backup\_db.py            # (UTILS) Script tự động sao lưu Database**
 
@@ -563,6 +581,8 @@
 #### **├── test\_auth.py        # Test xác thực \& Đăng nhập**
 
 #### **├── test\_integration\_system.py # Test tích hợp hệ thống**
+
+#### **├── test\_ml.py              # (TEST) thuật toán Machine Learning**
 
 #### **├── stress\_test.py          # (TEST) Script giả lập tải nặng \& bơm data ảo**
 
@@ -589,6 +609,8 @@
 #### **├── vector\_manager.py   # Quản trị Vector DB (ChromaDB)**
 
 #### **├── analytics\_engine.py # Lõi phân tích dữ liệu bán hàng (Pandas)**
+
+#### **├── recommendation\_ml.py# Thuật toán AI Lọc Cộng tác (Machine Learning)**
 
 #### **│**
 

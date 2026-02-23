@@ -6,7 +6,6 @@ from werkzeug.security import generate_password_hash
 from .extensions import db, login_manager, oauth, csrf, migrate
 from .models import User, Product, AICache
 
-
 def create_app(test_config=None):
     app = Flask(__name__)
     # 1. Import file lỗi và file task
@@ -83,6 +82,8 @@ def create_app(test_config=None):
     app.register_blueprint(errors_bp)
     if not app.config.get('TESTING'):
         start_background_tasks(app)
+        from .system_logger import SystemAuditLogger
+        SystemAuditLogger(app).init_app_middlewares()
 
     return app
 

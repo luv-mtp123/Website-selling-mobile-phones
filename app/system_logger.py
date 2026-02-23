@@ -24,8 +24,14 @@ class SystemAuditLogger:
 
         # File log cho Web Traffic
         access_log_path = os.path.join(self.log_dir, 'access.log')
-        # Tối đa 5MB mỗi file, giữ lại tối đa 10 file cũ
-        access_handler = RotatingFileHandler(access_log_path, maxBytes=5 * 1024 * 1024, backupCount=10)
+
+        # ---> [FIX LỖI WINDOWS]: Bắt buộc dùng encoding='utf-8' để ghi được Emoji/Tiếng Việt
+        access_handler = RotatingFileHandler(
+            access_log_path,
+            maxBytes=5 * 1024 * 1024,
+            backupCount=10,
+            encoding='utf-8'
+        )
         access_formatter = logging.Formatter(
             '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
         )

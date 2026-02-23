@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 from flask import Flask
 from werkzeug.security import generate_password_hash
@@ -6,11 +7,26 @@ from werkzeug.security import generate_password_hash
 from .extensions import db, login_manager, oauth, csrf, migrate
 from .models import User, Product, AICache
 
+# =========================================================================
+# [FIX WINDOWS ERROR] Ép Terminal của Windows đọc được Emoji UTF-8
+# Khắc phục lỗi: UnicodeEncodeError: 'charmap' codec can't encode characters
+# =========================================================================
+if sys.platform == 'win32':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass
+
+
+# =========================================================================
+
 def create_app(test_config=None):
     app = Flask(__name__)
     # 1. Import file lỗi và file task
     from .errors import errors_bp
     from .tasks import start_background_tasks
+
     # 1. Cấu hình App & Load .env
     # (Load thủ công vì file này nằm trong thư mục con app/)
     env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
@@ -46,7 +62,6 @@ def create_app(test_config=None):
     if test_config:
         app.config.update(test_config)
 
-
     # [NEW] Khởi tạo Flask-Migrate
     migrate.init_app(app, db)
 
@@ -80,10 +95,32 @@ def create_app(test_config=None):
     app.register_blueprint(admin_bp)
 
     app.register_blueprint(errors_bp)
+
+    # 5. Kích hoạt các hệ thống chạy ngầm (Chỉ khi không chạy Test)
     if not app.config.get('TESTING'):
         start_background_tasks(app)
+
         from .system_logger import SystemAuditLogger
         SystemAuditLogger(app).init_app_middlewares()
+
+        # ---> [HOTFIX BẢO MẬT WINDOWS] <---
+        # Ép tất cả các file stream ghi log phải dùng chuẩn UTF-8
+        import logging
+        for handler in app.logger.handlers:
+            if hasattr(handler, 'stream') and hasattr(handler.stream, 'reconfigure'):
+                try:
+                    handler.stream.reconfigure(encoding='utf-8')
+                except Exception:
+                    pass
+
+        # ---> [NEW: KÍCH HOẠT FIREWALL VÀ BACKGROUND WORKER Ở ĐÂY] <---
+        from .security_firewall import MobileStoreFirewall
+        MobileStoreFirewall(app)
+
+        from .notification_worker import BackgroundJobWorker
+        worker = BackgroundJobWorker()
+        worker.start_worker(app)
+        # --------------------------------------------------------------
 
     return app
 

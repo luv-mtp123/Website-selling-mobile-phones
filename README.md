@@ -118,7 +118,7 @@
 
 # 
 
-## **✅ Nâng Cấp Hệ Thống AI So Sánh (AI Battle):**
+### **✅ Nâng Cấp Hệ Thống AI So Sánh (AI Battle):**
 
 ## 
 
@@ -546,6 +546,22 @@
 
 # 
 
+## **18. 🛡️ Cơ Sở Hạ Tầng \& Bảo Mật Nâng Cao (Core Infrastructure)**
+
+#### 
+
+#### **- Hệ Thống Tường Lửa Web (WAF): Triển khai file security\_firewall.py bảo vệ ứng dụng khỏi các cuộc tấn công DDoS (Rate Limiting 60 req/min) và tự động quét/chặn các payload chứa mã độc XSS, SQL Injection từ người dùng.**
+
+#### 
+
+#### **- Hệ Thống Hàng Đợi Tác Vụ Nền (Job Queue): Xây dựng notification\_worker.py sử dụng kiến trúc Producer-Consumer với Threading. Tự động đẩy các tác vụ nặng (như gửi email sinh nhật, đồng bộ Vector DB) xuống chạy ngầm, đảm bảo giao diện người dùng luôn mượt mà và không bị gián đoạn.**
+
+#### 
+
+#### **- Hệ Thống Phân Tích Nhật Ký (Log Analyzer): Tích hợp script log\_analyzer.py sử dụng Regex và Counter để đọc file access.log. Tự động thống kê lượng truy cập, nhận diện các IP có dấu hiệu spam và báo cáo các API xử lý chậm để tối ưu.**
+
+# 
+
 # **📂 Cấu Trúc Dự Án (Modular MVC)**
 
 # 
@@ -559,6 +575,8 @@
 #### **├── competitor\_scraper.py   # (BOT) Robot thu thập dữ liệu giá đối thủ**
 
 #### **├── backup\_db.py            # (UTILS) Script tự động sao lưu Database**
+
+#### **├── log\_analyzer.py         # (UTILS) Phân tích nhật ký hệ thống** 
 
 #### **├── run\_tests.py            # (TEST RUNNER) Script chạy toàn bộ test**
 
@@ -586,6 +604,8 @@
 
 #### **├── stress\_test.py          # (TEST) Script giả lập tải nặng \& bơm data ảo**
 
+#### **├── test\_infrastructure.py  # Test hệ thống Firewall , Hàng đợi tác vụ**
+
 #### **├── .env                    # Cấu hình bảo mật**
 
 #### **├── requirements.txt        # Thư viện**
@@ -611,6 +631,10 @@
 #### **├── analytics\_engine.py # Lõi phân tích dữ liệu bán hàng (Pandas)**
 
 #### **├── recommendation\_ml.py# Thuật toán AI Lọc Cộng tác (Machine Learning)**
+
+#### **├── security\_firewall.py  # Tường lửa bảo mật WAF (Chống DDoS/XSS)**
+
+#### **├── notification\_worker.py # Hàng đợi xử lý tác vụ nền (Queue)**
 
 #### **│**
 

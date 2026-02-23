@@ -29,3 +29,136 @@
 [2026-02-23 19:48:19,152] INFO in system_logger: MobileStore Audit Logging System Started.
 [2026-02-23 19:50:18,714] INFO in system_logger: MobileStore Audit Logging System Started.
 [2026-02-23 20:10:16,635] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:30:38,570] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:30:38,935] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 106.9ms
+[2026-02-23 20:30:38,954] INFO in system_logger: IP: 127.0.0.1 | POST /product/1/comment | Status: 302 | Time: 17.04ms
+[2026-02-23 20:30:38,958] INFO in system_logger: IP: 127.0.0.1 | GET /logout | Status: 302 | Time: 1.0ms
+[2026-02-23 20:30:39,072] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 113.81ms
+[2026-02-23 20:30:39,082] INFO in system_logger: IP: 127.0.0.1 | GET /admin/product/delete/1 | Status: 302 | Time: 8.42ms
+[2026-02-23 20:30:39,130] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 47.19ms
+[2026-02-23 20:30:39,164] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:30:39,164] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:30:39,552] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 113.56ms
+[2026-02-23 20:30:39,552] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 113.56ms
+[2026-02-23 20:30:39,556] INFO in system_logger: IP: 127.0.0.1 | POST /cart/add/1 | Status: 302 | Time: 1.54ms
+[2026-02-23 20:30:39,556] INFO in system_logger: IP: 127.0.0.1 | POST /cart/add/1 | Status: 302 | Time: 1.54ms
+[2026-02-23 20:30:39,557] INFO in system_logger: IP: 127.0.0.1 | POST /cart/add/1 | Status: 302 | Time: 1.0ms
+[2026-02-23 20:30:39,557] INFO in system_logger: IP: 127.0.0.1 | POST /cart/add/1 | Status: 302 | Time: 1.0ms
+[2026-02-23 20:30:39,558] INFO in system_logger: IP: 127.0.0.1 | POST /cart/add/2 | Status: 302 | Time: 0.0ms
+[2026-02-23 20:30:39,558] INFO in system_logger: IP: 127.0.0.1 | POST /cart/add/2 | Status: 302 | Time: 0.0ms
+[2026-02-23 20:30:39,585] INFO in system_logger: IP: 127.0.0.1 | POST /checkout | Status: 302 | Time: 25.95ms
+[2026-02-23 20:30:39,585] INFO in system_logger: IP: 127.0.0.1 | POST /checkout | Status: 302 | Time: 25.95ms
+[2026-02-23 20:30:39,588] INFO in system_logger: IP: 127.0.0.1 | GET /logout | Status: 302 | Time: 1.0ms
+[2026-02-23 20:30:39,588] INFO in system_logger: IP: 127.0.0.1 | GET /logout | Status: 302 | Time: 1.0ms
+[2026-02-23 20:30:39,705] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 113.35ms
+[2026-02-23 20:30:39,705] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 113.35ms
+[2026-02-23 20:30:39,728] INFO in system_logger: IP: 127.0.0.1 | GET /admin/order/update/1/Cancelled | Status: 302 | Time: 20.54ms
+[2026-02-23 20:30:39,728] INFO in system_logger: IP: 127.0.0.1 | GET /admin/order/update/1/Cancelled | Status: 302 | Time: 20.54ms
+[2026-02-23 20:30:39,770] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 41.46ms
+[2026-02-23 20:30:39,770] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 41.46ms
+[2026-02-23 20:30:40,062] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:30:40,062] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:30:40,062] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:30:40,435] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 108.89ms
+[2026-02-23 20:30:40,435] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 108.89ms
+[2026-02-23 20:30:40,435] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 108.89ms
+[2026-02-23 20:30:40,444] WARNING in system_logger: IP: 127.0.0.1 | GET /order/cancel/1 | Status: 404 | Time: 8.18ms
+[2026-02-23 20:30:40,444] WARNING in system_logger: IP: 127.0.0.1 | GET /order/cancel/1 | Status: 404 | Time: 8.18ms
+[2026-02-23 20:30:40,444] WARNING in system_logger: IP: 127.0.0.1 | GET /order/cancel/1 | Status: 404 | Time: 8.18ms
+[2026-02-23 20:30:40,481] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:30:40,481] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:30:40,481] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:30:40,481] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:30:40,858] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 113.72ms
+[2026-02-23 20:30:40,858] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 113.72ms
+[2026-02-23 20:30:40,858] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 113.72ms
+[2026-02-23 20:30:40,858] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 113.72ms
+[2026-02-23 20:30:40,867] WARNING in system_logger: IP: 127.0.0.1 | POST /trade-in | Status: 413 | Time: 1.0ms
+[2026-02-23 20:30:40,867] WARNING in system_logger: IP: 127.0.0.1 | POST /trade-in | Status: 413 | Time: 1.0ms
+[2026-02-23 20:30:40,867] WARNING in system_logger: IP: 127.0.0.1 | POST /trade-in | Status: 413 | Time: 1.0ms
+[2026-02-23 20:30:40,867] WARNING in system_logger: IP: 127.0.0.1 | POST /trade-in | Status: 413 | Time: 1.0ms
+[2026-02-23 20:32:01,258] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:32:04,478] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:32:07,521] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 24.02ms
+[2026-02-23 20:32:11,909] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.0ms
+[2026-02-23 20:32:48,614] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.56ms
+[2026-02-23 20:34:37,098] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:35:00,312] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:42:12,287] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:42:15,094] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:42:42,294] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 20.57ms
+[2026-02-23 20:42:44,797] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 0.0ms
+[2026-02-23 20:42:45,097] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2.09ms
+[2026-02-23 20:42:45,347] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.12ms
+[2026-02-23 20:42:45,599] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2.11ms
+[2026-02-23 20:42:45,782] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.0ms
+[2026-02-23 20:42:46,014] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.0ms
+[2026-02-23 20:42:46,218] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2.62ms
+[2026-02-23 20:42:46,407] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.55ms
+[2026-02-23 20:42:46,589] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.52ms
+[2026-02-23 20:42:46,765] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.03ms
+[2026-02-23 20:42:46,952] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 6.53ms
+[2026-02-23 20:42:47,083] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.0ms
+[2026-02-23 20:42:47,283] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.01ms
+[2026-02-23 20:42:47,697] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2.63ms
+[2026-02-23 20:42:47,916] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.02ms
+[2026-02-23 20:42:48,131] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.0ms
+[2026-02-23 20:42:48,538] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.07ms
+[2026-02-23 20:42:49,226] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.99ms
+[2026-02-23 20:42:49,447] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.22ms
+[2026-02-23 20:42:49,628] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.51ms
+[2026-02-23 20:42:49,809] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.62ms
+[2026-02-23 20:42:49,934] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.01ms
+[2026-02-23 20:42:50,090] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.33ms
+[2026-02-23 20:42:50,253] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.99ms
+[2026-02-23 20:42:50,387] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.55ms
+[2026-02-23 20:42:50,546] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 16.56ms
+[2026-02-23 20:42:50,667] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.04ms
+[2026-02-23 20:42:50,817] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.0ms
+[2026-02-23 20:42:50,940] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 13.15ms
+[2026-02-23 20:42:51,068] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.22ms
+[2026-02-23 20:42:51,197] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.17ms
+[2026-02-23 20:43:09,079] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 6.58ms
+[2026-02-23 20:43:09,265] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.04ms
+[2026-02-23 20:43:09,397] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 0.0ms
+[2026-02-23 20:43:09,536] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2.0ms
+[2026-02-23 20:43:09,664] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.0ms
+[2026-02-23 20:43:09,797] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.12ms
+[2026-02-23 20:43:09,975] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 6.27ms
+[2026-02-23 20:43:10,072] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.3ms
+[2026-02-23 20:43:10,211] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.0ms
+[2026-02-23 20:48:37,851] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:48:41,211] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 20:49:25,563] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 28.72ms
+[2026-02-23 21:05:31,966] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 21:05:31,966] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-23 21:05:35,077] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 21:05:35,079] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-23 21:05:35,165] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 31.4ms
+[2026-02-23 21:06:14,414] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 287.33ms
+[2026-02-23 21:07:23,361] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 80.87ms
+[2026-02-23 21:07:23,567] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 88.32ms
+[2026-02-23 21:07:23,843] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 84.79ms
+[2026-02-23 21:07:24,045] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 101.38ms
+[2026-02-23 21:07:24,191] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 76.12ms
+[2026-02-23 21:07:24,362] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 101.79ms
+[2026-02-23 21:07:24,492] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 82.48ms
+[2026-02-23 21:07:24,627] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 78.65ms
+[2026-02-23 21:07:24,745] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 64.04ms
+[2026-02-23 21:07:24,891] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 73.4ms
+[2026-02-23 21:07:25,049] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 90.4ms
+[2026-02-23 21:07:25,175] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 73.75ms
+[2026-02-23 21:07:25,329] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 87.98ms
+[2026-02-23 21:07:25,476] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 86.52ms
+[2026-02-23 21:07:25,713] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 152.28ms
+[2026-02-23 21:07:26,035] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 165.29ms
+[2026-02-23 21:07:26,193] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 118.49ms
+[2026-02-23 21:07:26,450] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 202.81ms
+[2026-02-23 21:07:26,494] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 85.06ms
+[2026-02-23 21:07:26,647] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 95.74ms
+[2026-02-23 21:07:26,795] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 93.85ms
+[2026-02-23 21:07:26,909] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 63.62ms
+[2026-02-23 21:07:47,228] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 93.49ms
+[2026-02-23 21:07:50,641] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.0ms
+[2026-02-23 21:15:18,904] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-23 21:15:18,906] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.

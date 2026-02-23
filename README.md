@@ -514,6 +514,22 @@
 
 # 
 
+## **16. 📈 Nâng Cấp Kiến Trúc Dữ Liệu \& Phân Tích (Big Data \& Performance)**
+
+## 
+
+#### **- Lõi Phân Tích Dữ Liệu (Sales Analytics Engine): Xây dựng module analytics\_engine.py ứng dụng thư viện Pandas để xử lý Big Data. Cung cấp các công cụ phân tích nâng cao như: Tính tỷ lệ giữ chân khách hàng (Retention Rate), Phân tích xu hướng doanh thu 7 ngày, và Phân tích RFM (Recency, Frequency, Monetary) để tự động lọc ra tệp Khách hàng VIP.**
+
+#### 
+
+#### **- Giả Lập Tải Nặng (Stress Test): Tích hợp kịch bản kiểm thử hiệu năng stress\_test.py. Tự động bơm hàng ngàn user, đơn hàng và lịch sử giao dịch ảo vào Database để kiểm tra sức chịu tải của hệ thống, đồng thời cung cấp nguồn khối lượng lớn dữ liệu để test các thuật toán Data Science \& AI.**
+
+#### 
+
+#### **- Quản Trị Vector AI (Vector Manager): Refactor toàn bộ logic ChromaDB thành class vector\_manager.py chuyên biệt. Hệ thống mã hóa ngôn ngữ tự nhiên thành Vector đa chiều (768 chiều) với model Google Embedding chuẩn xác, sẵn sàng mở rộng quy mô dữ liệu RAG.**
+
+# 
+
 # **📂 Cấu Trúc Dự Án (Modular MVC)**
 
 # 
@@ -548,6 +564,8 @@
 
 #### **├── test\_integration\_system.py # Test tích hợp hệ thống**
 
+#### **├── stress\_test.py          # (TEST) Script giả lập tải nặng \& bơm data ảo**
+
 #### **├── .env                    # Cấu hình bảo mật**
 
 #### **├── requirements.txt        # Thư viện**
@@ -567,6 +585,10 @@
 #### **├── tasks.py            # Hệ thống quét và chạy ngầm**
 
 #### **├── errors.py           # Bộ xử lý lỗi toàn cục**
+
+#### **├── vector\_manager.py   # Quản trị Vector DB (ChromaDB)**
+
+#### **├── analytics\_engine.py # Lõi phân tích dữ liệu bán hàng (Pandas)**
 
 #### **│**
 

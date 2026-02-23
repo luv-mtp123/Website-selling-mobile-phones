@@ -448,11 +448,11 @@
 
 #### **- Cập nhật lỗi Admin Dashboard: Khôi phục lại Modal Form thêm mới sản phẩm (admin\_dashboard.html), cho phép nhập đầy đủ thông tin (Kho, Giá khuyến mãi, Trạng thái) và lưu vào Database.**
 
-## 
+#### 
 
 #### **- Nâng cấp Admin Dashboard với Pandas: Hiển thị thêm các insight dữ liệu thực tế (Khung giờ vàng, Sản phẩm mua nhiều) thay vì chỉ báo cáo thô, tích hợp nút Xuất file Excel doanh thu chuyên nghiệp.**
 
-## 
+#### 
 
 #### **- Giao diện Tabs Admin (MỚI): Chỉnh sửa CSS giúp các nút Tab (Sản phẩm, Đơn hàng, Thu cũ...) hiển thị chữ đen đậm, viền nổi bật không bị chìm vào nền trắng.**
 
@@ -460,7 +460,7 @@
 
 #### **- Quản lý Đánh giá \& Trả lời (MỚI): Bảng quản lý bình luận được nâng cấp, phân loại rõ ràng (Tích cực/Tiêu cực/Câu hỏi). Bổ sung tính năng "Trả lời" trực tiếp ngay trong trang quản trị, gỡ bỏ hoàn toàn gửi cảnh báo qua Email (SMTP) để tránh làm nặng web.**
 
-#### 
+## 
 
 ### **✅ Chi Tiết Sản Phẩm (Product Detail):**
 
@@ -523,6 +523,10 @@
 #### **├── test\_ai.py              # Test tính năng AI (Mocking)**
 
 #### **├── test\_security.py        # Test bảo mật**
+
+#### **├── test\_models.py        # Test cấu trúc Database**
+
+#### **├── test\_auth.py        # Test xác thực \& Đăng nhập**
 
 #### **├── test\_integration\_system.py # Test tích hợp hệ thống**
 

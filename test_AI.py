@@ -27,7 +27,7 @@ class AIFeaturesTestCase(unittest.TestCase):
     3. Chatbot Memory (Hội thoại theo ngữ cảnh)
     4. Product Comparison (So sánh)
     5. Sentiment Analysis (Phân tích cảm xúc)
-    6. Recommendation System (Gợi ý mua kèm)
+    6. Recommendation System (Gợi ý mua kèm & Gợi ý tương tự)
     7. Direct Text-RAG Search (Bypass Vector DB 404)
     8. Direct Text-RAG Search Edge Cases (Bắt lỗi AI ảo giác)
     """
@@ -58,7 +58,7 @@ class AIFeaturesTestCase(unittest.TestCase):
         self.app_context.pop()
 
     def create_sample_data(self):
-        """Tạo dữ liệu mẫu đa dạng để test khả năng hiểu của AI"""
+        """Tạo dữ liệu mẫu đa dạng để test khả năng hiểu của AI và Thuật toán"""
         # 1. Điện thoại giá cao
         p1 = Product(name='iPhone 15 Pro Max', brand='Apple', price=35000000, category='phone',
                      description='Titan tự nhiên, chip A17', stock_quantity=10, is_active=True)
@@ -262,29 +262,29 @@ class AIFeaturesTestCase(unittest.TestCase):
         res_neutral = analyze_sentiment("Tôi mới mua, chưa xài nhiều nên chưa rõ.")
         self.assertEqual(res_neutral, "NEUTRAL")
 
-    ### ---> [NEW: TEST 6 - KIỂM TRA THUẬT TOÁN GỢI Ý MUA KÈM (MARKET BASKET)] <--- ###
+    ### ---> [ĐÃ SỬA: TEST 6 - KIỂM TRA CẢ 2 THUẬT TOÁN GỢI Ý ĐỒNG THỜI] <--- ###
     def test_recommendation_system(self):
         """
-        Kiểm tra thuật toán Collaborative Filtering.
-        Mục tiêu: Khi truy cập iPhone 15, hệ thống phải phát hiện ra trong quá khứ
-        có người từng mua iPhone 15 kèm Ốp lưng, từ đó gợi ý cái Ốp lưng ra giao diện.
+        Kiểm tra thuật toán Khuyến nghị hệ thống:
+        1. Phụ Kiện mua kèm (Collaborative Filtering)
+        2. Sản phẩm tương tự (Content-Based Algorithmic)
         """
-        print("\n[AI Test 6] Testing Collaborative Filtering (Recommendation System)...")
+        print("\n[AI Test 6] Testing Dual Recommendation Systems...")
 
         # Truy cập vào trang chi tiết sản phẩm p1 (iPhone 15)
         with self.client:
             response = self.client.get(f'/product/{self.p1_id}')
             html_data = response.data.decode('utf-8')
 
-            # Kiểm tra xem giao diện có render khối "Phụ Kiện Gợi Ý Mua Kèm" hay không
+            # 1. Đảm bảo tính năng Gợi ý Mua kèm đã chạy và hiển thị Ốp lưng
             self.assertIn("Phụ Kiện Gợi Ý Mua Kèm", html_data)
-
-            # Kiểm tra xem "Ốp lưng iPhone 15" có được moi lên để gợi ý hay không
-            # (Vì ở hàm create_sample_data, chúng ta đã giả lập o1 mua kèm 2 món này)
             self.assertIn("Ốp lưng iPhone 15", html_data)
 
-            # Đảm bảo điện thoại khác KHÔNG BỊ lọt vào danh sách phụ kiện
-            self.assertNotIn("Samsung Galaxy A05", html_data)
+            # 2. Đảm bảo Thuật toán Toán học Sản phẩm tương tự đã chạy
+            self.assertIn("Sản Phẩm Tương Tự", html_data)
+            # YÊU CẦU MỚI: Vì đã nâng cấp thuật toán, Samsung A05 LÀ ĐIỆN THOẠI DUY NHẤT CÒN LẠI
+            # nên chắc chắn nó phải được hiện ra làm "Sản phẩm tương tự"
+            self.assertIn("Samsung Galaxy A05", html_data)
 
     ### ---> [NEW: TEST 7 - KIỂM TRA LÕI DỰ PHÒNG TEXT-RAG KHI VECTOR DB SẬP] <--- ###
     @patch('app.utils.GEMINI_API_KEY',

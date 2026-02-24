@@ -646,6 +646,14 @@
 
 # 
 
+## **25. 🧮 Thuật Toán Khuyến Nghị Toán Học (Algorithmic Recommendation Engine)**
+
+## 
+
+#### **- Hệ Thống Gợi Ý Sản Phẩm Tương Tự (Content-Based Filtering): Xây dựng thuật toán Python thuần túy thay thế cho AI Vector Search để đảm bảo tính ổn định tuyệt đối (không lo đứt cáp hay hết Quota API). Thuật toán tự động chấm điểm tương đồng (Scoring) giữa các sản phẩm dựa trên 3 tiêu chí trọng số: Cùng hãng sản xuất (+50 điểm), Độ lệch chuẩn mức giá (+10 đến +30 điểm), và Tỷ lệ trùng lặp từ khóa tên máy (+5 điểm/từ). Giúp giao diện trang chi tiết hiển thị danh sách "Sản Phẩm Tương Tự" siêu mượt, logic và chuẩn xác như các sàn TMĐT lớn.**
+
+# 
+
 # **📂 Cấu Trúc Dự Án (Modular MVC)**
 
 # 

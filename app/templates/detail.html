@@ -408,6 +408,31 @@
 <!-- ========================================================================= -->
 
 
+<!-- ========================================================================= -->
+<!-- KHỐI THUẬT TOÁN GỢI Ý SẢN PHẨM TƯƠNG TỰ (ĐÃ SỬA CÚ PHÁP COMMENT CHO HIỂN THỊ ĐÚNG) -->
+<!-- ========================================================================= -->
+{% if similar_products %}
+<div class="mt-5 mb-4">
+    <h4 class="fw-bold mb-4 border-start border-5 border-info ps-3 text-info">
+        <i class="fas fa-mobile-alt me-2"></i>Sản Phẩm Tương Tự
+    </h4>
+    <div class="row row-cols-2 row-cols-md-4 g-4">
+        {% for sim in similar_products %}
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm rounded-4 text-center p-3" style="transition: 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <a href="/product/{{ sim.id }}">
+                    <img src="{{ sim.image_url }}" class="img-fluid mb-3" style="max-height: 120px;" onerror="this.src='https://via.placeholder.com/150'">
+                </a>
+                <h6 class="fw-bold text-truncate"><a href="/product/{{ sim.id }}" class="text-dark text-decoration-none">{{ sim.name }}</a></h6>
+                <p class="text-danger fw-bold mb-0">{{ sim.price | vnd }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+
 <!-- PHỤ KIỆN GỢI Ý MUA KÈM -->
 {% if recommendations %}
 <div class="mt-5 mb-5">

@@ -33,6 +33,9 @@ class AIFeaturesTestCase(unittest.TestCase):
     """
 
     def setUp(self):
+        """
+        Khởi tạo DB ảo trên RAM và nạp dữ liệu từ điển cho AI.
+        """
         # Cấu hình test dùng DB trên RAM (nhanh, sạch)
         self.app = create_app({
             'TESTING': True,
@@ -47,6 +50,9 @@ class AIFeaturesTestCase(unittest.TestCase):
         self.create_sample_data()
 
     def tearDown(self):
+        """
+        Hủy DB và xóa kết nối sau khi hoàn thành chuỗi test AI.
+        """
         db.session.remove()
         db.drop_all()
         self.app_context.pop()

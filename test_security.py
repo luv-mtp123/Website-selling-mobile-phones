@@ -7,6 +7,10 @@ from app.models import User, Order, OrderDetail, Product
 
 
 class SecurityTestCase(unittest.TestCase):
+    """
+    Bộ kiểm thử bảo mật chuyên sâu cho các lỗ hổng hệ thống điển hình
+    như IDOR (Insecure Direct Object Reference) hay DDoS Upload.
+    """
 
     def setUp(self):
         """Khởi tạo môi trường ảo bỏ qua CSRF để test trực tiếp Logic Backend"""
@@ -36,6 +40,10 @@ class SecurityTestCase(unittest.TestCase):
             db.session.commit()
 
     def tearDown(self):
+        """
+        Hủy môi trường kiểm thử và dọn dẹp các kết nối Database
+        để ngăn chặn tình trạng tràn bộ nhớ (Memory Leak) sau khi test.
+        """
         with self.app.app_context():
             db.session.remove()
             db.drop_all()

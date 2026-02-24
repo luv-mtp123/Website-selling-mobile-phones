@@ -62,6 +62,10 @@ except Exception as e:
 # ---------------------------------------------------------
 
 def validate_image_file(file):
+    """
+    Kiểm tra tính hợp lệ của file ảnh tải lên.
+    Xác minh phần mở rộng (JPG, PNG, WEBP) và dung lượng (<2MB) để ngăn chặn mã độc.
+    """
     if file.filename == '': return False, "Chưa chọn file."
     if '.' not in file.filename or file.filename.rsplit('.', 1)[1].lower() not in ALLOWED_EXTENSIONS:
         return False, "Chỉ nhận: JPG, PNG, WEBP."
@@ -73,10 +77,18 @@ def validate_image_file(file):
 
 
 def get_serializer(secret_key):
+    """
+    Khởi tạo đối tượng mã hóa chuỗi (Serializer).
+    Dùng để tạo các mã Token bảo mật có thời hạn (như Reset Password).
+    """
     return URLSafeTimedSerializer(secret_key)
 
 
 def send_reset_email_simulation(to_email, token):
+    """
+    Giả lập quá trình gửi Email khôi phục mật khẩu.
+    Sẽ in thẳng đường link (chứa token) ra màn hình Console để Dev dễ dàng Test.
+    """
     link = url_for('auth.reset_password', token=token, _external=True)
     print(f"EMAIL MOCK: {link}")
     return link
@@ -111,6 +123,10 @@ def search_vector_db(query_text, n_results=5, metadata_filters=None):
 
 
 def sync_product_to_vector_db(product):
+    """
+    Đồng bộ thông tin sản phẩm mới/cập nhật từ SQLite sang ChromaDB.
+    Chuyển đổi văn bản miêu tả thành Vector nhúng (Embeddings) để phục vụ cho Semantic Search.
+    """
     if not product_collection: return
 
     semantic_text = f"Sản phẩm: {product.name}. Hãng: {product.brand}. Loại: {product.category}. Mô tả chi tiết: {product.description}. Mức giá khoảng: {product.price} đồng."
@@ -133,6 +149,10 @@ def sync_product_to_vector_db(product):
 # --- AI CORE FUNCTIONS ---
 
 def call_gemini_api(prompt, system_instruction=None):
+    """
+    Hàm lõi giao tiếp trực tiếp với Google Gemini API.
+    Bao gồm việc gắn System Instruction để ép khuôn tính cách và xử lý lỗi kết nối.
+    """
     if not GEMINI_API_KEY: return None
     try:
         model = genai.GenerativeModel(
@@ -178,6 +198,10 @@ def direct_gemini_search(query, catalog_json):
 
 
 def build_product_context(user_query):
+    """
+    Thu thập tự động dữ liệu kho hàng xung quanh chủ đề mà người dùng đang hỏi (RAG).
+    Nạp dữ liệu này làm "Ngữ cảnh - Context" để Chatbot trả lời thông minh không bị ảo giác.
+    """
     ai_data = local_analyze_intent(user_query)
     filter_dict = {}
     if ai_data and ai_data.get('category'):
@@ -214,6 +238,10 @@ def build_product_context(user_query):
 
 
 def generate_chatbot_response(user_msg, chat_history=[]):
+    """
+    Module xử lý lõi của AI Tư vấn bán hàng.
+    Được tích hợp bộ nhớ Session để hiểu các đại từ nhân xưng (Nó, Cái đó) từ lịch sử chat.
+    """
     product_context = build_product_context(user_msg)
 
     history_text = ""
@@ -234,6 +262,10 @@ def generate_chatbot_response(user_msg, chat_history=[]):
 
 
 def analyze_search_intents(query):
+    """
+    Hệ thống trích xuất dữ liệu (Entity Extraction) bằng LLM.
+    Bóc tách câu nói tự nhiên của người dùng thành cấu trúc JSON chuẩn mực gồm (Brand, Price, Category).
+    """
     system_instruction = """
     Bạn là hệ thống trích xuất dữ liệu tìm kiếm cho Website bán điện thoại MobileStore.
     Nhiệm vụ: Phân tích câu hỏi của khách và trả về CHỈ MỘT chuỗi JSON hợp lệ. Không giải thích thêm.
@@ -282,6 +314,10 @@ def analyze_search_intents(query):
 
 
 def local_analyze_intent(query):
+    """
+    Thuật toán Fallback dự phòng (Offline Mode).
+    Sử dụng Regex kết hợp Python thuần để đọc hiểu ý định nếu như API của Google AI bị sập.
+    """
     query = query.lower()
     data = {'brand': None, 'category': None, 'keyword': '', 'min_price': None, 'max_price': None, 'sort': None}
 
@@ -315,6 +351,10 @@ def local_analyze_intent(query):
 
 
 def get_comparison_result(p1_name, p1_price, p1_desc, p2_name, p2_price, p2_desc):
+    """
+    Sử dụng AI tạo bảng HTML đối chiếu trực tiếp thông số 2 sản phẩm.
+    Đưa ra lời khuyên khách quan (Pros/Cons) hỗ trợ người dùng ra quyết định mua hàng.
+    """
     system_instruction = (
         "Bạn là chuyên gia bán hàng công nghệ cấp cao. "
         "Nhiệm vụ của bạn là so sánh thông số, sau đó BẮT BUỘC phải đưa ra lời khuyên "

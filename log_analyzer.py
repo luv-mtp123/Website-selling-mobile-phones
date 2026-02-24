@@ -24,6 +24,10 @@ class ServerLogAnalyzer:
         )
 
     def run_analysis(self):
+        """
+        Đọc và phân tích file log hệ thống, thống kê IP truy cập,
+        mã trạng thái HTTP và lọc ra các API có thời gian phản hồi chậm nhất.
+        """
         print("=" * 60)
         print(f"📊 BẮT ĐẦU PHÂN TÍCH LOG MÁY CHỦ ({datetime.now().strftime('%d/%m/%Y %H:%M')})")
         print("=" * 60)

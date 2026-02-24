@@ -50,6 +50,10 @@ class SecurityAstVisitor(ast.NodeVisitor):
         self.sensitive_keywords = ['password', 'secret', 'api_key', 'token', 'credentials']
 
     def add_vuln(self, line_no, vuln_type, description, severity="HIGH"):
+        """
+        Ghi nhận một lỗ hổng bảo mật mới phát hiện vào danh sách cảnh báo.
+        Bao gồm số dòng, loại lỗi, mô tả chi tiết và mức độ nghiêm trọng.
+        """
         self.vulnerabilities.append({
             "line": line_no,
             "type": vuln_type,
@@ -109,6 +113,10 @@ class DevSecOpsScanner:
         self.total_issues_found = 0
 
     def scan_project(self):
+        """
+        Khởi động chiến dịch quét toàn bộ dự án.
+        Đi sâu vào từng thư mục, bỏ qua các thư mục ảo/cấu hình, và phân tích từng file Python.
+        """
         print(f"{Colors.HEADER}{Colors.BOLD}=" * 70)
         print(f"🛡️ HỆ THỐNG DEV-SEC-OPS: TỰ ĐỘNG QUÉT LỖ HỔNG MÃ NGUỒN PYTHON 🛡️")
         print(f"Bắt đầu lúc: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -138,6 +146,10 @@ class DevSecOpsScanner:
         print("=" * 70 + f"{Colors.ENDC}")
 
     def analyze_file(self, filepath):
+        """
+        Mở và đọc nội dung một file Python.
+        Chuyển đổi thành Cây cú pháp AST và đưa qua bộ lọc bảo mật để truy quét mã độc.
+        """
         self.total_files_scanned += 1
 
         try:

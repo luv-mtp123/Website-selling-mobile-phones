@@ -14,6 +14,10 @@ class InfrastructureTestCase(unittest.TestCase):
     """
 
     def setUp(self):
+        """
+        Khởi tạo hệ thống giả lập với cấu hình Testing.
+        Đặc biệt kích hoạt lại Firewall và Background Worker vốn bị tắt tự động ở mode Test.
+        """
         # 1. Khởi tạo App ảo dùng cho việc test
         self.app = create_app({
             'TESTING': True,
@@ -41,6 +45,9 @@ class InfrastructureTestCase(unittest.TestCase):
         self.worker.start_worker(self.app)
 
     def tearDown(self):
+        """
+        Tắt an toàn (Graceful Shutdown) tiến trình Worker chạy ngầm và dọn dẹp Database.
+        """
         # Dọn dẹp an toàn: Tắt worker thread, drop bảng và pop context
         self.worker.stop_worker()
         db.session.remove()
@@ -105,6 +112,7 @@ class InfrastructureTestCase(unittest.TestCase):
 
         # Định nghĩa 1 hàm giả lập (ví dụ gửi email) tốn nhiều thời gian
         def mock_heavy_task(result_list, user_name):
+            """Hàm giả lập tác vụ nặng (như gửi email) để test luồng Hàng đợi (Queue)."""
             time.sleep(0.5)  # Giả lập độ trễ mạng khi gửi email
             result_list.append(f"Email đã gửi cho {user_name}")
 

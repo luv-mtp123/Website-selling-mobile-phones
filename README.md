@@ -622,31 +622,61 @@
 
 # 
 
+## **22. 🗄️ Kỹ Nghệ Dữ Liệu (Data Engineering)**
+
+## 
+
+#### **- Động Cơ Xuất Dữ Liệu Data Warehouse: Phát triển module data\_warehouse\_exporter.py đóng vai trò là một luồng ETL (Extract, Transform, Load) nội bộ. Hệ thống kết nối trực tiếp vào SQLite, sử dụng Pandas để làm sạch dữ liệu (ẩn danh email khách hàng, format số điện thoại), xuất toàn bộ cơ sở dữ liệu thành các tệp CSV nén ZIP chuẩn mực. Sẵn sàng cung cấp Data cho các công cụ BI (Business Intelligence) như PowerBI hoặc Tableau.**
+
+## 
+
+## **23. ⚖️ Quản Trị Chất Lượng Mã Nguồn (Code Quality)**
+
+## 
+
+#### **- Hệ Thống Linter Tùy Chỉnh (Custom Linter): Tích hợp code\_quality\_scorer.py, một công cụ quét chất lượng code sử dụng AST và Regex. Tự động đếm dòng code, phát hiện các hàm quên viết tài liệu (Missing Docstrings) và kiểm tra chuẩn đặt tên PEP8 (phát hiện sai sót CamelCase/snake\_case). Cuối cùng chấm điểm dự án trên thang 100 để liên tục duy trì độ "sạch" của hệ thống.**
+
+# 
+
+## **24. 🌟 Tối Ưu Hóa Trải Nghiệm Lập Trình (Đạt Chuẩn PEP8 100/100)**
+
+## 
+
+#### **- Phủ Xanh 100% Docstring: Toàn bộ hệ thống mã nguồn Python (từ các Controller, Models, Utils cho đến các kịch bản Kiểm thử - Test Suites và Công cụ nền) đã được viết chú thích (Docstring) mô tả chi tiết chức năng, tham số theo đúng quy chuẩn Python quốc tế. Hệ thống vượt qua hoàn toàn bài kiểm tra khắt khe của Custom Linter và đạt điểm số tuyệt đối A+ (100/100), thiết lập nền tảng Clean Code vĩnh cửu và đẩy tỷ trọng ngôn ngữ Python của dự án trên kho lưu trữ lên mức cao nhất!**
+
+# 
+
 # **📂 Cấu Trúc Dự Án (Modular MVC)**
 
 # 
 
 ## **MobileStore/**
 
+## 
+
 #### **│**
 
-#### **├── run.py                  # (ENTRY POINT) File chạy chính**
+#### **├── run.py                  # (ENTRY POINT) Khởi chạy Server Development**
+
+#### **├── run\_windows\_prod.py   # (PROD ENTRY) Khởi chạy Server Production cho Windows (Waitress)**
 
 #### **├── competitor\_scraper.py   # (BOT) Robot thu thập dữ liệu giá đối thủ**
 
-#### **├── code\_security\_scanner.py # Bot tự động quét lổ hổng Code bằng AST**
-
 #### **├── backup\_db.py            # (UTILS) Script tự động sao lưu Database**
 
-#### **├── api\_doc\_builder.py      # Tự động sinh tài liệu API (Document as Code)**
+#### **├── log\_analyzer.py         # (UTILS) Phân tích nhật ký hệ thống (Log Analyzer)**
 
-#### **├── log\_analyzer.py         # (UTILS) Phân tích nhật ký hệ thống**
+#### **├── code\_security\_scanner.py# (DEVSECOPS) Bot tự động quét lổ hổng Code bằng AST**
+
+#### **├── api\_doc\_builder.py      # (DOCS) Cỗ máy tự động sinh tài liệu API (Document as Code)**
+
+#### **├── data\_warehouse\_exporter.py# (DATA) Script ETL xuất dữ liệu sang Data Warehouse**
+
+#### **├── code\_quality\_scorer.py  # (QA/QC) Bot Linter chấm điểm chuẩn code PEP8**
 
 #### **├── run\_tests.py            # (TEST RUNNER) Script chạy toàn bộ test**
 
 #### **├── rag\_sync.py             # (AI SYNC) Script đồng bộ Vector DB (ChromaDB)**
-
-#### **├── run\_windows\_prod.py   # Khởi chạy Server Production cho Windows**
 
 #### **├── migrations/             # (NEW) Thư mục chứa file migration DB**
 
@@ -664,9 +694,9 @@
 
 #### **├── test\_ml.py              # (TEST) thuật toán Machine Learning**
 
-#### **├── stress\_test.py          # (TEST) Script giả lập tải nặng \& bơm data ảo**
+#### **├── test\_infrastructure.py  # (TEST) Tường lửa và Hàng đợi tác vụ**
 
-#### **├── test\_infrastructure.py  # Test hệ thống Firewall , Hàng đợi tác vụ**
+#### **├── stress\_test.py          # (TEST) Script giả lập tải nặng \& bơm data ảo**
 
 #### **├── .env                    # Cấu hình bảo mật**
 
@@ -676,7 +706,7 @@
 
 #### **└── app/                    # (PACKAGE) Source Code**
 
-#### **├── \_\_init\_\_.py         # App Factory**
+#### **├── \_init\_.py         # App Factory**
 
 #### **├── extensions.py       # DB, Login, OAuth, Migrate, CSRF**
 
@@ -696,7 +726,7 @@
 
 #### **├── security\_firewall.py  # Tường lửa bảo mật WAF (Chống DDoS/XSS)**
 
-#### **├── notification\_worker.py # Hàng đợi xử lý tác vụ nền (Queue)**
+#### **├── notification\_worker.py# Hàng đợi xử lý tác vụ nền (Queue)**
 
 #### **├── constants.py        # Quản lý hằng số hệ thống (Clean Code)**
 

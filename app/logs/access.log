@@ -216,3 +216,13 @@
 [2026-02-24 09:01:57,595] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 22.03ms
 [2026-02-24 09:02:31,273] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 19205.97ms
 [2026-02-24 09:03:30,452] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 19466.45ms
+[2026-02-24 10:27:52,435] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-24 10:27:52,437] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-24 10:28:21,386] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 24.49ms
+[2026-02-24 10:28:23,314] INFO in system_logger: IP: 127.0.0.1 | GET /login | Status: 200 | Time: 4.0ms
+[2026-02-24 10:28:27,862] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 112.8ms
+[2026-02-24 10:28:27,929] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 43.29ms
+[2026-02-24 10:28:36,363] INFO in system_logger: IP: 127.0.0.1 | GET /dashboard | Status: 200 | Time: 20.23ms
+[2026-02-24 10:28:56,291] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.0ms
+[2026-02-24 12:37:37,570] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-24 12:37:37,571] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.

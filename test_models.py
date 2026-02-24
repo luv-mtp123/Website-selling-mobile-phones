@@ -10,6 +10,10 @@ class ModelsTestCase(unittest.TestCase):
     """
 
     def setUp(self):
+        """
+        Thiết lập môi trường kiểm thử (Test Environment).
+        Khởi tạo cơ sở dữ liệu SQLite in-memory để đảm bảo mỗi test case đều chạy trên DB sạch.
+        """
         self.app = create_app({
             'TESTING': True,
             'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:'
@@ -19,6 +23,10 @@ class ModelsTestCase(unittest.TestCase):
         db.create_all()
 
     def tearDown(self):
+        """
+        Dọn dẹp môi trường sau khi test xong.
+        Xóa bỏ toàn bộ bảng và dữ liệu ảo để giải phóng hoàn toàn bộ nhớ RAM.
+        """
         db.session.remove()
         db.drop_all()
         self.app_context.pop()

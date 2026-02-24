@@ -28,12 +28,21 @@ admin_bp = Blueprint('admin', __name__)
 @admin_bp.before_request
 @login_required
 def check_admin():
+    """
+    Middleware kiểm tra quyền quản trị viên.
+    Sẽ tự động chặn (abort 403) nếu người dùng hiện tại không phải là admin.
+    """
     if current_user.role != 'admin':
         abort(403)
 
 
 @admin_bp.route('/admin')
 def dashboard():
+    """
+    Trang tổng quan (Dashboard) của Quản trị viên.
+    Hiển thị biểu đồ doanh thu, thống kê đơn hàng, phân tích người dùng,
+    và các thuật toán tìm ra khung giờ vàng chốt đơn (Sử dụng Pandas).
+    """
     products = Product.query.order_by(Product.id.desc()).all()
     users = User.query.all()
     orders = Order.query.options(joinedload(Order.user)).order_by(Order.date_created.desc()).all()
@@ -133,6 +142,10 @@ def dashboard():
 @admin_bp.route('/admin/export/report')
 @login_required
 def export_revenue_report():
+    """
+    Xuất báo cáo doanh thu dưới dạng file Excel (.xlsx).
+    Sử dụng thư viện Pandas và Openpyxl để định dạng tiền tệ và độ rộng cột tự động.
+    """
     if current_user.role != 'admin':
         abort(403)
 
@@ -188,6 +201,10 @@ def export_revenue_report():
 
 @admin_bp.route('/admin/order/update/<int:id>/<status>')
 def update_order_status(id, status):
+    """
+    Cập nhật trạng thái của đơn hàng.
+    Nếu chuyển từ trạng thái khác sang Đã Hủy (Cancelled), hệ thống sẽ tự động hoàn trả số lượng sản phẩm lại vào kho.
+    """
     order = Order.query.options(joinedload(Order.details)).get_or_404(id)
     old_status = order.status
     valid_statuses = VALID_ORDER_STATUSES
@@ -215,6 +232,10 @@ def update_order_status(id, status):
 
 @admin_bp.route('/admin/product/add', methods=['POST'])
 def add_product():
+    """
+    Thêm mới một sản phẩm vào hệ thống.
+    Ghi nhận dữ liệu vào CSDL SQLite và đồng thời đồng bộ hóa Vector Embeddings lên ChromaDB.
+    """
     try:
         name = request.form.get('name')
         brand = request.form.get('brand')
@@ -248,6 +269,10 @@ def add_product():
 
 @admin_bp.route('/admin/product/edit/<int:id>', methods=['GET', 'POST'])
 def edit_product(id):
+    """
+    Chỉnh sửa thông tin của một sản phẩm đã có.
+    Hỗ trợ chỉnh sửa thông tin JSON (Colors, Versions) và tự động đồng bộ lại Vector Search.
+    """
     product = Product.query.get_or_404(id)
 
     if request.method == 'POST':
@@ -287,6 +312,10 @@ def edit_product(id):
 
 @admin_bp.route('/admin/product/delete/<int:id>')
 def delete_product(id):
+    """
+    Xóa vĩnh viễn một sản phẩm khỏi CSDL.
+    Các bình luận liên kết sẽ tự động bị xóa theo tính năng Cascade Delete-Orphan.
+    """
     product = Product.query.get_or_404(id)
     db.session.delete(product)
     db.session.commit()
@@ -296,6 +325,10 @@ def delete_product(id):
 
 @admin_bp.route('/admin/tradein/update', methods=['POST'])
 def update_tradein():
+    """
+    Cập nhật trạng thái của yêu cầu Thu cũ Đổi mới.
+    Cho phép Admin định giá máy cũ hoặc từ chối kèm theo ghi chú công khai cho người dùng.
+    """
     req_id = request.form.get('id')
     action = request.form.get('action')
     price = request.form.get('valuation_price', default=0, type=int)

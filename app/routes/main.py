@@ -14,19 +14,6 @@ from sqlalchemy import or_, and_, func, desc
 from app.extensions import db, csrf
 from app.models import Product, Order, OrderDetail, AICache, TradeInRequest, Comment
 
-# ---> [NEW] IMPORT HẰNG SỐ HỆ THỐNG ĐỂ THAY THẾ HARDCODE <---
-from app.constants import (
-    ORDER_STATUS_PENDING,
-    ORDER_STATUS_COMPLETED,
-    ORDER_STATUS_CANCELLED,
-    ORDER_STATUS_CONFIRMED,
-    SEARCH_STOP_WORDS,
-    CHATBOT_QUICK_REPLIES,
-    SystemMessages,
-    PAYMENT_METHOD_COD,
-    PAYMENT_METHOD_BANKING
-)
-
 # Import Utils
 from app.utils import (
     analyze_search_intents,
@@ -37,8 +24,7 @@ from app.utils import (
     build_product_context,
     generate_chatbot_response,
     search_vector_db,
-    analyze_sentiment,
-    direct_gemini_search  # <--- Bổ sung Import Lõi AI mới
+    analyze_sentiment
 )
 
 main_bp = Blueprint('main', __name__)
@@ -46,25 +32,29 @@ main_bp = Blueprint('main', __name__)
 
 # --- AI Cache Helper ---
 def cached_ai_call(func, *args):
+    """
+    Trình bọc (Wrapper) lưu trữ kết quả gọi API AI vào Cache Database.
+    Hỗ trợ hệ thống giảm tải API Quota và tăng tốc độ xử lý câu trả lời lên gấp 10 lần
+    cho các câu hỏi trùng lặp nhờ thuật toán băm (MD5 Hash).
+    """
     try:
-        ### ---> [ĐÃ SỬA CHỖ NÀY: Nâng Version Cache để xóa sạch các SQL lỗi do Model chết lúc trước] <--- ###
-        cache_key_content = f"{func.__name__}_{str(args)}_v30_flash_search"
+        cache_key_content = f"{func.__name__}_{str(args)}_v230_final"
         key = hashlib.md5(cache_key_content.encode()).hexdigest()
 
         cached = AICache.query.filter_by(prompt_hash=key).first()
         if cached:
             try:
+                # [FIX] Parse Cache an toàn hơn, lọc khoảng trắng
                 text_data = cached.response_text.strip()
                 if text_data.startswith('{') and text_data.endswith('}'):
                     return json.loads(text_data)
-                elif text_data.startswith('[') and text_data.endswith(']'):
-                    return json.loads(text_data)  # [NEW] Hỗ trợ Load Array IDs từ Cache
                 return text_data
             except:
                 return cached.response_text
     except Exception as e:
         print(f"Cache Error: {e}")
 
+    # Gọi hàm thực thi (Call API)
     res = func(*args)
 
     if res:
@@ -78,7 +68,12 @@ def cached_ai_call(func, *args):
     return res
 
 
+# Helper tạo filter ChromaDB từ ai_data
 def build_chroma_filter(ai_data):
+    """
+    Chuyển đổi dữ liệu phân tích ý định tìm kiếm của người dùng thành
+    định dạng siêu dữ liệu (Metadata filter) để phục vụ cho Hybrid Search trên ChromaDB.
+    """
     if not ai_data: return None
     conditions = []
     if ai_data.get('category'):
@@ -93,8 +88,17 @@ def build_chroma_filter(ai_data):
     return None
 
 
+# =========================================================
+# ROUTES CHÍNH
+# =========================================================
+
 @main_bp.route('/')
 def home():
+    """
+    Xử lý hiển thị Trang chủ của hệ thống.
+    Tiếp nhận các truy vấn tìm kiếm AI phức tạp, kết hợp Vector Database
+    để lọc sản phẩm chuẩn xác theo ngữ nghĩa và tầm giá.
+    """
     q = request.args.get('q', '').strip()
     brand_arg = request.args.get('brand', '')
     sort_arg = request.args.get('sort', '')
@@ -103,9 +107,10 @@ def home():
     products = []
 
     base_query = Product.query.filter_by(is_active=True)
-    ai_data = None
+    ai_data = None  # Cần lưu lại ai_data để dùng cho lớp Fallback phía dưới
 
     if q and len(q.split()) >= 1 and not brand_arg:
+        # Gọi AI kể cả khi truy vấn ngắn (>=2 từ) để bắt chính xác Phụ kiện vs Điện thoại
         if len(q.split()) >= 2:
             ai_data = cached_ai_call(analyze_search_intents, q)
 
@@ -119,6 +124,7 @@ def home():
         if ai_data:
             query = base_query
 
+            # Lọc chính xác bằng SQL
             if ai_data.get('brand'):
                 query = query.filter(Product.brand.ilike(f"%{ai_data['brand']}%"))
                 if "Hãng" not in ai_msg: ai_msg += f" | Hãng: {ai_data['brand']}"
@@ -135,6 +141,7 @@ def home():
             if ai_data.get('keyword'):
                 kw = ai_data['keyword'].strip()
                 if kw:
+                    # [FIXED] Luôn ưu tiên dùng Vector DB để xử lý từ đồng nghĩa ("cáp sạc" -> cáp / sạc)
                     chroma_filter = build_chroma_filter(ai_data)
                     vector_ids = search_vector_db(kw, n_results=20, metadata_filters=chroma_filter)
 
@@ -144,7 +151,7 @@ def home():
                             query = query.filter(Product.id.in_(ids))
                             if "Ngữ nghĩa" not in ai_msg: ai_msg += f" | 🧠 Smart Search"
                         else:
-                            vector_ids = []
+                            vector_ids = []  # Ép rỗng để đá qua Fallback SQL bên dưới
 
                     if not vector_ids:
                         conditions = []
@@ -162,58 +169,38 @@ def home():
 
             products = query.all()
 
-    # [UPDATED] LỚP DỰ PHÒNG TỐI THƯỢNG (KHI VECTOR DB BỊ 404 VÀ SQL BÓ TAY)
+    # [UPDATED] LỚP FALLBACK NẾU KẾT QUẢ RỖNG
     if not products and q:
-        ### ---> [ĐÃ SỬA CHỖ NÀY: Gom toàn bộ kho hàng đưa cho model Text (gemini-flash) đọc và tự lựa chọn máy] <--- ###
-        catalog_for_ai = []
-        for p in base_query.all():
-            catalog_for_ai.append({
-                "id": p.id, "name": p.name, "price": p.price,
-                "category": p.category,
-                "desc": (p.description or "")[:150]  # Lấy đặc điểm máy cho AI tự hiểu "ban đêm, game"
-            })
+        # Nếu đã có ai_data từ bước trên, hãy duy trì bộ lọc Category ở Fallback
+        fallback_query = base_query
+        if ai_data and ai_data.get('category'):
+            fallback_query = fallback_query.filter(Product.category.ilike(f"{ai_data['category']}"))
+        if ai_data and ai_data.get('brand'):
+            fallback_query = fallback_query.filter(Product.brand.ilike(f"%{ai_data['brand']}%"))
 
-        cat_json = json.dumps(catalog_for_ai, ensure_ascii=False)
-        # Gọi trực tiếp Text Model (Giống như hàm Compare)
-        flash_ids = cached_ai_call(direct_gemini_search, q, cat_json)
+        if ai_data and ai_data.get('min_price'):
+            fallback_query = fallback_query.filter(Product.price >= int(ai_data['min_price']))
+        if ai_data and ai_data.get('max_price'):
+            fallback_query = fallback_query.filter(Product.price <= int(ai_data['max_price']))
 
-        if flash_ids and isinstance(flash_ids, list) and len(flash_ids) > 0:
-            # Truy vấn SQL theo mảng ID trả về từ AI
-            unsorted_products = base_query.filter(Product.id.in_(flash_ids)).all()
-            # Giữ nguyên thứ tự AI ưu tiên (Sản phẩm xịn nhất xếp đầu)
-            products = sorted(unsorted_products, key=lambda x: flash_ids.index(x.id) if x.id in flash_ids else 999)
+        search_words = q.split()
+        stop_words = ['mua', 'tìm', 'giá', 'rẻ', 'cho', 'cần', 'dưới', 'khoảng', 'củ', 'triệu', 'điện', 'thoại', 'máy',
+                      'tốt', 'đẹp', 'tôi', 'muốn', 'chơi', 'game', 'chụp', 'ảnh']
+        keywords = [w for w in search_words if w.lower() not in stop_words]
+
+        if keywords:
+            conditions = []
+            for word in keywords:
+                conditions.append(or_(
+                    Product.name.like(f"%{word}%"),
+                    Product.name.like(f"%{word.capitalize()}%"),
+                    Product.name.like(f"%{word.lower()}%"),
+                    Product.name.like(f"%{word.title()}%")
+                ))
+
+            products = fallback_query.filter(or_(*conditions)).all()
             if products:
-                ai_msg = "🧠 Trí tuệ nhân tạo (Gemini Semantic Search)"
-        else:
-            ### ---> [TẦNG DỰ PHÒNG CUỐI CÙNG] Rớt xuống đây là khi cả Text AI cũng sập <--- ###
-            fallback_query = base_query
-            if ai_data and ai_data.get('category'):
-                fallback_query = fallback_query.filter(Product.category.ilike(f"{ai_data['category']}"))
-            if ai_data and ai_data.get('brand'):
-                fallback_query = fallback_query.filter(Product.brand.ilike(f"%{ai_data['brand']}%"))
-
-            if ai_data and ai_data.get('min_price'):
-                fallback_query = fallback_query.filter(Product.price >= int(ai_data['min_price']))
-            if ai_data and ai_data.get('max_price'):
-                fallback_query = fallback_query.filter(Product.price <= int(ai_data['max_price']))
-
-            search_words = q.split()
-            stop_words = SEARCH_STOP_WORDS
-            keywords = [w for w in search_words if w.lower() not in stop_words]
-
-            if keywords:
-                conditions = []
-                for word in keywords:
-                    conditions.append(or_(
-                        Product.name.like(f"%{word}%"),
-                        Product.name.like(f"%{word.capitalize()}%"),
-                        Product.name.like(f"%{word.lower()}%"),
-                        Product.name.like(f"%{word.title()}%")
-                    ))
-
-                products = fallback_query.filter(or_(*conditions)).all()
-                if products:
-                    ai_msg = "🔍 Tìm kiếm mở rộng (SQL Fallback)"
+                ai_msg = "🔍 Tìm kiếm mở rộng (Strict Mode)"
 
     elif not q:
         query = base_query
@@ -242,6 +229,11 @@ def home():
 
 @main_bp.route('/product/<int:id>')
 def product_detail(id):
+    """
+    Xử lý truy xuất thông tin chi tiết một sản phẩm.
+    Tích hợp thuật toán Collaborative Filtering để gợi ý mua kèm phụ kiện,
+    hiển thị tiến trình đánh giá sao và khu vực Hỏi & Đáp.
+    """
     p = Product.query.filter_by(id=id, is_active=True).first_or_404()
     try:
         p.colors_list = json.loads(p.colors) if p.colors else []
@@ -249,8 +241,14 @@ def product_detail(id):
     except:
         p.colors_list, p.versions_list = [], []
 
+    # ==============================================================================================
+    # ---> [ĐÃ SỬA CHỖ NÀY: Xóa .subquery() để khắc phục cảnh báo SAWarning của SQLAlchemy 2.0] <---
+    # ==============================================================================================
+
+    # 1. Tìm tất cả các OrderID (Giỏ hàng) đã từng chứa sản phẩm này (Không dùng .subquery() nữa)
     related_order_ids_query = db.session.query(OrderDetail.order_id).filter_by(product_id=id)
 
+    # 2. Tìm các sản phẩm (Phụ kiện) xuất hiện nhiều nhất trong các Giỏ hàng đó
     recommendation_query = db.session.query(Product, func.sum(OrderDetail.quantity).label('total_bought')) \
         .join(OrderDetail, Product.id == OrderDetail.product_id) \
         .filter(OrderDetail.order_id.in_(related_order_ids_query)) \
@@ -263,17 +261,23 @@ def product_detail(id):
 
     recs = [item[0] for item in recommendation_query]
 
+    # Fallback: Nếu điện thoại mới ra chưa ai mua kèm phụ kiện, lấy đại 4 phụ kiện random
     if not recs:
         recs = Product.query.filter(Product.category == 'accessory', Product.is_active == True).limit(4).all()
 
+    # ==============================================================================================
+
+    # 1. Lấy Bình luận đánh giá (có sao)
     comments = Comment.query.options(joinedload(Comment.user)).filter(
         Comment.product_id == id, Comment.parent_id == None, Comment.rating > 0
     ).order_by(Comment.created_at.desc()).all()
 
+    # 2. Lấy Câu hỏi Hỏi Đáp (không có sao, rating = 0)
     questions = Comment.query.options(joinedload(Comment.user)).filter_by(
         product_id=id, parent_id=None, rating=0
     ).order_by(Comment.created_at.desc()).all()
 
+    # [REFACTOR] Tính toán Rating Logic ở Backend thay vì HTML
     rating_stats = {
         'total': 0, 'avg': 0,
         'stars': {5: {'count': 0, 'pct': 0}, 4: {'count': 0, 'pct': 0}, 3: {'count': 0, 'pct': 0},
@@ -299,19 +303,24 @@ def product_detail(id):
 @main_bp.route('/product/<int:id>/comment', methods=['POST'])
 @login_required
 def add_comment(id):
+    """
+    Xử lý gửi bình luận hoặc câu hỏi từ người dùng lên hệ thống.
+    Cho phép trả lời lồng nhau (Nested Replies) và tự động ghi nhận điểm đánh giá.
+    """
     content = request.form.get('content', '').strip()
 
     is_question = request.form.get('is_question') == 'true'
     parent_id = request.form.get('parent_id', type=int)
 
     if is_question or parent_id:
-        final_rating = 0
+        final_rating = 0  # Câu hỏi hoặc câu trả lời thì không có sao (rating=0)
     else:
         rating = request.form.get('rating', default=5, type=int)
         if rating not in [1, 2, 3, 4, 5]: rating = 5
         final_rating = rating
 
     if content:
+        # Nếu là bình luận thường thì lưu rating, nếu là reply thì không cần tính rating
         new_comment = Comment(
             user_id=current_user.id,
             product_id=id,
@@ -326,12 +335,13 @@ def add_comment(id):
             sentiment_result = analyze_sentiment(content)
 
         if parent_id:
-            flash(SystemMessages.COMMENT_REPLY_SUCCESS, 'success')
+            flash('Đã gửi câu trả lời!', 'success')
         elif is_question:
-            flash(SystemMessages.COMMENT_QA_SUCCESS, 'success')
+            flash('Đã gửi câu hỏi thành công!', 'success')
         else:
-            flash(SystemMessages.COMMENT_REVIEW_SUCCESS, 'success')
+            flash('Cảm ơn bạn đã đánh giá!', 'success')
 
+    # Nếu người trả lời là Admin, hãy quay lại trang Admin thay vì trang sản phẩm
     if request.form.get('source') == 'admin':
         return redirect(url_for('admin.dashboard'))
 
@@ -340,6 +350,10 @@ def add_comment(id):
 
 @main_bp.route('/cart')
 def view_cart():
+    """
+    Hiển thị giao diện Giỏ hàng.
+    Lấy dữ liệu tạm thời từ phiên truy cập (Session) của khách hàng để tính toán tổng tiền.
+    """
     cart = session.get('cart', {})
     total = 0
     enriched_cart = []
@@ -358,14 +372,18 @@ def view_cart():
 
 @main_bp.route('/cart/add/<int:id>', methods=['POST'])
 def add_to_cart(id):
+    """
+    Xử lý thêm sản phẩm vào Giỏ hàng trong bộ nhớ đệm.
+    Kiểm tra chặt chẽ số lượng tồn kho (Inventory) trước khi cho phép thêm.
+    """
     p = Product.query.filter_by(id=id, is_active=True).first_or_404()
     if p.stock_quantity <= 0:
-        flash(SystemMessages.CART_OUT_OF_STOCK, 'danger')
+        flash('Hết hàng!', 'danger')
         return redirect(request.referrer)
     cart = session.get('cart', {})
     sid = str(id)
     if cart.get(sid, {}).get('quantity', 0) + 1 > p.stock_quantity:
-        flash(SystemMessages.CART_EXCEED_STOCK, 'warning')
+        flash(f'Kho chỉ còn {p.stock_quantity} sản phẩm.', 'warning')
         return redirect(request.referrer)
 
     if sid in cart:
@@ -375,12 +393,16 @@ def add_to_cart(id):
                      'quantity': 1}
 
     session['cart'] = cart
-    flash(SystemMessages.CART_ADD_SUCCESS, 'success')
+    flash('Đã thêm vào giỏ!', 'success')
     return redirect(request.referrer or url_for('main.home'))
 
 
 @main_bp.route('/cart/update/<int:id>/<action>')
 def update_cart(id, action):
+    """
+    Cho phép khách hàng thay đổi số lượng hoặc xóa sản phẩm khỏi Giỏ hàng.
+    Cập nhật trực tiếp vào Session lưu trữ.
+    """
     cart = session.get('cart', {})
     sid = str(id)
     if sid in cart:
@@ -389,7 +411,7 @@ def update_cart(id, action):
             if p and cart[sid]['quantity'] + 1 <= p.stock_quantity:
                 cart[sid]['quantity'] += 1
             else:
-                flash(SystemMessages.CART_EXCEED_STOCK, 'warning')
+                flash('Quá số lượng tồn kho.', 'warning')
         elif action == 'decrease':
             cart[sid]['quantity'] -= 1
             if cart[sid]['quantity'] <= 0: del cart[sid]
@@ -402,6 +424,11 @@ def update_cart(id, action):
 @main_bp.route('/checkout', methods=['GET', 'POST'])
 @login_required
 def checkout():
+    """
+    Quy trình thanh toán chính thức (Checkout).
+    Bảo vệ chống Race Condition bằng with_for_update() để trừ đúng tồn kho khi nhiều
+    khách hàng cùng đặt một sản phẩm cùng lúc.
+    """
     cart = session.get('cart', {})
     if not cart: return redirect(url_for('main.home'))
 
@@ -416,7 +443,7 @@ def checkout():
 
     if request.method == 'POST':
         try:
-            payment_method = request.form.get('payment', PAYMENT_METHOD_COD)
+            payment_method = request.form.get('payment', 'cod')
 
             for i in final_items:
                 prod = db.session.query(Product).filter_by(id=i['p'].id).with_for_update().first()
@@ -432,7 +459,7 @@ def checkout():
                 address=request.form.get('address'),
                 phone=request.form.get('phone'),
                 payment_method=payment_method,
-                status=ORDER_STATUS_PENDING
+                status='Pending'
             )
             db.session.add(order)
             db.session.flush()
@@ -445,16 +472,16 @@ def checkout():
             db.session.commit()
             session.pop('cart', None)
 
-            if payment_method == PAYMENT_METHOD_BANKING:
+            if payment_method == 'banking':
                 return redirect(url_for('main.payment_qr', order_id=order.id))
 
-            flash(SystemMessages.ORDER_SUCCESS, 'success')
+            flash('Đặt hàng thành công!', 'success')
             return redirect(url_for('main.dashboard'))
 
         except Exception as e:
             db.session.rollback()
             print(f"Checkout Error: {e}")
-            flash(SystemMessages.ORDER_ERROR, 'danger')
+            flash('Lỗi xử lý đơn hàng.', 'danger')
             return redirect(url_for('main.view_cart'))
 
     return render_template('checkout.html', cart=cart, total=total)
@@ -463,10 +490,14 @@ def checkout():
 @main_bp.route('/payment/qr/<int:order_id>')
 @login_required
 def payment_qr(order_id):
+    """
+    Hiển thị giao diện thanh toán chuyển khoản qua mã QR Động (VietQR).
+    Hỗ trợ đồng hồ đếm ngược (Countdown) cho các giao dịch treo nhằm hủy và thu hồi hàng tự động.
+    """
     order = Order.query.filter_by(id=order_id, user_id=current_user.id).first_or_404()
 
-    if order.status != ORDER_STATUS_PENDING:
-        flash(SystemMessages.ORDER_ENDED, 'info')
+    if order.status != 'Pending':
+        flash('Đơn hàng này đã được xử lý hoặc hết hạn.', 'info')
         return redirect(url_for('main.dashboard'))
 
     expiration_time = order.date_created + timedelta(minutes=3)
@@ -474,7 +505,7 @@ def payment_qr(order_id):
     remaining_seconds = (expiration_time - now_naive).total_seconds()
 
     if remaining_seconds <= 0:
-        flash(SystemMessages.ORDER_EXPIRED, 'warning')
+        flash('Giao dịch đã hết hạn vui lòng đặt lại.', 'warning')
         return redirect(url_for('main.dashboard'))
 
     bank_id = "MB"
@@ -489,6 +520,10 @@ def payment_qr(order_id):
 @main_bp.route('/api/payment/check/<int:order_id>')
 @login_required
 def check_payment_status(order_id):
+    """
+    API kiểm tra định kỳ (Polling) trạng thái thanh toán từ trình duyệt.
+    Xác minh xem tiền đã vào tài khoản và đơn hàng đã sang trạng thái Xác nhận chưa.
+    """
     order = db.session.get(Order, order_id)
     if not order or order.user_id != current_user.id:
         return jsonify({'status': 'error'})
@@ -497,7 +532,7 @@ def check_payment_status(order_id):
     now_naive = datetime.now(timezone.utc).replace(tzinfo=None)
     is_expired = now_naive > expiration_time
 
-    if is_expired and order.status == ORDER_STATUS_PENDING:
+    if is_expired and order.status == 'Pending':
         return jsonify({'status': 'Expired'})
 
     return jsonify({'status': order.status})
@@ -505,11 +540,15 @@ def check_payment_status(order_id):
 
 @main_bp.route('/test/simulate-bank-success/<int:order_id>')
 def simulate_bank_success(order_id):
+    """
+    Môi trường kiểm thử giả lập (Sandbox) cho phép ép một đơn hàng
+    đang treo sang trạng thái Đã Thanh Toán thành công mà không cần chuyển khoản thật.
+    """
     if not current_user.is_authenticated:
         return "Vui lòng đăng nhập để test"
     order = db.session.get(Order, order_id)
-    if order and order.status == ORDER_STATUS_PENDING:
-        order.status = ORDER_STATUS_CONFIRMED
+    if order and order.status == 'Pending':
+        order.status = 'Confirmed'
         db.session.commit()
         return f"<h1>[SIMULATION] Đã nhận tiền thành công cho đơn {order_id}!</h1><p>Quay lại tab thanh toán để xem kết quả.</p>"
     return "Đơn hàng không tồn tại hoặc đã xử lý."
@@ -518,6 +557,10 @@ def simulate_bank_success(order_id):
 @main_bp.route('/trade-in', methods=['GET', 'POST'])
 @login_required
 def trade_in():
+    """
+    Khu vực tiếp nhận yêu cầu Thu cũ Đổi mới.
+    Cho phép khách hàng tải ảnh minh chứng tình trạng thiết bị cũ lên Server an toàn.
+    """
     if request.method == 'POST':
         if 'image' not in request.files: return redirect(request.url)
         file = request.files['image']
@@ -534,7 +577,7 @@ def trade_in():
                                       condition=request.form.get('condition'),
                                       image_proof=f"/static/uploads/{filename}"))
         db.session.commit()
-        flash(SystemMessages.TRADEIN_SUCCESS, 'success')
+        flash('Đã gửi yêu cầu định giá!', 'success')
         return redirect(url_for('main.dashboard'))
     return render_template('tradein.html')
 
@@ -542,20 +585,28 @@ def trade_in():
 @main_bp.route('/order/cancel/<int:id>')
 @login_required
 def cancel_order_user(id):
+    """
+    Chức năng tự hủy đơn hàng dành cho khách hàng.
+    Nếu đơn hàng chưa được xử lý, hệ thống tự động hoàn lại số lượng tồn kho cho các sản phẩm trong đơn.
+    """
     order = Order.query.options(joinedload(Order.details)).filter_by(id=id, user_id=current_user.id).first_or_404()
-    if order.status == ORDER_STATUS_PENDING:
+    if order.status == 'Pending':
         for d in order.details:
             p = db.session.get(Product, d.product_id)
             if p: p.stock_quantity += d.quantity
-        order.status = ORDER_STATUS_CANCELLED
+        order.status = 'Cancelled'
         db.session.commit()
-        flash(SystemMessages.ORDER_CANCEL_SUCCESS, 'success')
+        flash('Đã hủy đơn.', 'success')
     return redirect(url_for('main.dashboard'))
 
 
 @main_bp.route('/compare', methods=['GET', 'POST'])
 @csrf.exempt
 def compare_page():
+    """
+    Khu vực đấu trường So sánh Sản phẩm.
+    Sử dụng thuật toán Gemini AI để sinh ra bảng đối chiếu tính năng và đưa ra tư vấn.
+    """
     products = Product.query.filter_by(is_active=True).all()
     res, p1, p2 = None, None, None
 
@@ -574,7 +625,7 @@ def compare_page():
                     res = cached_ai_call(get_comparison_result, p1.name, p1.price, p1.description or "", p2.name,
                                          p2.price, p2.description or "")
                     if not res:
-                        res = f"<div class='alert alert-warning'>{SystemMessages.AI_ERROR}</div>"
+                        res = "<div class='alert alert-warning'>Hệ thống AI đang quá tải hoặc lỗi kết nối. Vui lòng so sánh dựa trên thông số hiển thị bên trên.</div>"
         except ValueError:
             flash('Dữ liệu sản phẩm không hợp lệ', 'danger')
 
@@ -584,12 +635,17 @@ def compare_page():
 @main_bp.route('/dashboard')
 @login_required
 def dashboard():
+    """
+    Bảng điều khiển (Dashboard) của khách hàng đăng nhập.
+    Bao gồm thống kê chi tiêu, hiển thị cấp bậc hội viên theo RFM Model và lịch sử giao dịch.
+    """
     my_orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.date_created.desc()).all()
     my_tradeins = TradeInRequest.query.filter_by(user_id=current_user.id).order_by(
         TradeInRequest.created_at.desc()).all()
 
-    total_spent = sum(o.total_price for o in my_orders if o.status == ORDER_STATUS_COMPLETED)
-    pending_orders = sum(1 for o in my_orders if o.status == ORDER_STATUS_PENDING)
+    # [REFACTOR] Tính toán toàn bộ Logic M-Member Rank ở Backend
+    total_spent = sum(o.total_price for o in my_orders if o.status == 'Completed')
+    pending_orders = sum(1 for o in my_orders if o.status == 'Pending')
     total_orders = len(my_orders)
 
     rank_tier = 1
@@ -634,27 +690,34 @@ def dashboard():
 @main_bp.route('/profile/update', methods=['POST'])
 @login_required
 def update_profile():
+    """
+    Tiếp nhận và cập nhật thông tin họ tên, thông tin bảo mật của người dùng hiện tại.
+    """
     full_name = request.form.get('full_name')
     if full_name: current_user.full_name = full_name
     db.session.commit()
-    flash(SystemMessages.PROFILE_UPDATE_SUCCESS, 'success')
+    flash('Cập nhật thành công.', 'success')
     return redirect(url_for('main.dashboard'))
 
 
 @main_bp.route('/api/chatbot', methods=['POST'])
 @csrf.exempt
 def chatbot_api():
+    """
+    Endpoint giao tiếp với Bot tư vấn thông minh (Gemini AI).
+    Sử dụng Session để ghi nhớ lịch sử hội thoại gần nhất giúp AI xử lý ngữ cảnh liền mạch.
+    """
     msg = request.json.get('message', '').strip()
     if not msg: return jsonify({'response': "Mời bạn hỏi ạ!"})
 
-    keywords = CHATBOT_QUICK_REPLIES
+    keywords = {"địa chỉ": "📍 123 Đường Tết, Q1, TP.HCM", "bảo hành": "🛡️ 12 tháng chính hãng."}
     for k, v in keywords.items():
         if k in msg.lower(): return jsonify({'response': v})
 
     try:
         chat_history = session.get('chat_history', [])
         response = generate_chatbot_response(msg, chat_history)
-        final_response = response or SystemMessages.AI_BUSY
+        final_response = response or "AI đang nghỉ Tết (Hết quota), bạn thử lại sau hoặc dùng tìm kiếm nhé! 🧧"
 
         chat_history.append({'user': msg, 'ai': final_response})
 

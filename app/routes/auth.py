@@ -11,6 +11,10 @@ auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    """
+    Xử lý quá trình đăng nhập của người dùng.
+    Kiểm tra thông tin định danh và cấp quyền truy cập phiên làm việc (Session).
+    """
     # Nếu đã đăng nhập thì chuyển về trang chủ
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
@@ -33,6 +37,10 @@ def login():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
+    """
+    Xử lý đăng ký tài khoản mới.
+    Mã hóa mật khẩu an toàn (Hash) trước khi lưu vào cơ sở dữ liệu bảo mật.
+    """
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
 
@@ -61,6 +69,9 @@ def register():
 @auth_bp.route('/logout')
 @login_required
 def logout():
+    """
+    Đăng xuất người dùng hiện tại, dọn dẹp bộ nhớ đệm và xóa Cookie phiên làm việc.
+    """
     logout_user()
     return redirect(url_for('main.home'))
 
@@ -69,6 +80,10 @@ def logout():
 
 @auth_bp.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
+    """
+    Xử lý yêu cầu quên mật khẩu của người dùng.
+    Tạo Token bảo mật có thời hạn và giả lập gửi Email khôi phục.
+    """
     if current_user.is_authenticated: return redirect(url_for('main.home'))
 
     if request.method == 'POST':
@@ -92,6 +107,10 @@ def forgot_password():
 
 @auth_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
+    """
+    Xác thực Token khôi phục mật khẩu.
+    Cho phép người dùng thiết lập lại mật khẩu mới nếu Token hợp lệ và chưa hết hạn.
+    """
     if current_user.is_authenticated: return redirect(url_for('main.home'))
 
     s = get_serializer(current_app.config['SECRET_KEY'])
@@ -121,6 +140,10 @@ def reset_password(token):
 
 @auth_bp.route('/login/google')
 def login_google():
+    """
+    Khởi tạo luồng xác thực OAuth 2.0.
+    Chuyển hướng người dùng sang cổng đăng nhập an toàn của Google.
+    """
     # Chuyển hướng sang Google để xác thực
     # Lưu ý: url_for('auth.authorize_google') trỏ về hàm authorize_google bên dưới
     return oauth.google.authorize_redirect(url_for('auth.authorize_google', _external=True))
@@ -128,6 +151,10 @@ def login_google():
 
 @auth_bp.route('/authorize/google')
 def authorize_google():
+    """
+    Nhận phản hồi từ Google (Callback), trích xuất thông tin người dùng.
+    Tự động tạo tài khoản mới nếu email này chưa từng tồn tại trong hệ thống.
+    """
     try:
         token = oauth.google.authorize_access_token()
         user_info = token.get('userinfo')

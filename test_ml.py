@@ -3,6 +3,10 @@ from app.recommendation_ml import MLRecommender
 
 
 def run_ml_test():
+    """
+    Thực thi kịch bản kiểm thử cho thuật toán Lọc cộng tác (Collaborative Filtering).
+    Giả lập việc khởi tạo ma trận tương quan và truy vấn gợi ý mua kèm từ bộ não AI.
+    """
     app = create_app()
     ml = MLRecommender(app)
 

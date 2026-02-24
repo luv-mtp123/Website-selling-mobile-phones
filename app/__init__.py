@@ -22,6 +22,11 @@ if sys.platform == 'win32':
 # =========================================================================
 
 def create_app(test_config=None):
+    """
+    Application Factory Model chuẩn Flask.
+    Khởi tạo ứng dụng, thiết lập biến môi trường, liên kết cơ sở dữ liệu
+    và đăng ký toàn bộ các Middleware, Blueprints cho hệ thống.
+    """
     app = Flask(__name__)
     # 1. Import file lỗi và file task
     from .errors import errors_bp
@@ -77,6 +82,10 @@ def create_app(test_config=None):
     # 3. Đăng ký Filter Tiền tệ
     @app.template_filter('vnd')
     def vnd_filter(value):
+        """
+        Template Filter độc quyền: Chuyển đổi dữ liệu số thô (Integer/Float)
+        thành định dạng chuỗi tiền tệ chuẩn Việt Nam Đồng (VNĐ) trên file HTML.
+        """
         if value is None: return "0 đ"
         try:
             # Ép kiểu an toàn về số thực trước khi format
@@ -128,11 +137,20 @@ def create_app(test_config=None):
 # Helper load user cho Flask-Login
 @login_manager.user_loader
 def load_user(user_id):
+    """
+    Hàm Callback bắt buộc của thư viện Flask-Login.
+    Dùng để truy xuất dữ liệu đối tượng User từ Database thông qua Session ID.
+    """
     return db.session.get(User, int(user_id))
 
 
 # Helper khởi tạo dữ liệu mẫu (Được gọi từ run.py)
 def initialize_database():
+    """
+    Công cụ Database Seeder nội bộ.
+    Tự động quét cấu trúc CSDL, nếu phát hiện CSDL trống sẽ tự động bơm hàng loạt
+    Sản phẩm mẫu, User (Admin/Khách) để khởi tạo hệ thống chạy ngay.
+    """
     # [NOTE] Khi dùng Flask-Migrate, db.create_all() vẫn có tác dụng tạo bảng nếu chưa có,
     # nhưng Migration sẽ quản lý version tốt hơn.
     db.create_all()

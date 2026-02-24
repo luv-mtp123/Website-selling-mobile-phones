@@ -47,11 +47,19 @@ class SystemAuditLogger:
 
         @self.app.before_request
         def before_request_logging():
+            """
+            Middleware thực thi trước khi Server xử lý API.
+            Đánh dấu mốc thời gian bắt đầu của một Session để tính toán độ trễ (Latency).
+            """
             # Đánh dấu thời gian bắt đầu nhận request
             request.start_time = time.time()
 
         @self.app.after_request
         def after_request_logging(response):
+            """
+            Middleware thực thi sau khi Server trả kết quả cho Client.
+            Tính toán tổng thời gian phản hồi thực tế và ghi lại Status Code kèm địa chỉ IP.
+            """
             # Tính toán thời gian xử lý của Server
             if hasattr(request, 'start_time'):
                 processing_time = round((time.time() - request.start_time) * 1000, 2)

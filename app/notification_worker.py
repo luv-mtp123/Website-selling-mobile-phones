@@ -21,6 +21,10 @@ class BackgroundJobWorker:
         return cls._instance
 
     def _init_queue(self):
+        """
+        Khởi tạo Thread-Safe Queue.
+        Tạo lập cờ trạng thái và thiết lập không gian quản lý tiến trình ngầm (Daemon Thread).
+        """
         self.job_queue = queue.Queue()
         self.is_running = False
         self.worker_thread = None

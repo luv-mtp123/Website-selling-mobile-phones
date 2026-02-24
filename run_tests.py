@@ -4,6 +4,11 @@ import os
 
 
 def run_all_tests():
+    """
+    Trình khởi chạy (Test Runner) tự động dò tìm (discover) toàn bộ các file test
+    có tiền tố 'test_' và thực thi báo cáo kết quả chi tiết ra màn hình Console.
+    Được sử dụng làm chốt chặn chất lượng (Quality Gate) cho quy trình CI/CD.
+    """
     # Tự động tìm tất cả các file bắt đầu bằng 'test_' trong thư mục hiện tại
     loader = unittest.TestLoader()
     # Nếu file test nằm trong thư mục 'test/' thì đổi '.' thành './test'

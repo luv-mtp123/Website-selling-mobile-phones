@@ -78,6 +78,10 @@ class APIDocumentationBuilder:
         self.all_endpoints = {}
 
     def parse_directory(self):
+        """
+        Duyệt qua toàn bộ các file Python trong thư mục chứa Routes.
+        Sử dụng AST để đọc mã nguồn và trích xuất các Endpoint API.
+        """
         print(f"{Colors.HEADER}{Colors.BOLD}=" * 70)
         print(f"📜 HỆ THỐNG DOCUMENT AS CODE: TỰ ĐỘNG SINH TÀI LIỆU API 📜")
         print(f"Khởi chạy lúc: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -105,6 +109,10 @@ class APIDocumentationBuilder:
                         print(f"  {Colors.GREEN}✔️ Đã tìm thấy {len(visitor.routes)} endpoints.{Colors.ENDC}")
 
     def generate_markdown(self):
+        """
+        Biên dịch toàn bộ dữ liệu Endpoint đã thu thập được thành văn bản
+        định dạng Markdown (MD) và lưu ra file báo cáo.
+        """
         print(f"\n{Colors.BLUE}✍️ Đang biên dịch thành file Markdown...{Colors.ENDC}")
 
         md_content = f"# 📚 TÀI LIỆU API HỆ THỐNG MOBILESTORE\n\n"

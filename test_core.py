@@ -15,6 +15,7 @@ class CoreFunctionalityTestCase(unittest.TestCase):
     """
 
     def setUp(self):
+        """Khởi tạo môi trường Test với Database ảo trên RAM và tắt CSRF."""
         self.app = create_app({
             'TESTING': True,
             'WTF_CSRF_ENABLED': False,
@@ -27,11 +28,16 @@ class CoreFunctionalityTestCase(unittest.TestCase):
         self.create_sample_data()
 
     def tearDown(self):
+        """Xóa toàn bộ dữ liệu và session sau mỗi kịch bản test."""
         db.session.remove()
         db.drop_all()
         self.app_context.pop()
 
     def create_sample_data(self):
+        """
+        Sinh dữ liệu mẫu cốt lõi bao gồm Admin, Khách hàng và các Sản phẩm
+        để phục vụ quá trình test luồng mua sắm.
+        """
         admin = User(username='admin', email='admin@test.com', password=generate_password_hash('123'), role='admin',
                      full_name='Admin')
         user = User(username='user', email='user@test.com', password=generate_password_hash('123'), role='user',
@@ -42,10 +48,19 @@ class CoreFunctionalityTestCase(unittest.TestCase):
         db.session.commit()
 
     def login(self, username, password):
+        """
+        Hàm hỗ trợ (Helper) thực hiện thao tác gửi request đăng nhập POST
+        tới hệ thống và tự động bám theo luồng chuyển hướng (redirect).
+        """
         return self.client.post('/login', data=dict(username=username, password=password), follow_redirects=True)
 
     # --- 1. AUTHENTICATION ---
     def test_auth_flow(self):
+        """
+        Kiểm tra luồng Xác thực bảo mật:
+        Đăng ký tài khoản mới, tiến hành đăng nhập và đảm bảo User thường
+        không thể truy cập vào trang Admin (kiểm tra lỗi 403).
+        """
         # Register
         self.client.post('/register', data=dict(username='new', email='n@t.com', password='123'), follow_redirects=True)
         # Login
@@ -57,6 +72,11 @@ class CoreFunctionalityTestCase(unittest.TestCase):
 
     # --- 2. SHOPPING CART & CHECKOUT ---
     def test_shopping_flow(self):
+        """
+        Kiểm tra quy trình Mua sắm (E2E Shopping Flow):
+        Thêm sản phẩm vào giỏ, điền form thanh toán, kiểm tra thông báo thành công
+        và đảm bảo số lượng tồn kho (Inventory) bị trừ chính xác.
+        """
         self.login('user', '123')
         p = Product.query.first()
 
@@ -74,6 +94,11 @@ class CoreFunctionalityTestCase(unittest.TestCase):
 
     # --- 3. TRADE-IN (THU CŨ) ---
     def test_tradein_submission(self):
+        """
+        Kiểm tra tính năng Thu cũ đổi mới:
+        Giả lập việc khách hàng upload hình ảnh thiết bị cũ và submit form,
+        đảm bảo yêu cầu được ghi nhận thành công vào Database.
+        """
         self.login('user', '123')
         data = {
             'device_name': 'iPhone 11 Cũ',

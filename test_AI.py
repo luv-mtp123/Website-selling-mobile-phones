@@ -13,8 +13,9 @@ from app import create_app, db
 ### ---> [ĐÃ SỬA CHỖ NÀY: Import thêm User, Order, OrderDetail để tạo Data Test Gợi ý] <--- ###
 from app.models import User, Product, Order, OrderDetail
 
-### ---> [ĐÃ SỬA CHỖ NÀY: Import thêm hàm analyze_sentiment] <--- ###
-from app.utils import get_comparison_result, local_analyze_intent, build_product_context, analyze_sentiment
+### ---> [ĐÃ SỬA CHỖ NÀY: Import thêm hàm analyze_sentiment và direct_gemini_search] <--- ###
+from app.utils import get_comparison_result, local_analyze_intent, build_product_context, analyze_sentiment, \
+    direct_gemini_search
 from flask import session
 
 
@@ -27,6 +28,8 @@ class AIFeaturesTestCase(unittest.TestCase):
     4. Product Comparison (So sánh)
     5. Sentiment Analysis (Phân tích cảm xúc)
     6. Recommendation System (Gợi ý mua kèm)
+    7. Direct Text-RAG Search (Bypass Vector DB 404)
+    8. Direct Text-RAG Search Edge Cases (Bắt lỗi AI ảo giác)
     """
 
     def setUp(self):
@@ -63,8 +66,9 @@ class AIFeaturesTestCase(unittest.TestCase):
         db.session.add_all([p1, p2, p3])
         db.session.commit()
 
-        # Lưu ID để xài cho bài Test số 6
+        # Lưu ID để xài cho bài Test số 6 và số 7
         self.p1_id = p1.id
+        self.p2_id = p2.id
         self.p3_id = p3.id
 
         ### ---> [NEW: GIẢ LẬP HÀNH VI NGƯỜI DÙNG ĐỂ TEST THUẬT TOÁN GỢI Ý (RECOMMENDATION)] <--- ###
@@ -96,7 +100,6 @@ class AIFeaturesTestCase(unittest.TestCase):
         # Case 1: Tìm theo giá và loại ("điện thoại dưới 5 triệu")
         query = "điện thoại dưới 5 triệu"
         result = local_analyze_intent(query)  # Gọi hàm logic nội bộ
-
         self.assertEqual(result['category'], 'phone')
         self.assertEqual(result['max_price'], 5000000)
         self.assertIsNone(result['brand'])  # Không nhắc đến hãng
@@ -104,9 +107,48 @@ class AIFeaturesTestCase(unittest.TestCase):
         # Case 2: Tìm theo Hãng và Phụ kiện ("ốp lưng iphone")
         query = "ốp lưng iphone"
         result = local_analyze_intent(query)
-
         self.assertEqual(result['brand'], 'Apple')  # Map từ 'iphone' -> 'Apple'
         self.assertEqual(result['category'], 'accessory')  # Map từ 'ốp' -> 'accessory'
+
+        ### ---> [NEW] CÁC TEST CASE BỔ SUNG ĐỂ BẢO VỆ LOGIC KHỎI LỖI REGRESSION <--- ###
+        # Case 3: Bẫy phân loại (Có tên hãng điện thoại nhưng thực chất là tìm phụ kiện)
+        query_trap = "Ốp lưng dành cho Samsung S24 Ultra"
+        result_trap = local_analyze_intent(query_trap)
+        self.assertEqual(result_trap['brand'], 'Samsung')
+        self.assertEqual(result_trap['category'], 'accessory')  # Phải nhận ra là 'accessory'
+
+        # Case 4: Đọc hiểu từ lóng giá tiền ("triệu")
+        query_price_1 = "Tôi muốn mua điện thoại Samsung chơi game tốt giá 10 triệu"
+        result_price_1 = local_analyze_intent(query_price_1)
+        self.assertEqual(result_price_1['brand'], 'Samsung')
+        self.assertEqual(result_price_1['category'], 'phone')
+        self.assertEqual(result_price_1['max_price'], 10000000)  # Phải quy đổi đúng 10 triệu
+
+        # Case 5: Đọc hiểu từ lóng đàm thoại ("củ")
+        query_price_2 = "Kiếm điện thoại 15 củ quay đầu"
+        result_price_2 = local_analyze_intent(query_price_2)
+        self.assertEqual(result_price_2['max_price'], 15000000)  # Phải quy đổi đúng 15 triệu
+        self.assertEqual(result_price_2['category'], 'phone')
+
+        ### ---> [BỔ SUNG THÊM TEST CASE NGẮN & KHÓ TỪ BẠN] <--- ###
+        # Case 6: Cực ngắn, chỉ gõ mỗi 1 chữ phụ kiện
+        query_short = "ốp"
+        result_short = local_analyze_intent(query_short)
+        self.assertEqual(result_short['category'], 'accessory')
+        self.assertEqual(result_short['keyword'], 'ốp')
+
+        # Case 7: Gài bẫy phụ kiện nhưng để tên hãng ở tít phía sau
+        query_trap_2 = "Tai nghe bluetooth xài chung với Xiaomi"
+        result_trap_2 = local_analyze_intent(query_trap_2)
+        self.assertEqual(result_trap_2['category'], 'accessory')
+        self.assertEqual(result_trap_2['brand'], 'Xiaomi')
+
+        # Case 8: Khách chỉ gõ tên dòng máy, không có chữ "điện thoại"
+        query_phone = "iphone 15"
+        result_phone = local_analyze_intent(query_phone)
+        # [FIXED] Vì 'iphone' đã tự map qua hãng Apple, logic hệ thống để category=None để tự do quét hãng.
+        self.assertIsNone(result_phone['category'])
+        self.assertEqual(result_phone['brand'], 'Apple')
 
     # --- TEST 2: RAG CONTEXT (AI đọc dữ liệu DB) ---
     def test_rag_context_building(self):
@@ -237,6 +279,59 @@ class AIFeaturesTestCase(unittest.TestCase):
 
             # Đảm bảo điện thoại khác KHÔNG BỊ lọt vào danh sách phụ kiện
             self.assertNotIn("Samsung Galaxy A05", html_data)
+
+    ### ---> [NEW: TEST 7 - KIỂM TRA LÕI DỰ PHÒNG TEXT-RAG KHI VECTOR DB SẬP] <--- ###
+    @patch('app.utils.GEMINI_API_KEY',
+           'dummy_key')  # [FIXED] Giả lập có API Key để hàm không bị ngắt sớm do thiếu file .env
+    @patch('app.utils.call_gemini_api')
+    def test_direct_text_rag_fallback(self, mock_gemini):
+        """
+        Kiểm tra tính năng Direct Gemini Search (Tìm kiếm bằng Text khi Vector bị lỗi 404).
+        """
+        print("\n[AI Test 7] Testing Direct Text-RAG Fallback (Bypass Vector DB 404)...")
+
+        # Giả lập AI Model Text Flash hoạt động tốt và trả về format JSON ID của p2 (Samsung A05)
+        mock_gemini.return_value = f"```json\n[{self.p2_id}]\n```"
+
+        # Giả lập kho hàng được chuyển thành JSON để gửi cho AI đọc
+        catalog_mock = '[{"id": %d, "name": "iPhone 15 Pro Max", "price": 35000000}, {"id": %d, "name": "Samsung Galaxy A05", "price": 3000000}]' % (
+            self.p1_id, self.p2_id)
+
+        # Test Case 5: Truy vấn khó, đòi hỏi hiểu ngữ nghĩa (Mười lăm củ quay đầu)
+        query = "Kiếm em đt nào pin trâu giá mười lăm củ quay đầu"
+
+        # Gọi hàm mới thêm ở utils.py (direct_gemini_search)
+        result_ids = direct_gemini_search(query, catalog_mock)
+
+        # Đảm bảo AI bóc tách đúng JSON array ra thành list các số nguyên (Integer)
+        self.assertIsInstance(result_ids, list)
+        self.assertEqual(len(result_ids), 1)
+        self.assertEqual(result_ids[0], self.p2_id)  # Đảm bảo trả về đúng ID của máy Samsung A05 giá rẻ
+
+    ### ---> [NEW: TEST 8 - KIỂM TRA LÕI DỰ PHÒNG KHI AI BỊ LỖI FORMAT (EDGE CASES)] <--- ###
+    @patch('app.utils.GEMINI_API_KEY',
+           'dummy_key')  # [FIXED] Giả lập có API Key để hàm không bị ngắt sớm do thiếu file .env
+    @patch('app.utils.call_gemini_api')
+    def test_direct_text_rag_fallback_edge_cases(self, mock_gemini):
+        """
+        Kiểm tra hệ thống xử lý thế nào khi AI không tìm thấy sản phẩm hoặc trả về văn bản lỗi thay vì JSON.
+        """
+        print("\n[AI Test 8] Testing Direct Text-RAG Fallback (Edge Cases)...")
+        catalog_mock = '[{"id": %d, "name": "iPhone 15 Pro Max", "price": 35000000}]' % self.p1_id
+
+        # Edge Case 1: AI không tìm thấy máy nào phù hợp (VD khách tìm Nokia nhưng kho chỉ có iPhone)
+        mock_gemini.return_value = "```json\n[]\n```"
+        result_empty = direct_gemini_search("Điện thoại Nokia đập đá", catalog_mock)
+        self.assertIsInstance(result_empty, list)
+        self.assertEqual(len(result_empty), 0)
+
+        # Edge Case 2: AI bị "ảo giác" (hallucination), trả về văn bản trò chuyện thay vì format mảng ID JSON
+        mock_gemini.return_value = "Dạ chào bạn, hiện tại cửa hàng không có sản phẩm này ạ."
+        result_malformed = direct_gemini_search("tìm máy bay trực thăng", catalog_mock)
+
+        # Hàm của chúng ta phải đủ mạnh để bắt lỗi (try/except) đoạn văn bản này và trả về rỗng một cách an toàn
+        self.assertIsInstance(result_malformed, list)
+        self.assertEqual(len(result_malformed), 0)
     ### ============================================================================== ###
 
 

@@ -37,7 +37,8 @@ from app.utils import (
     build_product_context,
     generate_chatbot_response,
     search_vector_db,
-    analyze_sentiment
+    analyze_sentiment,
+    direct_gemini_search  # <--- Bổ sung Import Lõi AI mới
 )
 
 main_bp = Blueprint('main', __name__)
@@ -46,7 +47,8 @@ main_bp = Blueprint('main', __name__)
 # --- AI Cache Helper ---
 def cached_ai_call(func, *args):
     try:
-        cache_key_content = f"{func.__name__}_{str(args)}_v230_final"
+        ### ---> [ĐÃ SỬA CHỖ NÀY: Nâng Version Cache để xóa sạch các SQL lỗi do Model chết lúc trước] <--- ###
+        cache_key_content = f"{func.__name__}_{str(args)}_v30_flash_search"
         key = hashlib.md5(cache_key_content.encode()).hexdigest()
 
         cached = AICache.query.filter_by(prompt_hash=key).first()
@@ -55,6 +57,8 @@ def cached_ai_call(func, *args):
                 text_data = cached.response_text.strip()
                 if text_data.startswith('{') and text_data.endswith('}'):
                     return json.loads(text_data)
+                elif text_data.startswith('[') and text_data.endswith(']'):
+                    return json.loads(text_data)  # [NEW] Hỗ trợ Load Array IDs từ Cache
                 return text_data
             except:
                 return cached.response_text
@@ -158,35 +162,58 @@ def home():
 
             products = query.all()
 
+    # [UPDATED] LỚP DỰ PHÒNG TỐI THƯỢNG (KHI VECTOR DB BỊ 404 VÀ SQL BÓ TAY)
     if not products and q:
-        fallback_query = base_query
-        if ai_data and ai_data.get('category'):
-            fallback_query = fallback_query.filter(Product.category.ilike(f"{ai_data['category']}"))
-        if ai_data and ai_data.get('brand'):
-            fallback_query = fallback_query.filter(Product.brand.ilike(f"%{ai_data['brand']}%"))
+        ### ---> [ĐÃ SỬA CHỖ NÀY: Gom toàn bộ kho hàng đưa cho model Text (gemini-flash) đọc và tự lựa chọn máy] <--- ###
+        catalog_for_ai = []
+        for p in base_query.all():
+            catalog_for_ai.append({
+                "id": p.id, "name": p.name, "price": p.price,
+                "category": p.category,
+                "desc": (p.description or "")[:150]  # Lấy đặc điểm máy cho AI tự hiểu "ban đêm, game"
+            })
 
-        if ai_data and ai_data.get('min_price'):
-            fallback_query = fallback_query.filter(Product.price >= int(ai_data['min_price']))
-        if ai_data and ai_data.get('max_price'):
-            fallback_query = fallback_query.filter(Product.price <= int(ai_data['max_price']))
+        cat_json = json.dumps(catalog_for_ai, ensure_ascii=False)
+        # Gọi trực tiếp Text Model (Giống như hàm Compare)
+        flash_ids = cached_ai_call(direct_gemini_search, q, cat_json)
 
-        search_words = q.split()
-        stop_words = SEARCH_STOP_WORDS
-        keywords = [w for w in search_words if w.lower() not in stop_words]
-
-        if keywords:
-            conditions = []
-            for word in keywords:
-                conditions.append(or_(
-                    Product.name.like(f"%{word}%"),
-                    Product.name.like(f"%{word.capitalize()}%"),
-                    Product.name.like(f"%{word.lower()}%"),
-                    Product.name.like(f"%{word.title()}%")
-                ))
-
-            products = fallback_query.filter(or_(*conditions)).all()
+        if flash_ids and isinstance(flash_ids, list) and len(flash_ids) > 0:
+            # Truy vấn SQL theo mảng ID trả về từ AI
+            unsorted_products = base_query.filter(Product.id.in_(flash_ids)).all()
+            # Giữ nguyên thứ tự AI ưu tiên (Sản phẩm xịn nhất xếp đầu)
+            products = sorted(unsorted_products, key=lambda x: flash_ids.index(x.id) if x.id in flash_ids else 999)
             if products:
-                ai_msg = "🔍 Tìm kiếm mở rộng (Strict Mode)"
+                ai_msg = "🧠 Trí tuệ nhân tạo (Gemini Semantic Search)"
+        else:
+            ### ---> [TẦNG DỰ PHÒNG CUỐI CÙNG] Rớt xuống đây là khi cả Text AI cũng sập <--- ###
+            fallback_query = base_query
+            if ai_data and ai_data.get('category'):
+                fallback_query = fallback_query.filter(Product.category.ilike(f"{ai_data['category']}"))
+            if ai_data and ai_data.get('brand'):
+                fallback_query = fallback_query.filter(Product.brand.ilike(f"%{ai_data['brand']}%"))
+
+            if ai_data and ai_data.get('min_price'):
+                fallback_query = fallback_query.filter(Product.price >= int(ai_data['min_price']))
+            if ai_data and ai_data.get('max_price'):
+                fallback_query = fallback_query.filter(Product.price <= int(ai_data['max_price']))
+
+            search_words = q.split()
+            stop_words = SEARCH_STOP_WORDS
+            keywords = [w for w in search_words if w.lower() not in stop_words]
+
+            if keywords:
+                conditions = []
+                for word in keywords:
+                    conditions.append(or_(
+                        Product.name.like(f"%{word}%"),
+                        Product.name.like(f"%{word.capitalize()}%"),
+                        Product.name.like(f"%{word.lower()}%"),
+                        Product.name.like(f"%{word.title()}%")
+                    ))
+
+                products = fallback_query.filter(or_(*conditions)).all()
+                if products:
+                    ai_msg = "🔍 Tìm kiếm mở rộng (SQL Fallback)"
 
     elif not q:
         query = base_query

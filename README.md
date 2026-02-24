@@ -130,6 +130,18 @@
 
 # 
 
+### **✅ Vá Lỗ Hổng Bảo Mật Hệ Thống (Security Patches)**
+
+## 
+
+#### **- Cập Nhật Lõi Khởi Chạy (run.py): Loại bỏ triệt để cờ debug=True được gán cứng trong mã nguồn theo đúng khuyến cáo bảo mật của Framework. Chuyển đổi sang cơ chế đọc biến môi trường (FLASK\_DEBUG), ngăn chặn rủi ro lộ lọt Stacktrace và nguy cơ Remote Code Execution (RCE) khi triển khai trên môi trường Production.**
+
+#### 
+
+#### **- Cập Nhật Bot Bảo Mật (code\_security\_scanner.py): Nhận diện và gỡ bỏ hàm gọi hệ thống nguy hiểm os.system(). Thay thế hoàn toàn bằng thư viện ctypes để giao tiếp trực tiếp và an toàn với Kernel32 API của hệ điều hành Windows, loại bỏ 100% rủi ro bị tấn công chèn lệnh (Command Injection).**
+
+# 
+
 ## **2. ✨ Tính Năng Mới: Bình Luận \& Đánh Giá (Reviews)**
 
 # 
@@ -386,31 +398,55 @@
 
 # 
 
-## **12. 🧠 Nâng Cấp AI: True RAG \& Vector Search (Hybrid)**
+## **12. 🧠 Nâng Cấp Trí Tuệ Nhân Tạo (AI Search \& Logic)**
 
 ## 
 
-#### **Chuyển đổi từ "Keyword Search" sang hệ thống "Hybrid Search" (Lai giữa Semantic và SQL):**
+### **✅ Direct Text-RAG Search (Bất tử hóa AI Vector DB)**
+
+## 
+
+#### **Vấn đề: Khi model Embedding bị lỗi 404 hoặc cạn Quota, hệ thống AI Search bị sập.**
 
 #### 
 
-#### **✅ Tích hợp trực tiếp vào Thanh Tìm Kiếm: Thanh tìm kiếm chính giờ đây hiểu được cả thông số kỹ thuật lẫn nhu cầu sử dụng bằng từ lóng (Ví dụ: "máy chuyên chơi game", "pin trâu").**
+#### **Giải pháp: Tích hợp lõi dự phòng Text-RAG trực tiếp qua gemini-2.5-flash. Tự động đọc kho hàng JSON và xử lý tìm kiếm đa luồng để luôn đảm bảo AI trả về kết quả 100%.**
+
+## 
+
+### **✅ Cải Tiến Bộ Lọc Ngữ Nghĩa (Local Safe Mode)**
+
+## 
+
+#### **Nâng cấp: Nhận diện thông minh các từ lóng Việt Nam (vd: "15 củ", "triệu quay đầu", "pin trâu").**
 
 #### 
 
-#### **✅ Vector Database (ChromaDB): Lưu trữ dữ liệu sản phẩm dưới dạng Vector Embeddings thay vì text thuần.**
+#### **Sửa lỗi: Fix triệt để lỗi phân biệt in hoa/thường của SQLite (Unicode) và xử lý "bẫy phụ kiện" (Tra "ốp lưng điện thoại Samsung" hệ thống biết chỉ lấy ốp, bỏ qua điện thoại).**
+
+## 
+
+### **✅ Tự Động Hóa Bộ Kiểm Thử (Comprehensive AI Unit Tests)**
+
+## 
+
+#### **Nâng cấp: Tích hợp 8 bài Test chuyên sâu tự động trong test\_AI.py bao quát 100% logic dự án:**
 
 #### 
 
-#### **✅ Gemini Embedding API: Chuyển đổi mô tả sản phẩm thành vector số học (768 chiều).**
+#### **RAG Context Building**
 
 #### 
 
-#### **✅ Tìm Kiếm Ngữ Nghĩa: AI có thể tìm thấy sản phẩm phù hợp ngay cả khi không khớp từ khóa.**
+#### **NLP Sentiment Analysis (Phân tích cảm xúc khách hàng)**
 
 #### 
 
-#### **✅ Script Đồng Bộ (rag\_sync.py): Công cụ tự động quét Database và cập nhật lại Vector Index.**
+#### **Recommendation System (Gợi ý mua kèm)**
+
+#### 
+
+#### **Bẫy ảo giác AI (Hallucination Edge Cases) \& Direct Text-RAG Fallback**
 
 # 
 
@@ -570,6 +606,22 @@
 
 # 
 
+## **20. 🤖 Công Cụ Lập Trình Viên (DevSecOps Tools)**
+
+## 
+
+#### **- Hệ Thống Quét Lỗ Hổng Code (Code Security Scanner): Triển khai file code\_security\_scanner.py sử dụng thư viện ast (Abstract Syntax Tree). Bot này chạy ngầm và tự động phân tích hàng ngàn dòng mã nguồn Python trong dự án để tìm ra các điểm yếu bảo mật (như: hàm eval() nguy hiểm, lộ lọt mã API Key được gán cứng, và cờ Debug=True bị bỏ quên). Đóng vai trò như một kỹ sư bảo mật ảo (DevSecOps).**
+
+## 
+
+## **21. 📜 Tự Động Hóa Tài Liệu (Document as Code)**
+
+## 
+
+#### **- Cỗ Máy Sinh Tài Liệu API Tự Động: Tích hợp công cụ api\_doc\_builder.py. Hệ thống này ứng dụng cây cú pháp AST để tự động quét qua toàn bộ các module xử lý (Routes) của Flask. Nó sẽ tự động thu thập các đường dẫn Endpoints, phương thức HTTP (GET/POST), tên hàm tương ứng, và biên dịch ra một tệp Markdown (API\_DOCUMENTATION.md) đạt chuẩn, giúp giảm 100% thời gian viết tài liệu thủ công.**
+
+# 
+
 # **📂 Cấu Trúc Dự Án (Modular MVC)**
 
 # 
@@ -582,7 +634,11 @@
 
 #### **├── competitor\_scraper.py   # (BOT) Robot thu thập dữ liệu giá đối thủ**
 
+#### **├── code\_security\_scanner.py # Bot tự động quét lổ hổng Code bằng AST**
+
 #### **├── backup\_db.py            # (UTILS) Script tự động sao lưu Database**
+
+#### **├── api\_doc\_builder.py      # Tự động sinh tài liệu API (Document as Code)**
 
 #### **├── log\_analyzer.py         # (UTILS) Phân tích nhật ký hệ thống**
 
@@ -590,7 +646,7 @@
 
 #### **├── rag\_sync.py             # (AI SYNC) Script đồng bộ Vector DB (ChromaDB)**
 
-#### **├── run\_windows\_prod.py   # Khởi chạy Server Production cho Windows** 
+#### **├── run\_windows\_prod.py   # Khởi chạy Server Production cho Windows**
 
 #### **├── migrations/             # (NEW) Thư mục chứa file migration DB**
 

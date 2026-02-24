@@ -8,8 +8,6 @@ from chromadb.utils import embedding_functions
 from flask import url_for
 from itsdangerous import URLSafeTimedSerializer
 
-### ---> [ĐÃ XÓA CHỖ NÀY: Import thư viện gửi Email (smtplib, MIMEText) và Threading] <--- ###
-
 ### ---> [ĐÃ SỬA CHỖ NÀY: Tắt cảnh báo Telemetry của ChromaDB] <--- ###
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
 
@@ -34,7 +32,6 @@ except Exception as e:
 # Hàm tạo Embedding dùng Gemini (Wrapper cho ChromaDB)
 class GeminiEmbeddingFunction(embedding_functions.EmbeddingFunction):
     def __call__(self, input: list[str]) -> list[list[float]]:
-        ### ---> [ĐÃ SỬA CHỖ NÀY: Cập nhật sang model Embedding mới nhất của Google vì bản 001 đã bị 404] <--- ###
         model = 'models/text-embedding-004'
         embeddings = []
         for text in input:
@@ -43,7 +40,6 @@ class GeminiEmbeddingFunction(embedding_functions.EmbeddingFunction):
                 res = genai.embed_content(model=model, content=text, task_type="retrieval_document")
                 embeddings.append(res['embedding'])
             except Exception as e:
-                ### ---> [ĐÃ SỬA CHỖ NÀY: Bắt lỗi API Hết Quota để không tạo Vector rác, giúp App nhảy qua SQL an toàn] <--- ###
                 print(f"❌ Embedding API Error (Quota?): {e}")
                 raise ValueError("API Hết Quota hoặc Lỗi")
         return embeddings
@@ -86,12 +82,11 @@ def send_reset_email_simulation(to_email, token):
     return link
 
 
-# --- [NEW] VECTOR SEARCH FUNCTIONS ---
+# --- VECTOR SEARCH FUNCTIONS ---
 
 def search_vector_db(query_text, n_results=5, metadata_filters=None):
     """
     Tìm kiếm bằng Vector Database CÓ KẾT HỢP BỘ LỌC (Metadata Filtering).
-    metadata_filters format ChromaDB: {"category": "phone"} hoặc {"$and": [{"category": "phone"}, {"brand": "Apple"}]}
     """
     if not product_collection or not GEMINI_API_KEY:
         return []
@@ -102,7 +97,6 @@ def search_vector_db(query_text, n_results=5, metadata_filters=None):
             "n_results": n_results
         }
 
-        # Thêm bộ lọc nếu có để ép VectorDB không bị nhầm lẫn ĐT và Phụ kiện
         if metadata_filters:
             query_params["where"] = metadata_filters
 
@@ -112,23 +106,15 @@ def search_vector_db(query_text, n_results=5, metadata_filters=None):
             return results['ids'][0]
         return []
     except Exception as e:
-        ### ---> [ĐÃ SỬA CHỖ NÀY: Nếu gọi Vector lỗi do hết API, in log và trả về rỗng để kích hoạt SQL Fallback] <--- ###
         print(f"⚠️ Vector Search Skipped: {e}")
         return []
 
 
 def sync_product_to_vector_db(product):
-    """
-    Đồng bộ 1 sản phẩm vào Vector DB.
-    Cần gọi hàm này khi Add/Edit sản phẩm trong Admin.
-    """
     if not product_collection: return
 
-    # Tạo nội dung ngữ nghĩa phong phú (Rich Semantic Content)
-    # Kết hợp Tên, Hãng, Loại, Mô tả và Giá để AI hiểu toàn diện
     semantic_text = f"Sản phẩm: {product.name}. Hãng: {product.brand}. Loại: {product.category}. Mô tả chi tiết: {product.description}. Mức giá khoảng: {product.price} đồng."
 
-    # Upsert (Update hoặc Insert) vào ChromaDB
     try:
         product_collection.upsert(
             documents=[semantic_text],
@@ -144,11 +130,10 @@ def sync_product_to_vector_db(product):
         print(f"Sync Vector Error: {e}")
 
 
-# --- AI CORE FUNCTIONS (UPDATED) ---
+# --- AI CORE FUNCTIONS ---
 
 def call_gemini_api(prompt, system_instruction=None):
     if not GEMINI_API_KEY: return None
-    # Dùng SDK Google Generative AI thay vì requests thủ công
     try:
         model = genai.GenerativeModel(
             model_name="gemini-2.5-flash",
@@ -160,15 +145,44 @@ def call_gemini_api(prompt, system_instruction=None):
         print(f"Gemini API Error: {e}")
         return None
 
+### ---> [ĐÃ SỬA CHỖ NÀY: BỔ SUNG LÕI TÌM KIẾM TEXT-RAG ĐỂ VƯỢT QUA LỖI VECTOR 404] <--- ###
+def direct_gemini_search(query, catalog_json):
+    """
+    Dùng mô hình Text (đang hoạt động tốt) đọc toàn bộ kho hàng và nhặt ID ra.
+    Khắc phục triệt để lỗi Embedding 404.
+    """
+    if not GEMINI_API_KEY: return []
+
+    system_instruction = (
+        "Bạn là trí tuệ nhân tạo lõi của MobileStore. "
+        "Dựa vào yêu cầu của khách và danh sách kho hàng (JSON), "
+        "hãy phân tích ngữ nghĩa (VD: 'củ/quy đầu' = triệu, 'pin trâu' = pin lớn, 'chụp đêm' = camera xịn, 'chơi game' = chip mạnh) "
+        "và lọc ra đúng các ID sản phẩm phù hợp nhất với nhu cầu."
+        "BẮT BUỘC TRẢ VỀ CHỈ MỘT MẢNG JSON CÁC SỐ NGUYÊN LÀ ID. Ví dụ: [1, 5, 12]. Tuyệt đối không viết thêm chữ gì khác."
+    )
+    prompt = f"Yêu cầu tìm kiếm của khách: '{query}'\n\nKho hàng hiện tại:\n{catalog_json}\n\nTrả về mảng JSON ID:"
+
+    res = call_gemini_api(prompt, system_instruction)
+    if not res: return []
+
+    try:
+        clean = re.sub(r"```json|```", "", res).strip()
+        match = re.search(r"\[.*\]", clean, re.DOTALL)
+        if match:
+            ids = json.loads(match.group(0))
+            return [int(i) for i in ids]
+        return []
+    except Exception as e:
+        print(f"Direct AI Search Parse Error: {e}")
+        return []
+
 
 def build_product_context(user_query):
-    # Sử dụng intent parsing để lấy category trước khi search DB
     ai_data = local_analyze_intent(user_query)
     filter_dict = {}
     if ai_data and ai_data.get('category'):
         filter_dict["category"] = ai_data['category']
 
-    # Vector search có lọc category
     vector_ids = search_vector_db(user_query, n_results=10, metadata_filters=filter_dict if filter_dict else None)
 
     from app.models import Product
@@ -200,7 +214,6 @@ def build_product_context(user_query):
 
 
 def generate_chatbot_response(user_msg, chat_history=[]):
-    # [UPDATED] Context giờ đây được lấy thông minh hơn nhờ Vector Search
     product_context = build_product_context(user_msg)
 
     history_text = ""
@@ -220,9 +233,7 @@ def generate_chatbot_response(user_msg, chat_history=[]):
     return call_gemini_api(final_prompt, system_instruction)
 
 
-# [FIXED & UPGRADED] Cải thiện hàm phân tích ý định tìm kiếm
 def analyze_search_intents(query):
-    # Cập nhật Prompt khắt khe hơn để phân biệt Điện thoại và Phụ kiện
     system_instruction = """
     Bạn là hệ thống trích xuất dữ liệu tìm kiếm cho Website bán điện thoại MobileStore.
     Nhiệm vụ: Phân tích câu hỏi của khách và trả về CHỈ MỘT chuỗi JSON hợp lệ. Không giải thích thêm.
@@ -274,15 +285,13 @@ def local_analyze_intent(query):
     query = query.lower()
     data = {'brand': None, 'category': None, 'keyword': '', 'min_price': None, 'max_price': None, 'sort': None}
 
-    # 1. Tách Brand
     brands = {'iphone': 'Apple', 'apple': 'Apple', 'samsung': 'Samsung', 'oppo': 'Oppo', 'xiaomi': 'Xiaomi',
               'vivo': 'Vivo'}
     for k, v in brands.items():
         if k in query:
             data['brand'] = v
-            query = query.replace(k, '')  # Gỡ tên hãng khỏi query để làm sạch
+            query = query.replace(k, '')
 
-    # 2. Phân loại Category
     accessory_kws = ['ốp', 'sạc', 'tai nghe', 'cáp', 'kính', 'cường lực', 'giá đỡ', 'loa', 'dây đeo', 'airpods']
     phone_kws = ['điện thoại', 'máy', 'smartphone', 'phone']
     if any(x in query for x in accessory_kws):
@@ -290,15 +299,12 @@ def local_analyze_intent(query):
     elif any(x in query for x in phone_kws):
         data['category'] = 'phone'
 
-    # 3. Tách Giá (Price) và gỡ chữ ra khỏi query
-    ### ---> [ĐÃ SỬA CHỖ NÀY: Bắt giá tiền thông minh hơn, không cần phải gõ chữ "dưới", lấy thẳng con số gắn với triệu/củ] <--- ###
     price_match = re.search(r'(\d+)\s*(triệu|củ)', query)
     if price_match:
         val = int(price_match.group(1))
         if val < 1000: data['max_price'] = val * 1000000
-        query = re.sub(r'\d+\s*(triệu|củ)', '', query)  # Xóa phần giá khỏi text
+        query = re.sub(r'\d+\s*(triệu|củ)', '', query)
 
-    # 4. Làm sạch Keyword (Loại bỏ toàn bộ stop_words đàm thoại để Database đọc được chữ chính)
     stop_words = ['tôi', 'muốn', 'mua', 'tìm', 'cho', 'cần', 'dưới', 'khoảng', 'điện', 'thoại', 'máy', 'tốt', 'đẹp',
                   'giá', 'chơi', 'game', 'chụp', 'ảnh', 'rẻ']
     words = query.split()
@@ -355,10 +361,6 @@ def get_comparison_result(p1_name, p1_price, p1_desc, p2_name, p2_price, p2_desc
     return re.sub(r"```html|```", "", res).strip() if res else None
 
 
-# =================================================================================
-# [NEW: CHỨC NĂNG NLP & SENTIMENT ANALYSIS - PHÂN TÍCH CẢM XÚC]
-# =================================================================================
-
 def analyze_sentiment(text):
     """
     Sử dụng AI phân tích cảm xúc của đoạn đánh giá.
@@ -377,5 +379,3 @@ def analyze_sentiment(text):
         if "NEGATIVE" in res: return "NEGATIVE"
         if "POSITIVE" in res: return "POSITIVE"
     return "NEUTRAL"
-
-### ---> [ĐÃ XÓA CHỖ NÀY: Hàm send_admin_alert_email_async đã được gỡ bỏ theo yêu cầu] <--- ###

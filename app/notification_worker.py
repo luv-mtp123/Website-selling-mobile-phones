@@ -10,15 +10,12 @@ import time
 from dataclasses import dataclass, field
 from typing import Callable
 
-
 @dataclass(order=True)
 class PriorityJob:
     """
-    Lớp đối tượng Tác vụ (Job Object).
-    Cài đặt cơ sở so sánh toán học (Comparisons) thông qua tham số `order=True` của Dataclass.
-    Thuật toán Heap Queue sẽ tự động phân loại mức độ:
-    - Priority (Độ ưu tiên): Số càng nhỏ (1) -> Mức ưu tiên càng cao (Đứng đầu mảng).
-    - Nếu Priority bằng nhau -> So sánh Timestamp, ai vào trước chạy trước (FIFO).
+    Lớp đối tượng Tác vụ (Job Object) có thể tự so sánh độ ưu tiên.
+    - Priority càng nhỏ (VD: 1) thì chạy càng sớm.
+    - Cùng Priority thì so sánh Timestamp (Ai vào trước chạy trước - FIFO).
     """
     priority: int
     timestamp: float = field(default_factory=time.time, compare=True)
@@ -32,58 +29,62 @@ class PriorityJob:
         if self.func:
             self.func(*self.args, **self.kwargs)
 
-
-# Khởi tạo Hàng đợi Ưu tiên dựa trên Heap Algorithm (Tuyệt đối Thread-safe)
-job_queue = queue.PriorityQueue()
-
-
-def worker_loop():
+# ==============================================================================
+# ---> [CRITICAL FIX: Khôi phục Class BackgroundJobWorker để Test File Import] <---
+# ==============================================================================
+class BackgroundJobWorker:
     """
-    Vòng lặp Vô tận (Infinite Loop) của Cỗ máy xử lý chạy ở một luồng (Thread) riêng biệt.
-    Nó sẽ liên tục tiêu thụ (Consume) các tác vụ có độ ưu tiên cao nhất ra để thực thi.
+    Lớp quản lý Worker chạy nền.
+    Được cấu trúc lại để tương thích ngược 100% với hệ thống cũ (__init__.py và test),
+    nhưng bên trong lõi đã được nâng cấp lên Hàng đợi Ưu tiên (Priority Queue).
     """
-    print("🚀 [PRIORITY WORKER] Khởi động Engine Hàng đợi Đa luồng. Sẵn sàng nhận lệnh!")
-    while True:
-        # get() sẽ Block (chặn) luồng này không ăn CPU cho đến khi có job mới được đưa vào
-        job = job_queue.get()
+    def __init__(self):
+        self.job_queue = queue.PriorityQueue()
+        self.worker_thread = None
+        self._stop_event = threading.Event()  # Cờ tín hiệu dừng an toàn
 
-        print(f"⚡ [WORKER EXECUTING] Đang xử lý -> Priority: {job.priority} | Task: {job.description}")
-        try:
-            # Thực thi tác vụ
-            job.execute()
-            print(f"✅ [WORKER SUCCESS] Tác vụ hoàn tất: {job.description}")
-        except Exception as e:
-            # Đây là nơi có thể mở rộng thành Dead-Letter Queue (DLQ) sau này
-            print(f"❌ [WORKER FATAL ERROR] Lỗi khi chạy tác vụ '{job.description}': {e}")
-        finally:
-            # Báo hiệu cho Queue biết tác vụ (thread) đã hoàn thành giải phóng bộ nhớ
-            job_queue.task_done()
+    def worker_loop(self):
+        print("🚀 [PRIORITY WORKER] Khởi động Engine Hàng đợi Đa luồng. Sẵn sàng nhận lệnh!")
+        while not self._stop_event.is_set():
+            try:
+                # Đợi tối đa 1s để lấy job, nếu không có sẽ vòng lại kiểm tra _stop_event
+                job = self.job_queue.get(timeout=1)
+                print(f"⚡ [WORKER EXECUTING] Đang xử lý -> Priority: {job.priority} | Task: {job.description}")
+                try:
+                    job.execute()
+                    print(f"✅ [WORKER SUCCESS] Tác vụ hoàn tất: {job.description}")
+                except Exception as e:
+                    print(f"❌ [WORKER FATAL ERROR] Lỗi khi chạy tác vụ '{job.description}': {e}")
+                finally:
+                    self.job_queue.task_done()
+            except queue.Empty:
+                continue
 
+    def start_worker(self, app=None):
+        """Kích hoạt luồng Daemon"""
+        if self.worker_thread is None or not self.worker_thread.is_alive():
+            self._stop_event.clear()
+            self.worker_thread = threading.Thread(target=self.worker_loop, daemon=True)
+            self.worker_thread.start()
 
-def start_worker_thread():
-    """
-    Hàm mồi (Bootstrapper) để khởi chạy Worker dưới dạng Daemon Thread.
-    Đặc tính Daemon: Thread sẽ tự động tắt, không treo RAM khi Server chính (Flask) tắt.
-    """
-    worker_thread = threading.Thread(target=worker_loop, daemon=True)
-    worker_thread.start()
+    def stop_worker(self):
+        """Dừng an toàn luồng Worker (Dùng cho quá trình TearDown của Test)"""
+        self._stop_event.set()
+        if self.worker_thread:
+            self.worker_thread.join(timeout=2)
 
+    def add_job(self, func, *args, **kwargs):
+        """Giao diện đẩy Task tương thích với hệ thống Test (như test_infrastructure.py)"""
+        # Bóc tách tham số priority (nếu không có thì mặc định là 5)
+        priority = kwargs.pop('priority', 5)
+        description = kwargs.pop('description', getattr(func, '__name__', 'Unnamed Task'))
 
-def add_task_to_queue(priority, description, func, *args, **kwargs):
-    """
-    Giao diện API Mở rộng (Interface) để các Controllers đẩy tác vụ vào hàng đợi.
-
-    Quy chuẩn Priority (P):
-    - P=1: System Critical (Gửi mã OTP, Trạng thái Thanh toán).
-    - P=5: Medium (Gửi Email Sinh nhật, Gửi Voucher).
-    - P=10: Low Background (Đồng bộ ChromaDB, Sinh báo cáo Analytics).
-    """
-    new_job = PriorityJob(
-        priority=priority,
-        description=description,
-        func=func,
-        args=args,
-        kwargs=kwargs
-    )
-    job_queue.put(new_job)
-    print(f"📥 [QUEUE ADDED] Đã xếp hàng: {description} (Độ ưu tiên: {priority} - Hàng chờ: {job_queue.qsize()})")
+        new_job = PriorityJob(
+            priority=priority,
+            description=description,
+            func=func,
+            args=args,
+            kwargs=kwargs
+        )
+        self.job_queue.put(new_job)
+        print(f"📥 [QUEUE ADDED] Đã xếp hàng: {description} (Độ ưu tiên: {priority} - Hàng chờ: {self.job_queue.qsize()})")

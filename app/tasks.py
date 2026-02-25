@@ -4,17 +4,15 @@ Tích hợp kỹ thuật tối ưu hóa bộ nhớ (Memory Optimization) bằng 
 để xử lý dữ liệu lớn (Big Data) mà không gây tràn RAM (OOM - Out of Memory).
 """
 import time
+import threading
 from datetime import datetime, timedelta, timezone
 from app.extensions import db
 from app.models import Order, Product
-from flask import current_app
-
 
 def get_expired_orders_chunked(app, chunk_size=50):
     """
     Python Generator (yield) để truy xuất dữ liệu theo từng phân đoạn (Chunking).
-    Giúp giải phóng RAM ngay lập tức sau khi xử lý xong một lô dữ liệu nhỏ,
-    thay vì kéo toàn bộ 100,000 bản ghi lên RAM cùng lúc bằng hàm .all().
+    Giúp giải phóng RAM ngay lập tức sau khi xử lý xong một lô dữ liệu nhỏ.
     """
     with app.app_context():
         # Lấy mốc thời gian cách đây 15 phút
@@ -33,7 +31,6 @@ def get_expired_orders_chunked(app, chunk_size=50):
 
             yield chunk
             offset += chunk_size
-
 
 def cleanup_expired_orders_task(app):
     """
@@ -61,3 +58,19 @@ def cleanup_expired_orders_task(app):
 
     if total_cancelled > 0:
         print(f"✅ [TASK SUCCESS] Đã hủy tự động và hoàn kho thành công {total_cancelled} đơn hàng.")
+
+# ==============================================================================
+# ---> [CRITICAL FIX: Khôi phục lại hàm khởi chạy Scheduler để App Import] <---
+# ==============================================================================
+def start_background_tasks(app):
+    """
+    Khởi chạy luồng nền cho các tác vụ định kỳ.
+    Hàm này được gọi từ __init__.py lúc khởi động ứng dụng Flask.
+    """
+    def background_loop():
+        while True:
+            time.sleep(300)  # Quét mỗi 5 phút
+            cleanup_expired_orders_task(app)
+
+    thread = threading.Thread(target=background_loop, daemon=True)
+    thread.start()

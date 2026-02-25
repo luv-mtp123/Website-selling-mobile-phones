@@ -447,3 +447,9 @@ TypeError: get_comparison_result() takes 10 positional arguments but 20 were giv
 [2026-02-25 13:51:46,625] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
 [2026-02-25 13:51:46,847] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 37.11ms
 [2026-02-25 13:51:49,529] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 51.35ms
+[2026-02-25 14:18:42,944] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-25 14:18:42,944] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-25 14:18:45,850] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 21.91ms
+[2026-02-25 14:18:50,922] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 50.87ms
+[2026-02-25 14:18:59,410] INFO in system_logger: IP: 127.0.0.1 | GET /login | Status: 200 | Time: 15.92ms
+[2026-02-25 14:19:02,761] INFO in system_logger: IP: 127.0.0.1 | GET /login | Status: 200 | Time: 0.0ms

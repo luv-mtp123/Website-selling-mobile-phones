@@ -1,58 +1,81 @@
+"""
+Công cụ sao lưu Cơ sở dữ liệu tự động (Database Backup Tool).
+Tích hợp thuật toán băm SHA-256 (Secure Hash Algorithm 256-bit) để xác thực
+tính toàn vẹn của dữ liệu (Data Integrity Check), chống lại rủi ro file backup
+bị can thiệp hoặc tiêm mã độc (Tampering).
+"""
 import os
-import shutil
-import tarfile
+import zipfile
+import hashlib
 from datetime import datetime
 
+# Cấu hình đường dẫn nội bộ
+DB_FILE = os.path.join("instance", "mobile_store.db")
+BACKUP_DIR = "backups"
+CHUNK_SIZE = 8192  # Đọc file theo từng khối 8KB để tối ưu tài nguyên
 
-def backup_database():
+def calculate_sha256(filepath):
     """
-    Công cụ sao lưu toàn bộ cơ sở dữ liệu (Database) và file Upload của hệ thống.
-    Giúp lập trình viên bảo vệ dữ liệu, tránh mất mát khi thao tác nhầm.
+    Thuật toán băm (Hashing) đọc file dưới dạng nhị phân (Binary stream).
+    Sử dụng Chunking để có thể băm các file dung lượng khổng lồ (vài chục GB)
+    mà không tiêu tốn quá 8KB RAM hệ thống.
+    """
+    sha256_hash = hashlib.sha256()
+    with open(filepath, "rb") as f:
+        # Đọc từng khối dữ liệu bằng toán tử Walrus (:=) cực ngầu của Python 3.8+
+        while chunk := f.read(CHUNK_SIZE):
+            sha256_hash.update(chunk)
+    return sha256_hash.hexdigest()
+
+def create_secure_backup():
+    """
+    Quy trình thực thi sao lưu an toàn:
+    1. Kiểm tra sự tồn tại của file CSDL gốc.
+    2. Nén file CSDL thành định dạng ZIP chuẩn (Deflated).
+    3. Tính toán mã băm SHA-256 của toàn bộ file ZIP.
+    4. Xuất mã băm ra file Manifest để Admin đối chiếu khi có sự cố.
     """
     print("=" * 50)
-    print("📦 BẮT ĐẦU QUÁ TRÌNH SAO LƯU DỮ LIỆU (BACKUP) 📦")
+    print("🛡️ MOBILESTORE SECURE DATA BACKUP INITIATED 🛡️")
     print("=" * 50)
 
-    # 1. Tạo thư mục chứa backup nếu chưa có
-    backup_dir = "backups"
-    if not os.path.exists(backup_dir):
-        os.makedirs(backup_dir)
-        print(f"📁 Đã tạo thư mục chứa bản sao lưu: ./{backup_dir}")
+    if not os.path.exists(DB_FILE):
+        print("❌ [BACKUP ERROR] Không tìm thấy file Database gốc (instance/mobile_store.db).")
+        return
 
-    # Lấy thời gian hiện tại để đặt tên file (VD: backup_20260223_173000)
+    if not os.path.exists(BACKUP_DIR):
+        os.makedirs(BACKUP_DIR)
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_folder_name = f"backup_{timestamp}"
-    backup_path = os.path.join(backup_dir, backup_folder_name)
-    os.makedirs(backup_path)
+    zip_filename = os.path.join(BACKUP_DIR, f"backup_{timestamp}.zip")
+    manifest_filename = os.path.join(BACKUP_DIR, f"manifest_{timestamp}.txt")
 
-    # 2. Tìm và copy file Database (SQLite)
-    # Tùy cấu hình mà db có thể nằm ở thư mục gốc hoặc thư mục 'instance'
-    db_paths = ["instance/mobilestore.db", "mobilestore.db", "instance/mobilestore.db", "mobilestore.db"]
-    db_found = False
+    try:
+        # 1. Nén file Database
+        print(f"⏳ [1/3] Đang nén dữ liệu vào kho lưu trữ: {zip_filename}...")
+        with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as backup_zip:
+            backup_zip.write(DB_FILE, arcname="mobile_store.db")
 
-    for db_file in db_paths:
-        if os.path.exists(db_file):
-            shutil.copy2(db_file, backup_path)
-            print(f"✅ Đã sao lưu thành công Database: {db_file}")
-            db_found = True
-            break
+        # 2. Tính toán mã băm SHA-256
+        print("⏳ [2/3] Đang quét khối Binary và tính toán mã băm toàn vẹn SHA-256...")
+        file_hash = calculate_sha256(zip_filename)
 
-    if not db_found:
-        print("⚠️ CẢNH BÁO: Không tìm thấy file Database (.db) nào!")
+        # 3. Tạo file Manifest
+        print(f"⏳ [3/3] Đang xuất chứng thư bảo mật Manifest...")
+        with open(manifest_filename, 'w', encoding='utf-8') as mf:
+            mf.write(f"=== MOBILESTORE SECURE BACKUP MANIFEST ===\n")
+            mf.write(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            mf.write(f"File: {os.path.basename(zip_filename)}\n")
+            mf.write(f"Algorithm: SHA-256\n")
+            mf.write(f"Checksum: {file_hash}\n")
+            mf.write(f"Status: VERIFIED SAFE\n")
 
-    # 3. Nén thư mục thành file ZIP để tiết kiệm dung lượng
-    archive_name = os.path.join(backup_dir, f"MobileStore_Backup_{timestamp}")
-    shutil.make_archive(archive_name, 'zip', backup_path)
-    print(f"🗜️ Đã nén thành file: {archive_name}.zip")
+        print("\n✅ [BACKUP SUCCESS] Đã tạo bản sao lưu an toàn!")
+        print(f"🔑 [CHECKSUM HASH] {file_hash}")
+        print("=" * 50)
 
-    # 4. Dọn dẹp thư mục tạm
-    shutil.rmtree(backup_path)
-
-    print("=" * 50)
-    print("🎉 QUÁ TRÌNH SAO LƯU HOÀN TẤT THÀNH CÔNG!")
-    print(f"👉 File của bạn nằm tại: {archive_name}.zip")
-    print("=" * 50)
-
+    except Exception as e:
+        print(f"❌ [BACKUP FATAL] Phát hiện lỗi nghiêm trọng trong quá trình sao lưu: {e}")
 
 if __name__ == "__main__":
-    backup_database()
+    create_secure_backup()

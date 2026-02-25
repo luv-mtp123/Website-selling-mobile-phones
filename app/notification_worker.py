@@ -1,89 +1,89 @@
+"""
+Hệ thống Hàng đợi Đa luồng Ưu tiên (Priority Threading Queue).
+Sử dụng cấu trúc dữ liệu PriorityQueue kết hợp với Lập trình Hướng Đối Tượng (OOP).
+Cho phép hệ thống phân luồng tài nguyên xử lý: Tác vụ quan trọng (OTP, Thanh toán) sẽ
+luôn được ưu tiên "chen hàng" chạy trước các tác vụ chạy nền (Sync Vector DB).
+"""
 import threading
 import queue
 import time
-from flask import current_app
+from dataclasses import dataclass, field
+from typing import Callable
 
 
-class BackgroundJobWorker:
+@dataclass(order=True)
+class PriorityJob:
     """
-    Hệ thống Hàng đợi (Message Queue) tự xây dựng dựa trên Threading.
-    Mô hình Producer - Consumer.
-    Giúp đẩy các tác vụ nặng (Gửi Email, Sync Vector DB, Nén File) chạy ngầm phía sau,
-    đảm bảo giao diện web của người dùng không bao giờ bị đơ (lag).
+    Lớp đối tượng Tác vụ (Job Object).
+    Cài đặt cơ sở so sánh toán học (Comparisons) thông qua tham số `order=True` của Dataclass.
+    Thuật toán Heap Queue sẽ tự động phân loại mức độ:
+    - Priority (Độ ưu tiên): Số càng nhỏ (1) -> Mức ưu tiên càng cao (Đứng đầu mảng).
+    - Nếu Priority bằng nhau -> So sánh Timestamp, ai vào trước chạy trước (FIFO).
     """
-    _instance = None
+    priority: int
+    timestamp: float = field(default_factory=time.time, compare=True)
+    description: str = field(compare=False, default="Unnamed Task")
+    func: Callable = field(compare=False, default=None)
+    args: tuple = field(compare=False, default_factory=tuple)
+    kwargs: dict = field(compare=False, default_factory=dict)
 
-    def __new__(cls):
-        """Đảm bảo chỉ có 1 Worker duy nhất tồn tại (Singleton Pattern)"""
-        if cls._instance is None:
-            cls._instance = super(BackgroundJobWorker, cls).__new__(cls)
-            cls._instance._init_queue()
-        return cls._instance
+    def execute(self):
+        """Kích hoạt thực thi hàm callback được đóng gói bên trong."""
+        if self.func:
+            self.func(*self.args, **self.kwargs)
 
-    def _init_queue(self):
-        """
-        Khởi tạo Thread-Safe Queue.
-        Tạo lập cờ trạng thái và thiết lập không gian quản lý tiến trình ngầm (Daemon Thread).
-        """
-        self.job_queue = queue.Queue()
-        self.is_running = False
-        self.worker_thread = None
 
-    def start_worker(self, app):
-        """Khởi động tiến trình dọn dẹp hàng đợi"""
-        if self.is_running:
-            return
+# Khởi tạo Hàng đợi Ưu tiên dựa trên Heap Algorithm (Tuyệt đối Thread-safe)
+job_queue = queue.PriorityQueue()
 
-        self.is_running = True
-        # Gửi context của Flask vào Thread để có thể truy cập Database
-        self.worker_thread = threading.Thread(target=self._process_queue, args=(app,))
-        self.worker_thread.daemon = True  # Sẽ tự động chết khi tắt server chính
-        self.worker_thread.start()
-        app.logger.info("⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.")
 
-    def add_job(self, task_function, *args, **kwargs):
-        """
-        Producer: Thêm một tác vụ mới vào hàng đợi chờ xử lý.
-        Ví dụ: worker.add_job(send_email, 'user@mail.com', 'Hello')
-        """
-        job = {
-            'func': task_function,
-            'args': args,
-            'kwargs': kwargs,
-            'timestamp': time.time()
-        }
-        self.job_queue.put(job)
+def worker_loop():
+    """
+    Vòng lặp Vô tận (Infinite Loop) của Cỗ máy xử lý chạy ở một luồng (Thread) riêng biệt.
+    Nó sẽ liên tục tiêu thụ (Consume) các tác vụ có độ ưu tiên cao nhất ra để thực thi.
+    """
+    print("🚀 [PRIORITY WORKER] Khởi động Engine Hàng đợi Đa luồng. Sẵn sàng nhận lệnh!")
+    while True:
+        # get() sẽ Block (chặn) luồng này không ăn CPU cho đến khi có job mới được đưa vào
+        job = job_queue.get()
 
-    def _process_queue(self, app):
-        """Consumer: Liên tục lấy tác vụ ra xử lý từng cái một"""
-        with app.app_context():
-            while self.is_running:
-                try:
-                    # Lấy tác vụ ra khỏi hàng đợi (sẽ block tối đa 2 giây nếu hàng đợi trống)
-                    job = self.job_queue.get(timeout=2.0)
+        print(f"⚡ [WORKER EXECUTING] Đang xử lý -> Priority: {job.priority} | Task: {job.description}")
+        try:
+            # Thực thi tác vụ
+            job.execute()
+            print(f"✅ [WORKER SUCCESS] Tác vụ hoàn tất: {job.description}")
+        except Exception as e:
+            # Đây là nơi có thể mở rộng thành Dead-Letter Queue (DLQ) sau này
+            print(f"❌ [WORKER FATAL ERROR] Lỗi khi chạy tác vụ '{job.description}': {e}")
+        finally:
+            # Báo hiệu cho Queue biết tác vụ (thread) đã hoàn thành giải phóng bộ nhớ
+            job_queue.task_done()
 
-                    func = job['func']
-                    args = job['args']
-                    kwargs = job['kwargs']
 
-                    app.logger.info(f"▶️ Bắt đầu xử lý Job nền: {func.__name__}...")
+def start_worker_thread():
+    """
+    Hàm mồi (Bootstrapper) để khởi chạy Worker dưới dạng Daemon Thread.
+    Đặc tính Daemon: Thread sẽ tự động tắt, không treo RAM khi Server chính (Flask) tắt.
+    """
+    worker_thread = threading.Thread(target=worker_loop, daemon=True)
+    worker_thread.start()
 
-                    # Thực thi hàm
-                    func(*args, **kwargs)
 
-                    app.logger.info(f"✅ Hoàn thành Job: {func.__name__}.")
+def add_task_to_queue(priority, description, func, *args, **kwargs):
+    """
+    Giao diện API Mở rộng (Interface) để các Controllers đẩy tác vụ vào hàng đợi.
 
-                    # Báo hiệu đã xử lý xong
-                    self.job_queue.task_done()
-
-                except queue.Empty:
-                    # Hàng đợi rỗng, tiếp tục vòng lặp
-                    continue
-                except Exception as e:
-                    app.logger.error(f"❌ Lỗi khi xử lý Job nền: {str(e)}")
-
-    def stop_worker(self):
-        """Dừng worker an toàn"""
-        self.is_running = False
-        if self.worker_thread:
-            self.worker_thread.join()
+    Quy chuẩn Priority (P):
+    - P=1: System Critical (Gửi mã OTP, Trạng thái Thanh toán).
+    - P=5: Medium (Gửi Email Sinh nhật, Gửi Voucher).
+    - P=10: Low Background (Đồng bộ ChromaDB, Sinh báo cáo Analytics).
+    """
+    new_job = PriorityJob(
+        priority=priority,
+        description=description,
+        func=func,
+        args=args,
+        kwargs=kwargs
+    )
+    job_queue.put(new_job)
+    print(f"📥 [QUEUE ADDED] Đã xếp hàng: {description} (Độ ưu tiên: {priority} - Hàng chờ: {job_queue.qsize()})")

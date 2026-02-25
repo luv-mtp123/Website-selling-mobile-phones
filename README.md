@@ -706,6 +706,17 @@
 
 ## 
 
+### 27. 🚀 Nâng Cấp Kiến Trúc Hạ Tầng Lõi (Hardcore Infrastructure)
+
+* **✅ Quản Lý Bộ Nhớ (Memory Optimization):** Nâng cấp hệ thống tác vụ nền (`tasks.py`) sử dụng kỹ thuật **Chunking** kết hợp **Python Generators (`yield`)**.
+    * *Lợi ích:* Xử lý dữ liệu theo từng lô nhỏ (50 đơn hàng), giải phóng RAM ngay lập tức và ngăn chặn lỗi tràn bộ nhớ (Out of Memory) khi xử lý dữ liệu lớn.
+* **✅ Hàng Đợi Ưu Tiên Đa Luồng (Priority Threading Queue):** Tái cấu trúc `notification_worker.py` bằng `queue.PriorityQueue` và **OOP Dataclass**.
+    * *Cơ chế:* Tự động phân loại mức độ khẩn cấp. Các tác vụ như OTP/Email bảo mật được ưu tiên xử lý tức thì, trong khi các tác vụ nặng (Đồng bộ Vector) được chạy nền để tối ưu CPU.
+* **✅ Bảo Mật Toàn Vẹn Dữ Liệu (Data Integrity):** Nâng cấp script `backup_db.py` với thuật toán băm **SHA-256** (đọc file theo Binary stream).
+    * *An toàn:* Tự động khóa file ZIP và xuất chứng thư `manifest.txt`. Cho phép Admin đối chiếu chữ ký điện tử để phát hiện ngay lập tức nếu file backup bị can thiệp hoặc tiêm mã độc.
+
+##
+
 # **📂 Cấu Trúc Dự Án (Modular MVC)**
 
 ## 

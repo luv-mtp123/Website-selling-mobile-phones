@@ -436,3 +436,14 @@ TypeError: get_comparison_result() takes 10 positional arguments but 20 were giv
 [2026-02-25 10:14:24,385] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.01ms
 [2026-02-25 10:14:29,430] INFO in system_logger: IP: 127.0.0.1 | GET /dashboard | Status: 200 | Time: 33.24ms
 [2026-02-25 10:14:39,844] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.0ms
+[2026-02-25 13:51:04,850] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-25 13:51:04,851] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-25 13:51:10,954] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 22.42ms
+[2026-02-25 13:51:12,113] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 6.88ms
+[2026-02-25 13:51:12,171] WARNING in system_logger: IP: 127.0.0.1 | GET /favicon.ico | Status: 404 | Time: 5.78ms
+[2026-02-25 13:51:13,756] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.08ms
+[2026-02-25 13:51:16,284] INFO in system_logger: IP: 127.0.0.1 | GET /product/1 | Status: 200 | Time: 58.22ms
+[2026-02-25 13:51:46,623] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-25 13:51:46,625] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-25 13:51:46,847] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 37.11ms
+[2026-02-25 13:51:49,529] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 51.35ms

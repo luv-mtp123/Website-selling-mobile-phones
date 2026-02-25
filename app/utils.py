@@ -508,6 +508,71 @@ def get_comparison_result(p1_id, p1_name, p1_price, p1_desc, p1_img,
     res = call_gemini_api(prompt, system_instruction=system_instruction)
     return re.sub(r"```html|```", "", res).strip() if res else None
 
+# ==============================================================================================
+# ---> [NEW: LÕI DỰ PHÒNG SO SÁNH LOCAL (FALLBACK) KHI GEMINI AI SẬP] <---
+# ==============================================================================================
+def generate_local_comparison_html(p1, p2, p3=None, p4=None):
+    """
+    Thuật toán dự phòng (Local Fallback).
+    Tự động vẽ bảng HTML cấu trúc CellphoneS bằng Python thuần khi Gemini API hết Quota.
+    Giúp hệ thống đạt 100% Uptime không bao giờ báo lỗi.
+    """
+    from flask_wtf.csrf import generate_csrf
+    products = [p for p in [p1, p2, p3, p4] if p]
+    num_cols = len(products)
+
+    headers_html = f"<th><h5 class='fw-bold text-danger mb-0'>SO SÁNH</h5></th>"
+    for p in products:
+        price_str = "{:,.0f} đ".format(p.sale_price if p.is_sale else p.price).replace(",", ".")
+        headers_html += f"""
+        <th>
+            <div class="text-center">
+                <img src="{p.image_url}" style="max-height:140px; object-fit:contain;" class="mb-2"><br>
+                <span class="fw-bold fs-6 text-dark">{p.name}</span><br>
+                <span class="text-danger fw-bold fs-6">{price_str}</span><br>
+                <form action="/cart/add/{p.id}" method="POST" class="mt-2">
+                    <input type="hidden" name="csrf_token" value="{generate_csrf()}"/>
+                    <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm">MUA NGAY</button>
+                </form>
+            </div>
+        </th>
+        """
+
+    tbody_html = f"""
+    <tr class="table-light"><td colspan="{num_cols + 1}" class="fw-bold text-uppercase text-secondary ps-3 py-2">THÔNG TIN CƠ BẢN</td></tr>
+    <tr><td class="fw-bold">Thương hiệu</td>
+    """
+    for p in products:
+        tbody_html += f"<td class='text-center fw-medium'>{p.brand}</td>"
+    tbody_html += "</tr>"
+
+    tbody_html += "<tr><td class='fw-bold'>Phân loại</td>"
+    for p in products:
+        cat_name = "Điện thoại" if p.category == 'phone' else "Phụ kiện"
+        tbody_html += f"<td class='text-center fw-medium'>{cat_name}</td>"
+    tbody_html += "</tr>"
+
+    tbody_html += "<tr><td class='fw-bold'>Đặc điểm nổi bật</td>"
+    for p in products:
+        desc = (p.description or "Đang cập nhật")[:150] + "..."
+        tbody_html += f"<td class='text-center fw-medium'><small>{desc}</small></td>"
+    tbody_html += "</tr>"
+
+    html = f"""
+    <table class="table table-bordered table-striped table-compare align-middle">
+        <thead class="compare-thead bg-white">
+            <tr>{headers_html}</tr>
+        </thead>
+        <tbody>
+            {tbody_html}
+        </tbody>
+    </table>
+    <div class="alert alert-secondary mt-4 rounded-4 shadow-sm border-0 p-4">
+        <h5 class="fw-bold text-secondary mb-3"><i class="fas fa-server me-2"></i>CHẾ ĐỘ DỰ PHÒNG (LOCAL MODE)</h5>
+        <p class="mb-0">Hệ thống AI Gemini tạm thời đang bảo trì hoặc hết hạn mức (Quota). Bảng so sánh trên được tạo tự động bằng thuật toán nội bộ. Vui lòng quay lại sau để xem AI phân tích chuyên sâu.</p>
+    </div>
+    """
+    return html
 
 def analyze_sentiment(text):
     """

@@ -1,26 +1,26 @@
 # **📱 MobileStore - Siêu Thị Điện Thoại Thông Minh Tích Hợp AI (Phiên Bản Tết 2026 - Modular MVC)**
 
-# 
+## 
 
-#### **Chào mừng bạn đến với MobileStore! Đây là dự án thương mại điện tử hiện đại được xây dựng bằng Python Flask, tích hợp sâu Google Gemini AI.**
+### **Chào mừng bạn đến với MobileStore! Đây là dự án thương mại điện tử hiện đại được xây dựng bằng Python Flask, tích hợp sâu Google Gemini AI.**
 
-#### 
+### 
 
-#### **Phiên bản này đã được Tái cấu trúc (Refactor) toàn diện sang mô hình Modular MVC và cập nhật giao diện Tết Bính Ngọ 2026.**
+### **Phiên bản này đã được Tái cấu trúc (Refactor) toàn diện sang mô hình Modular MVC và cập nhật giao diện Tết Bính Ngọ 2026.**
 
-# 
+## 
 
 # **🚀 Các Cập Nhật Mới Nhất (Latest Updates)**
 
-# 
+## 
 
 ## **1. 🛠️ Fix Lỗi Logic \& Bảo Mật (Critical Fixes)**
 
-# 
+## 
 
 ### **✅ Quản Lý Database Chuyên Nghiệp (Flask-Migrate) (MỚI)**
 
-# 
+#### 
 
 #### **Nâng cấp: Tích hợp Flask-Migrate để quản lý thay đổi cấu trúc Database mà không cần xóa dữ liệu cũ.**
 
@@ -28,11 +28,11 @@
 
 #### **Lệnh hỗ trợ: flask db init, flask db migrate, flask db upgrade.**
 
-# 
+## 
 
 ### **✅ Sửa Lỗi Xung Đột Khởi Tạo Database (Migration):**
 
-## 
+#### 
 
 #### **Vấn đề: Lệnh flask db migrate bị lỗi OperationalError do vòng lặp khởi tạo CSDL tự động trong run.py/wsgi.py.**
 
@@ -40,11 +40,11 @@
 
 #### **Giải pháp: Xử lý và tối ưu hóa khối lệnh with app.app\_context(): bằng cách tạm thời ẩn lệnh initialize\_database() trong run.py/wsgi.py và thêm lệnh pass ( bỏ qua ) tránh việc lỗi thụt lề , cho phép chạy lệnh nâng cấp CSDL an toàn mà không làm mất dữ liệu hiện tại.**
 
-# 
+## 
 
 ### **✅ Fix Lỗi API Chatbot (CSRF Error):**
 
-# 
+#### 
 
 #### **Vấn đề: API Chatbot gặp lỗi 400 Bad Request do bị chặn bởi cơ chế bảo vệ CSRF khi gọi từ AJAX.**
 
@@ -52,11 +52,11 @@
 
 #### **Giải pháp: Sử dụng decorator @csrf.exempt cho endpoint /api/chatbot để cho phép giao tiếp API mượt mà mà vẫn giữ bảo mật cho các form khác.**
 
-# 
+## 
 
 ### **✅ Fix Lỗi \& Nâng Cấp Toàn Diện AI Smart Search (Hybrid Search):**
 
-# 
+#### 
 
 #### **Vấn đề: Trước đây tìm kiếm đôi khi hiển thị kết quả rác (nhầm hãng) do logic Fallback mở rộng dùng phép toán OR, đồng thời AI chưa hiểu được các từ lóng ngữ nghĩa cao (như "pin trâu", "củ").**
 
@@ -80,11 +80,11 @@
 
 #### **Cache Versioning: Đổi key cache để làm sạch toàn bộ các kết quả phân tích cũ sai lệch.**
 
-# 
+## 
 
 ### **✅ Fix Lỗi Giá Giỏ Hàng (Pricing Logic Security):**
 
-# 
+#### 
 
 #### **Vấn đề: Giá sản phẩm lưu trong session. Nếu Admin tăng giá khi khách đang mua, khách vẫn thanh toán giá cũ.**
 
@@ -92,35 +92,35 @@
 
 #### **Giải pháp: Tại bước thanh toán (checkout), hệ thống truy vấn lại giá thực tế từ Database để tính tổng tiền.**
 
-# 
+## 
 
 ### **✅ Fix Lỗi Toàn Vẹn Dữ Liệu (Cascade Delete):**
 
-# 
+#### 
 
 #### **Giải pháp: Thêm cấu hình cascade="all, delete-orphan" vào Model. Khi xóa sản phẩm, toàn bộ bình luận liên quan sẽ tự động được dọn dẹp.**
 
-# 
+## 
 
 ### **✅ Tối ưu Cấu trúc Database (SQLAlchemy 2.0):**
 
-# 
+#### 
 
 #### **Cập nhật: Thay thế cú pháp Model.query.get bằng db.session.get() giúp tối ưu hiệu suất và loại bỏ cảnh báo (LegacyAPIWarning).**
 
-# 
+## 
 
 ### **✅ Fix Lỗi Xung Đột Thời Gian (Timezone TypeError):**
 
-# 
+#### 
 
 #### **Giải pháp: Đồng bộ toàn bộ dữ liệu thời gian về dạng naive UTC (.replace(tzinfo=None)) để tương thích hoàn toàn với SQLite.**
 
-# 
+## 
 
 ### **✅ Nâng Cấp Hệ Thống AI So Sánh (AI Battle):**
 
-## 
+#### 
 
 #### **Vấn đề: AI đôi khi chỉ trả về phần tóm tắt ngắn, ngoài ra hệ thống lưu Cache cũ (câu trả lời ngắn) làm ảnh hưởng trải nghiệm.**
 
@@ -128,11 +128,11 @@
 
 #### **Giải pháp: Tối ưu hóa hệ thống System Instruction \& Prompt, ép buộc AI sinh ra mã HTML chi tiết và đưa ra lời khuyên (Pros/Cons). Đổi cơ chế băm cache\_key để hệ thống luôn nạp kết quả phân tích chuyên sâu mới nhất.**
 
-# 
-
-### **✅ Vá Lỗ Hổng Bảo Mật Hệ Thống (Security Patches)**
-
 ## 
+
+### **✅ Vá Lỗ Hổng Bảo Mật Hệ Thống (Security Patches):**
+
+#### 
 
 #### **- Cập Nhật Lõi Khởi Chạy (run.py): Loại bỏ triệt để cờ debug=True được gán cứng trong mã nguồn theo đúng khuyến cáo bảo mật của Framework. Chuyển đổi sang cơ chế đọc biến môi trường (FLASK\_DEBUG), ngăn chặn rủi ro lộ lọt Stacktrace và nguy cơ Remote Code Execution (RCE) khi triển khai trên môi trường Production.**
 
@@ -140,11 +140,11 @@
 
 #### **- Cập Nhật Bot Bảo Mật (code\_security\_scanner.py): Nhận diện và gỡ bỏ hàm gọi hệ thống nguy hiểm os.system(). Thay thế hoàn toàn bằng thư viện ctypes để giao tiếp trực tiếp và an toàn với Kernel32 API của hệ điều hành Windows, loại bỏ 100% rủi ro bị tấn công chèn lệnh (Command Injection).**
 
-# 
+## 
 
 ### **✅ Fix Lỗi 500 Đấu Trường So Sánh (Parameter Mismatch):**
 
-### 
+#### 
 
 #### **Vấn đề: Hệ thống bị văng lỗi 500 Internal Server Error do hàm AI chỉ nhận 10 tham số nhưng Controller lại truyền 20 tham số khi nâng cấp tính năng so sánh 4 máy.**
 
@@ -152,23 +152,23 @@
 
 #### **Giải pháp: Cập nhật hàm lõi get\_comparison\_result tại utils.py để tiếp nhận tham số động (lên tới 20 tham số cho 4 máy), xử lý vòng lặp nội suy linh hoạt, đảm bảo đồng bộ hóa hoàn toàn với Router và loại bỏ triệt để lỗi 500.**
 
-# 
+## 
 
 ### **✅ Tối Ưu Code Front-End Linter (Syntax Fixes):**
 
-### 
+#### 
 
 #### **Giải pháp: Loại bỏ hoàn toàn các cấu trúc Jinja ({% ... %}) ra khỏi các block <style> và <script> tại dashboard.html và detail.html, nhằm khắc phục triệt để lỗi \[GLOBAL] SyntaxError: Unexpected token '%' khi các bộ Linter kiểm tra cú pháp.**
 
-# 
+## 
 
 ## **2. ✨ Tính Năng Mới: Bình Luận \& Đánh Giá (Reviews)**
 
-# 
+## 
 
 ### **✅ Hệ Thống Đánh Giá \& Bình Luận Chuyên Nghiệp:**
 
-### 
+#### 
 
 #### **Nâng cấp: Tái thiết kế toàn bộ khối Đánh giá sản phẩm ở trang Chi tiết (detail.html) mang phong cách hiện đại của các trang TMĐT lớn.**
 
@@ -180,15 +180,15 @@
 
 #### **Bộ lọc thông minh: Viết thêm thuật toán JavaScript hỗ trợ lọc Đánh giá/Bình luận mượt mà (Lọc theo số sao, Đã mua hàng...) không cần phải tải lại trang (No-reload).**
 
-# 
+## 
 
 ## **3. 🎨 Nâng Cấp Giao Diện (UI/UX Optimization)**
 
-# 
+## 
 
 ### **🏠 Trang Chủ (Homepage) - Giao diện Tết:**
 
-# 
+#### 
 
 #### **Banner Tết Bính Ngọ: Banner tĩnh khổ lớn với hiệu ứng zoom nhẹ sang trọng.**
 
@@ -200,11 +200,11 @@
 
 #### **Smart Search: Thanh tìm kiếm AI thiết kế dạng nổi (floating).**
 
-# 
+## 
 
 ### **📱 Trang Chi Tiết (Product Detail):**
 
-# 
+#### 
 
 #### **Image Gallery: Khung hiển thị ảnh sản phẩm gọn gàng, hỗ trợ zoom.**
 
@@ -220,19 +220,19 @@
 
 #### **- Tính năng Yêu thích Sản phẩm (Wishlist) \& Trái tim Nhấp nháy (Pulse Animation): Tích hợp luồng AJAX mượt mà cho phép người dùng Thả tim / Gỡ tim (Toggle Favorite) không cần tải lại trang, kết hợp hiệu ứng CSS nhấp nháy sống động. Các sản phẩm này sẽ được đồng bộ trực tiếp vào cơ sở dữ liệu (Many-to-Many Relationship).**
 
-# 
+## 
 
 ### **🔔 Hệ thống Thông báo Thông minh (SweetAlert2):**
 
-# 
+#### 
 
 #### **Thay thế Bootstrap Toasts bằng Pop-up SweetAlert2 mượt mà góc màn hình.**
 
-# 
+## 
 
 ## **4. 📦 Quản Lý Tồn Kho Thực Tế (Inventory)**
 
-# 
+#### 
 
 #### **Tồn kho tự động: Trừ kho ngay khi đặt hàng, hoàn kho khi hủy đơn (nếu đơn chưa xử lý).**
 
@@ -240,11 +240,11 @@
 
 #### **Cảnh báo: Chặn mua nếu số lượng chọn lớn hơn tồn kho thực tế.**
 
-# 
+## 
 
 ## **5. 🤖 Trí Tuệ Nhân Tạo (Gemini AI)**
 
-# 
+#### 
 
 #### **Tìm Kiếm Thông Minh: Hiểu ngôn ngữ tự nhiên (VD: "iPhone giá rẻ dưới 10 triệu").**
 
@@ -260,11 +260,11 @@
 
 #### **Chatbot Memory (MỚI): Ghi nhớ lịch sử hội thoại ngắn hạn (Contextual Awareness), giúp AI hiểu các đại từ như "nó", "cái đó" trong câu hỏi nối tiếp.**
 
-# 
+## 
 
 ## **6. 🧪 Tái Cấu Trúc Hệ Thống Kiểm Thử (Testing Refactor)**
 
-# 
+#### 
 
 #### **Dự án tích hợp hệ thống kiểm thử tự động, sử dụng DB ảo trên RAM (sqlite:///:memory:):**
 
@@ -320,11 +320,11 @@
 
 #### **- Chuyển logic local\_analyze\_intent sang utils.py để tái sử dụng và kiểm thử độc lập.**
 
-# 
+## 
 
 ## **7. 🌐 Sẵn Sàng Triển Khai (Production Ready)**
 
-# 
+#### 
 
 #### **run\_windows\_prod.py: Entry Point độc lập cho Production chạy môi trường Windows.**
 
@@ -332,11 +332,11 @@
 
 #### **Waitress: Hỗ trợ chạy server trên môi trường Windows siêu nhẹ và chịu tải cao.**
 
-# 
+## 
 
 ## **8. 🛡️ Bảo Mật Nâng Cao**
 
-# 
+#### 
 
 #### **✅ Ngăn Chặn Race Condition: Áp dụng khóa dòng (with\_for\_update()) khi thanh toán để tránh bán quá số lượng tồn kho.**
 
@@ -356,7 +356,7 @@
 
 ## **9. 📊 Dashboard Quản Trị (Admin Dashboard)**
 
-# 
+#### 
 
 #### **📈 Real-time Analytics: Thống kê doanh thu từ đơn hàng "Completed".**
 
@@ -384,11 +384,11 @@
 
 #### **🏆 Top Sản Phẩm: Xếp hạng 5 sản phẩm bán chạy nhất.**
 
-# 
+## 
 
 ## **10. 🧠 Tối Ưu Hóa AI \& Persona**
 
-# 
+#### 
 
 #### **AI Persona: Thiết lập tính cách nhân viên bán hàng vui vẻ, dùng emoji Tết (🧧, 🌸).**
 
@@ -400,11 +400,11 @@
 
 #### **Refactor Code: Tách logic AI sang utils.py.**
 
-# 
+## 
 
 ## **11. 💳 Thanh Toán Online Tự Động (VietQR)**
 
-# 
+#### 
 
 #### **✅ Cổng Thanh Toán VietQR Động: Tự động tạo mã QR chính xác theo số tiền đơn hàng.**
 
@@ -420,15 +420,15 @@
 
 #### **✅ Chế Độ Giả Lập (Local): Nút "Gửi tín hiệu ĐÃ NHẬN TIỀN" để test luồng thanh toán mà không cần chuyển khoản thật.**
 
-# 
+## 
 
 ## **12. 🧠 Nâng Cấp Trí Tuệ Nhân Tạo (AI Search \& Logic)**
 
-## 
+#### 
 
-### **✅ Direct Text-RAG Search (Bất tử hóa AI Vector DB)**
+#### **✅ Direct Text-RAG Search (Bất tử hóa AI Vector DB)**
 
-## 
+#### 
 
 #### **Vấn đề: Khi model Embedding bị lỗi 404 hoặc cạn Quota, hệ thống AI Search bị sập.**
 
@@ -436,11 +436,11 @@
 
 #### **Giải pháp: Tích hợp lõi dự phòng Text-RAG trực tiếp qua gemini-2.5-flash. Tự động đọc kho hàng JSON và xử lý tìm kiếm đa luồng để luôn đảm bảo AI trả về kết quả 100%.**
 
-## 
+#### 
 
-### **✅ Cải Tiến Bộ Lọc Ngữ Nghĩa (Local Safe Mode)**
+#### **✅ Cải Tiến Bộ Lọc Ngữ Nghĩa (Local Safe Mode)**
 
-## 
+#### 
 
 #### **Nâng cấp: Nhận diện thông minh các từ lóng Việt Nam (vd: "15 củ", "triệu quay đầu", "pin trâu").**
 
@@ -448,11 +448,11 @@
 
 #### **Sửa lỗi: Fix triệt để lỗi phân biệt in hoa/thường của SQLite (Unicode) và xử lý "bẫy phụ kiện" (Tra "ốp lưng điện thoại Samsung" hệ thống biết chỉ lấy ốp, bỏ qua điện thoại).**
 
-## 
+#### 
 
-### **✅ Tự Động Hóa Bộ Kiểm Thử (Comprehensive AI Unit Tests)**
+#### **✅ Tự Động Hóa Bộ Kiểm Thử (Comprehensive AI Unit Tests)**
 
-## 
+#### 
 
 #### **Nâng cấp: Tích hợp 8 bài Test chuyên sâu tự động trong test\_AI.py bao quát 100% logic dự án:**
 
@@ -472,11 +472,11 @@
 
 #### **Bẫy ảo giác AI (Hallucination Edge Cases) \& Direct Text-RAG Fallback**
 
-# 
+## 
 
 ## **13. 🔄 Tự Động Hóa CI/CD (GitHub Actions)**
 
-# 
+#### 
 
 #### **Thiết lập quy trình DevOps chuyên nghiệp:**
 
@@ -492,15 +492,15 @@
 
 #### **✅ Quality Gate: Đảm bảo code lỗi không bao giờ được merge vào nhánh chính.**
 
-# 
+## 
 
 ## **14. 🌟 Cập Nhật Giao Diện \& Tính Năng Mới Nhất (Hotfixes)**
 
-## 
+#### 
 
-### **✅ Quản Trị Viên (Admin):**
+#### **✅ Quản Trị Viên (Admin):**
 
-## 
+#### 
 
 #### **- Cập nhật lỗi Admin Dashboard: Khôi phục lại Modal Form thêm mới sản phẩm (admin\_dashboard.html), cho phép nhập đầy đủ thông tin (Kho, Giá khuyến mãi, Trạng thái) và lưu vào Database.**
 
@@ -516,9 +516,9 @@
 
 #### **- Quản lý Đánh giá \& Trả lời (MỚI): Bảng quản lý bình luận được nâng cấp, phân loại rõ ràng (Tích cực/Tiêu cực/Câu hỏi). Bổ sung tính năng "Trả lời" trực tiếp ngay trong trang quản trị, gỡ bỏ hoàn toàn gửi cảnh báo qua Email (SMTP) để tránh làm nặng web.**
 
-## 
+#### 
 
-### **✅ Chi Tiết Sản Phẩm (Product Detail):**
+#### **✅ Chi Tiết Sản Phẩm (Product Detail):**
 
 #### 
 
@@ -528,11 +528,19 @@
 
 #### **- Trick Database Thông minh (MỚI): Tái sử dụng bảng Comment với cấu trúc logic linh hoạt (rating = 0 cho Hỏi đáp, rating > 0 cho Đánh giá), giúp mở rộng hệ thống lớn mà không cần đụng chạm, sửa đổi cấu trúc Database (tránh được lỗi Constraint đặc thù của SQLite).**
 
-## 
+#### 
 
-### **✅ Hồ Sơ Thành Viên (User Dashboard):**
+#### **- Tính năng Yêu thích Sản phẩm (Wishlist): Tích hợp luồng AJAX mượt mà cho phép người dùng Thả tim / Gỡ tim (Toggle Favorite) không cần tải lại trang. Các sản phẩm này sẽ được đồng bộ trực tiếp vào cơ sở dữ liệu (Many-to-Many Relationship).**
 
-## 
+#### 
+
+#### **✅ Hồ Sơ Thành Viên (User Dashboard):**
+
+#### 
+
+#### **- Tab Sản Phẩm Yêu Thích: Xây dựng tab Wishlist chuyên biệt trong M-Member, hiển thị các sản phẩm đã thả tim dưới dạng thẻ lưới (Grid) đẹp mắt. Hỗ trợ thao tác xóa nhanh sản phẩm và Thêm thẳng vào Giỏ Hàng.**
+
+#### 
 
 #### **- Tab Kho Voucher: Thiết kế giao diện thẻ ưu đãi (Tickets) đẹp mắt, chia bố cục rõ ràng giữa mức giảm và điều kiện áp dụng.**
 
@@ -552,11 +560,11 @@
 
 #### **- Giới Thiệu Nhận Quà (Referral): Tự động tạo mã chia sẻ REF-ID độc quyền cho từng user kèm link chia sẻ. Tích hợp tính năng Copy nhạy bén với thông báo SweetAlert2.**
 
-# 
+## 
 
 ## **15. ⚙️ Nâng Cấp Hệ Thống Backend \& Tiện Ích (Core System)**
 
-## 
+#### 
 
 #### **- Hệ Thống Chạy Ngầm (Background Tasks): Tích hợp luồng chạy ngầm (tasks.py) tự động quét cơ sở dữ liệu mỗi 5 phút. Tự động chuyển các đơn hàng ở trạng thái "Pending" (Chờ thanh toán) quá hạn 15 phút sang "Cancelled" và hoàn trả lại số lượng sản phẩm vào kho, ngăn chặn tình trạng giam hàng ảo.**
 
@@ -568,11 +576,11 @@
 
 #### **- Công Cụ Sao Lưu Dữ Liệu (Auto Backup): Tích hợp script backup\_db.py cho phép Admin sao lưu an toàn toàn bộ cơ sở dữ liệu (.db). Hệ thống tự động tìm file, copy, và nén thành file .zip gọn nhẹ kèm theo mốc thời gian (timestamp) chi tiết để dễ dàng phục hồi khi cần thiết.**
 
-# 
+## 
 
 ## **16. 📈 Nâng Cấp Kiến Trúc Dữ Liệu \& Phân Tích (Big Data \& Performance)**
 
-## 
+#### 
 
 #### **- Lõi Phân Tích Dữ Liệu (Sales Analytics Engine): Xây dựng module analytics\_engine.py ứng dụng thư viện Pandas để xử lý Big Data. Cung cấp các công cụ phân tích nâng cao như: Tính tỷ lệ giữ chân khách hàng (Retention Rate), Phân tích xu hướng doanh thu 7 ngày, và Phân tích RFM (Recency, Frequency, Monetary) để tự động lọc ra tệp Khách hàng VIP.**
 
@@ -584,11 +592,11 @@
 
 #### **- Quản Trị Vector AI (Vector Manager): Refactor toàn bộ logic ChromaDB thành class vector\_manager.py chuyên biệt. Hệ thống mã hóa ngôn ngữ tự nhiên thành Vector đa chiều (768 chiều) với model Google Embedding chuẩn xác, sẵn sàng mở rộng quy mô dữ liệu RAG.**
 
-# 
+## 
 
 ## **17. 🕷️ Trí Tuệ Nhân Tạo \& Phân Tích Chuyên Sâu (Advanced ML \& Tracking)**
 
-# 
+#### 
 
 #### **- Hệ Thống Học Máy Gợi Ý Sản Phẩm (ML Recommender): Xây dựng thuật toán Lọc Cộng Tác (Collaborative Filtering) trong file recommendation\_ml.py sử dụng Đại số tuyến tính của Numpy và Pandas. Hệ thống có khả năng tự động học hỏi từ hàng ngàn lịch sử giỏ hàng của người dùng để sinh ra Ma trận Độ Tương Đồng (Item-Item Similarity Matrix), từ đó đưa ra quyết định gợi ý mua kèm (Cross-sell) cực kỳ chuẩn xác.**
 
@@ -600,7 +608,7 @@
 
 #### **- Robot Cào Dữ Liệu Đối Thủ (Competitor Web Scraper): Ứng dụng kỹ thuật Web Scraping với BeautifulSoup/Requests trong file competitor\_scraper.py. Tạo lập các kịch bản bot giả lập trình duyệt (Bypass Anti-bot) để tự động quét giá trị trường, so sánh độ chênh lệch giá của sản phẩm nội bộ so với đối thủ và xuất báo cáo tự động cho Admin.**
 
-# 
+## 
 
 ## **18. 🛡️ Cơ Sở Hạ Tầng \& Bảo Mật Nâng Cao (Core Infrastructure)**
 
@@ -616,11 +624,11 @@
 
 #### **- Hệ Thống Phân Tích Nhật Ký (Log Analyzer): Tích hợp script log\_analyzer.py sử dụng Regex và Counter để đọc file access.log. Tự động thống kê lượng truy cập, nhận diện các IP có dấu hiệu spam và báo cáo các API xử lý chậm để tối ưu.**
 
-# 
+## 
 
 ## **19. 🧱 Chuẩn Hóa Mã Nguồn \& Clean Code (Refactoring)**
 
-## 
+#### 
 
 #### **- Hệ Thống Hằng Số Tập Trung (Constants Manager): Tạo file constants.py để tách toàn bộ các chuỗi văn bản cứng (hardcode strings) như: Trạng thái đơn hàng, Từ khóa AI, Cấu hình Chatbot, và Thông báo lỗi ra khỏi logic chính. Giúp mã nguồn tuân thủ triệt để nguyên tắc SOLID, dễ dàng bảo trì và đồng bộ đa ngôn ngữ sau này.**
 
@@ -628,11 +636,11 @@
 
 #### **- Refactor Controllers (main.py \& admin.py): Cập nhật toàn bộ logic xử lý chính để import và sử dụng các biến hằng số từ constants.py. Loại bỏ 100% "magic strings" (chuỗi rác) trong mã nguồn, giúp code an toàn hơn, tránh sai sót do gõ nhầm text và chuẩn bị sẵn sàng cho các đợt scale-up hệ thống lớn.**
 
-# 
+## 
 
 ## **20. 🤖 Công Cụ Lập Trình Viên (DevSecOps Tools)**
 
-## 
+#### 
 
 #### **- Hệ Thống Quét Lỗ Hổng Code (Code Security Scanner): Triển khai file code\_security\_scanner.py sử dụng thư viện ast (Abstract Syntax Tree). Bot này chạy ngầm và tự động phân tích hàng ngàn dòng mã nguồn Python trong dự án để tìm ra các điểm yếu bảo mật (như: hàm eval() nguy hiểm, lộ lọt mã API Key được gán cứng, và cờ Debug=True bị bỏ quên). Đóng vai trò như một kỹ sư bảo mật ảo (DevSecOps).**
 
@@ -640,15 +648,15 @@
 
 ## **21. 📜 Tự Động Hóa Tài Liệu (Document as Code)**
 
-## 
+#### 
 
 #### **- Cỗ Máy Sinh Tài Liệu API Tự Động: Tích hợp công cụ api\_doc\_builder.py. Hệ thống này ứng dụng cây cú pháp AST để tự động quét qua toàn bộ các module xử lý (Routes) của Flask. Nó sẽ tự động thu thập các đường dẫn Endpoints, phương thức HTTP (GET/POST), tên hàm tương ứng, và biên dịch ra một tệp Markdown (API\_DOCUMENTATION.md) đạt chuẩn, giúp giảm 100% thời gian viết tài liệu thủ công.**
 
-# 
+## 
 
 ## **22. 🗄️ Kỹ Nghệ Dữ Liệu (Data Engineering)**
 
-## 
+#### 
 
 #### **- Động Cơ Xuất Dữ Liệu Data Warehouse: Phát triển module data\_warehouse\_exporter.py đóng vai trò là một luồng ETL (Extract, Transform, Load) nội bộ. Hệ thống kết nối trực tiếp vào SQLite, sử dụng Pandas để làm sạch dữ liệu (ẩn danh email khách hàng, format số điện thoại), xuất toàn bộ cơ sở dữ liệu thành các tệp CSV nén ZIP chuẩn mực. Sẵn sàng cung cấp Data cho các công cụ BI (Business Intelligence) như PowerBI hoặc Tableau.**
 
@@ -656,31 +664,31 @@
 
 ## **23. ⚖️ Quản Trị Chất Lượng Mã Nguồn (Code Quality)**
 
-## 
+#### 
 
 #### **- Hệ Thống Linter Tùy Chỉnh (Custom Linter): Tích hợp code\_quality\_scorer.py, một công cụ quét chất lượng code sử dụng AST và Regex. Tự động đếm dòng code, phát hiện các hàm quên viết tài liệu (Missing Docstrings) và kiểm tra chuẩn đặt tên PEP8 (phát hiện sai sót CamelCase/snake\_case). Cuối cùng chấm điểm dự án trên thang 100 để liên tục duy trì độ "sạch" của hệ thống.**
 
-# 
+## 
 
 ## **24. 🌟 Tối Ưu Hóa Trải Nghiệm Lập Trình (Đạt Chuẩn PEP8 100/100)**
 
-## 
+#### 
 
 #### **- Phủ Xanh 100% Docstring: Toàn bộ hệ thống mã nguồn Python (từ các Controller, Models, Utils cho đến các kịch bản Kiểm thử - Test Suites và Công cụ nền) đã được viết chú thích (Docstring) mô tả chi tiết chức năng, tham số theo đúng quy chuẩn Python quốc tế. Hệ thống vượt qua hoàn toàn bài kiểm tra khắt khe của Custom Linter và đạt điểm số tuyệt đối A+ (100/100), thiết lập nền tảng Clean Code vĩnh cửu và đẩy tỷ trọng ngôn ngữ Python của dự án trên kho lưu trữ lên mức cao nhất!**
 
-# 
+## 
 
 ## **25. 🧮 Thuật Toán Khuyến Nghị Toán Học (Algorithmic Recommendation Engine)**
 
-## 
+#### 
 
 #### **- Hệ Thống Gợi Ý Sản Phẩm Tương Tự (Content-Based Filtering): Xây dựng thuật toán Python thuần túy thay thế cho AI Vector Search để đảm bảo tính ổn định tuyệt đối (không lo đứt cáp hay hết Quota API). Thuật toán tự động chấm điểm tương đồng (Scoring) giữa các sản phẩm dựa trên 3 tiêu chí trọng số: Cùng hãng sản xuất (+50 điểm), Độ lệch chuẩn mức giá (+10 đến +30 điểm), và Tỷ lệ trùng lặp từ khóa tên máy (+5 điểm/từ). Giúp giao diện trang chi tiết hiển thị danh sách "Sản Phẩm Tương Tự" siêu mượt, logic và chuẩn xác như các sàn TMĐT lớn.**
 
-# 
-
-## **26. ⚖️ Đấu Trường AI So Sánh 4 Sản Phẩm**
-
 ## 
+
+## **26. ⚖️ Đấu Trường AI So Sánh 4 Sản Phẩm (CellphoneS Style)**
+
+#### 
 
 #### **- Giao Diện Cột Bám Dính (Sticky Header): Tái thiết kế toàn diện khu vực So sánh (/compare) mang phong cách của các sàn TMĐT công nghệ hàng đầu. Bảng đối chiếu song song với hình ảnh, giá bán và nút "Mua Ngay" luôn bám dính trên màn hình khi người dùng cuộn xem cấu hình chi tiết.**
 
@@ -692,11 +700,15 @@
 
 #### **- AI Tư Vấn Chuyên Sâu Đa Luồng (Deep Analysis): Khắc phục triệt để tình trạng AI trả lời hời hợt bằng cách ép buộc AI viết 2-3 đoạn văn phân tích chi tiết. Prompt AI được thiết kế đặc biệt để tự động co giãn từ 2 đến 4 máy. AI không chỉ vẽ bảng thông số mà còn đóng vai chuyên gia công nghệ, phân tích ưu/nhược điểm từng dòng máy và đưa ra quyết định "Nên mua máy nào, cho ai, vì sao?" ở ngay dưới cùng.**
 
-# 
+#### 
+
+#### **- Lõi Dự Phòng So Sánh (Local Fallback): Xây dựng kiến trúc phòng thủ "bất tử" (100% Uptime). Khi máy chủ Google Gemini API gặp sự cố hoặc hết hạn mức (Quota), hệ thống tự động chuyển sang chế độ Local Mode. Thuật toán Python sẽ can thiệp và tự động kẻ bảng đối chiếu thông số kỹ thuật (vẫn giữ chuẩn CSS CellphoneS), đảm bảo người dùng luôn có kết quả so sánh thay vì gặp lỗi hệ thống (Trang 500).**
+
+## 
 
 # **📂 Cấu Trúc Dự Án (Modular MVC)**
 
-# 
+## 
 
 ## **MobileStore/**
 
@@ -704,123 +716,215 @@
 
 #### **│**
 
+#### 
+
 #### **├── run.py                  # (ENTRY POINT) Khởi chạy Server Development**
+
+#### 
 
 #### **├── run\_windows\_prod.py   # (PROD ENTRY) Khởi chạy Server Production cho Windows (Waitress)**
 
+#### 
+
 #### **├── competitor\_scraper.py   # (BOT) Robot thu thập dữ liệu giá đối thủ**
+
+#### 
 
 #### **├── backup\_db.py            # (UTILS) Script tự động sao lưu Database**
 
+#### 
+
 #### **├── log\_analyzer.py         # (UTILS) Phân tích nhật ký hệ thống (Log Analyzer)**
+
+#### 
 
 #### **├── code\_security\_scanner.py# (DEVSECOPS) Bot tự động quét lổ hổng Code bằng AST**
 
+#### 
+
 #### **├── api\_doc\_builder.py      # (DOCS) Cỗ máy tự động sinh tài liệu API (Document as Code)**
+
+#### 
 
 #### **├── data\_warehouse\_exporter.py# (DATA) Script ETL xuất dữ liệu sang Data Warehouse**
 
+#### 
+
 #### **├── code\_quality\_scorer.py  # (QA/QC) Bot Linter chấm điểm chuẩn code PEP8**
+
+#### 
 
 #### **├── run\_tests.py            # (TEST RUNNER) Script chạy toàn bộ test**
 
+#### 
+
 #### **├── rag\_sync.py             # (AI SYNC) Script đồng bộ Vector DB (ChromaDB)**
+
+#### 
 
 #### **├── migrations/             # (NEW) Thư mục chứa file migration DB**
 
+#### 
+
 #### **├── test\_core.py            # Test chức năng cơ bản (Core)**
+
+#### 
 
 #### **├── test\_ai.py              # Test tính năng AI (Mocking)**
 
+#### 
+
 #### **├── test\_security.py        # Test bảo mật**
+
+#### 
 
 #### **├── test\_models.py        # Test cấu trúc Database**
 
+#### 
+
 #### **├── test\_auth.py        # Test xác thực \& Đăng nhập**
+
+#### 
 
 #### **├── test\_integration\_system.py # Test tích hợp hệ thống**
 
+#### 
+
 #### **├── test\_ml.py              # (TEST) thuật toán Machine Learning**
+
+#### 
 
 #### **├── test\_infrastructure.py  # (TEST) Tường lửa và Hàng đợi tác vụ**
 
+#### 
+
 #### **├── stress\_test.py          # (TEST) Script giả lập tải nặng \& bơm data ảo**
+
+#### 
 
 #### **├── .env                    # Cấu hình bảo mật**
 
+#### 
+
 #### **├── requirements.txt        # Thư viện**
 
+#### 
+
 #### **│**
+
+#### 
 
 #### **└── app/                    # (PACKAGE) Source Code**
 
+#### 
+
 #### **├── \_init\_.py         # App Factory**
+
+#### 
 
 #### **├── extensions.py       # DB, Login, OAuth, Migrate, CSRF**
 
+#### 
+
 #### **├── models.py           # Database Models**
+
+#### 
 
 #### **├── utils.py            # AI Logic \& Helpers**
 
+#### 
+
 #### **├── tasks.py            # Hệ thống quét và chạy ngầm**
+
+#### 
 
 #### **├── errors.py           # Bộ xử lý lỗi toàn cục**
 
+#### 
+
 #### **├── vector\_manager.py   # Quản trị Vector DB (ChromaDB)**
+
+#### 
 
 #### **├── analytics\_engine.py # Lõi phân tích dữ liệu bán hàng (Pandas)**
 
+#### 
+
 #### **├── recommendation\_ml.py# Thuật toán AI Lọc Cộng tác (Machine Learning)**
+
+#### 
 
 #### **├── security\_firewall.py  # Tường lửa bảo mật WAF (Chống DDoS/XSS)**
 
+#### 
+
 #### **├── notification\_worker.py# Hàng đợi xử lý tác vụ nền (Queue)**
+
+#### 
 
 #### **├── constants.py        # Quản lý hằng số hệ thống (Clean Code)**
 
+#### 
+
 #### **│**
+
+#### 
 
 #### **├── templates/          # (VIEW) Giao diện HTML**
 
+#### 
+
 #### **└── routes/             # (CONTROLLER)**
+
+#### 
 
 #### **├── main.py         # Xử lý chính**
 
+#### 
+
 #### **├── auth.py         # Xác thực**
+
+#### 
 
 #### **└── admin.py        # Quản trị**
 
+#### 
+
 #### **├── .github/                # (CI/CD) Cấu hình GitHub Actions**
+
+#### 
 
 #### **│   └── workflows/**
 
+#### 
+
 #### **│       └── ci\_cd.yml**
 
-# 
+## 
 
 # **🛠 Cài Đặt \& Chạy**
 
-# 
+## 
 
 ## **Bước 1: Cài đặt thư viện**
 
-# 
+## 
 
 #### **py -m pip install -r requirements.txt**
 
-# 
+## 
 
 ## **Bước 2: Cấu hình .env**
 
-# 
+## 
 
 #### **Tạo file .env và điền API Key (Gemini, Google OAuth, Secret Key).**
 
-# 
+## 
 
 ## **Bước 3: Khởi tạo Database (QUAN TRỌNG)**
 
-# 
+## 
 
 #### **Do đã tích hợp Flask-Migrate, bạn chạy các lệnh sau để khởi tạo DB:**
 
@@ -828,11 +932,15 @@
 
 #### **# 1. Khởi tạo môi trường migration (chỉ chạy lần đầu)**
 
+#### 
+
 #### **py -m flask db init**
 
 #### 
 
 #### **# 2. Tạo file migration từ Models**
+
+#### 
 
 #### **py -m flask db migrate -m "Initial migration"**
 
@@ -840,13 +948,15 @@
 
 #### **# 3. Áp dụng vào Database**
 
+#### 
+
 #### **py -m flask db upgrade**
 
-# 
+## 
 
 ## **Bước 4: Đồng bộ Vector Database (Cho AI)**
 
-# 
+#### 
 
 #### **Chạy lệnh này để AI "học" dữ liệu sản phẩm lần đầu:**
 
@@ -854,7 +964,7 @@
 
 #### **py rag\_sync.py**
 
-# 
+## 
 
 ## **Bước 5: Chạy Website (Local)**
 
@@ -862,15 +972,15 @@
 
 #### **py run.py**
 
-## 
+#### 
 
-### **👉 Truy cập: http://127.0.0.1:5000**
+#### **👉 Truy cập: http://127.0.0.1:5000**
 
 ## 
 
 ## **Bước 6: Chạy Production (Chế độ Doanh nghiệp trên Windows)**
 
-## 
+#### 
 
 #### **Hệ điều hành Windows không hỗ trợ Gunicorn, vì vậy dự án đã thiết lập hệ thống máy chủ Waitress WSGI có khả năng chịu tải cao, hỗ trợ đa luồng (multi-threading).**
 
@@ -882,11 +992,11 @@
 
 #### **py run\_windows\_prod.py**
 
-# 
+## 
 
 # **🔑 Tài Khoản Demo**
 
-# 
+## 
 
 ## **Vai trò**
 
@@ -902,7 +1012,7 @@
 
 ## **Admin**
 
-# 
+## 
 
 #### **admin**
 
@@ -910,11 +1020,11 @@
 
 #### **123456**
 
-# 
+## 
 
 ## **Khách**
 
-# 
+## 
 
 #### **khach**
 
@@ -922,7 +1032,7 @@
 
 #### **123456**
 
-# 
+## 
 
 # **Chúc bạn có trải nghiệm tuyệt vời với MobileStore phiên bản Tết 2026! 🚀🌸**
 

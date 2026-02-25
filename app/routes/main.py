@@ -39,7 +39,8 @@ from app.utils import (
     search_vector_db,
     analyze_sentiment,
     direct_gemini_search,
-    get_similar_products
+    get_similar_products,
+    generate_local_comparison_html
 )
 
 main_bp = Blueprint('main', __name__)
@@ -692,7 +693,7 @@ def compare_page():
                     )
 
                     if not res:
-                        res = "<div class='alert alert-warning'>Hệ thống AI đang quá tải hoặc lỗi kết nối. Vui lòng thử lại sau.</div>"
+                        res = generate_local_comparison_html(p1, p2, p3, p4)
         except ValueError:
             flash('Dữ liệu sản phẩm không hợp lệ', 'danger')
 

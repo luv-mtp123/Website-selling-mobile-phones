@@ -1,7 +1,6 @@
 import os
 import json
 import re
-import requests
 import chromadb
 import google.generativeai as genai
 from chromadb.utils import embedding_functions
@@ -32,7 +31,7 @@ except Exception as e:
 # Hàm tạo Embedding dùng Gemini (Wrapper cho ChromaDB)
 class GeminiEmbeddingFunction(embedding_functions.EmbeddingFunction):
     def __call__(self, input: list[str]) -> list[list[float]]:
-        ### ---> [ĐÃ SỬA CHỖ NÀY: Cập nhật sang model Embedding mới nhất của Google vì bản 001 đã bị 404] <--- ###
+        """Hàm sinh Vector nhúng sử dụng model Google mới nhất."""
         model = 'models/text-embedding-004'
         embeddings = []
         for text in input:
@@ -438,51 +437,72 @@ def local_analyze_intent(query):
     return data
 
 
-def get_comparison_result(p1_name, p1_price, p1_desc, p2_name, p2_price, p2_desc):
+# ==============================================================================================
+# ---> [ĐÃ SỬA CHỖ NÀY: Nâng cấp System Instruction ép buộc AI phân tích sâu sắc cho TỪNG máy] <---
+# ==============================================================================================
+def get_comparison_result(p1_id, p1_name, p1_price, p1_desc, p1_img,
+                          p2_id, p2_name, p2_price, p2_desc, p2_img,
+                          p3_id=None, p3_name=None, p3_price=None, p3_desc=None, p3_img=None,
+                          p4_id=None, p4_name=None, p4_price=None, p4_desc=None, p4_img=None):
     """
-    Sử dụng AI tạo bảng HTML đối chiếu trực tiếp thông số 2 sản phẩm.
-    Đưa ra lời khuyên khách quan (Pros/Cons) hỗ trợ người dùng ra quyết định mua hàng.
+    Sử dụng AI tạo bảng HTML đối chiếu thông số đa sản phẩm (tối đa 4) theo cấu trúc chuẩn CellphoneS.
+    Bảng có Header bám dính (Sticky Header) chứa Hình ảnh, Giá và Nút "Mua Ngay".
+    Đưa ra lời khuyên khách quan (Pros/Cons) hỗ trợ người dùng ra quyết định.
     """
     system_instruction = (
-        "Bạn là chuyên gia bán hàng công nghệ cấp cao. "
-        "Nhiệm vụ của bạn là so sánh thông số, sau đó BẮT BUỘC phải đưa ra lời khuyên "
-        "để khách hàng biết mình nên chọn máy nào."
+        "Bạn là chuyên gia bán hàng công nghệ cấp cao kiêm Frontend Developer. "
+        "Nhiệm vụ của bạn là sinh ra bảng so sánh HTML CỰC KỲ CHÍNH XÁC cấu trúc để render giao diện, "
+        "sau đó BẮT BUỘC phải viết bài phân tích tư vấn RẤT CHUYÊN SÂU, CHI TIẾT bên dưới bảng."
     )
 
+    products_info = f"Sản phẩm 1: ID={p1_id}, Tên={p1_name}, Giá={p1_price}, Ảnh={p1_img}, Cấu hình={p1_desc}\n"
+    products_info += f"Sản phẩm 2: ID={p2_id}, Tên={p2_name}, Giá={p2_price}, Ảnh={p2_img}, Cấu hình={p2_desc}\n"
+
+    num_cols = 2
+    headers_html = f"""
+         + `<th>` 1: `<h5 class="fw-bold text-danger mb-0">SO SÁNH</h5>` (width: 15%)
+         + `<th>` 2: `<div class="text-center"><img src="{p1_img}" style="max-height:140px; object-fit:contain;" class="mb-2"><br><span class="fw-bold fs-6 text-dark">{p1_name}</span><br><span class="text-danger fw-bold fs-6">{p1_price}</span><br><form action="/cart/add/{p1_id}" method="POST" class="mt-2"><button type="submit" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm">MUA NGAY</button></form></div>`
+         + `<th>` 3: `<div class="text-center"><img src="{p2_img}" style="max-height:140px; object-fit:contain;" class="mb-2"><br><span class="fw-bold fs-6 text-dark">{p2_name}</span><br><span class="text-danger fw-bold fs-6">{p2_price}</span><br><form action="/cart/add/{p2_id}" method="POST" class="mt-2"><button type="submit" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm">MUA NGAY</button></form></div>`"""
+
+    # Tạo logic ép AI viết Lời khuyên động theo số lượng máy
+    advice_html = f"""
+    - Bước 4: Tạo phần tư vấn RẤT CHUYÊN SÂU dưới bảng bằng thẻ `<div class="alert alert-info mt-4 rounded-4 shadow-sm border-0 p-4">`.
+       Bên trong div, tạo tiêu đề `<h5 class="fw-bold text-primary mb-3"><i class="fas fa-robot me-2"></i>TƯ VẤN CHUYÊN SÂU TỪ CHUYÊN GIA AI</h5>`.
+       BẮT BUỘC viết 2-3 đoạn văn phân tích CHI TIẾT về điểm mạnh, điểm yếu, sự khác biệt cốt lõi (Camera, Hiệu năng, Pin, Thiết kế) giữa {num_cols} sản phẩm. Thể hiện bạn là chuyên gia công nghệ am hiểu sâu sắc.
+       Cuối cùng, tạo danh sách `<ul>` với class `mt-3` chỉ rõ đối tượng phù hợp cho TỪNG MÁY:
+         + `<li>Nên mua <b>{p1_name}</b> nếu bạn... (nêu rõ lý do)</li>`
+         + `<li>Nên mua <b>{p2_name}</b> nếu bạn... (nêu rõ lý do)</li>`"""
+
+    if p3_id:
+        num_cols = 3
+        products_info += f"Sản phẩm 3: ID={p3_id}, Tên={p3_name}, Giá={p3_price}, Ảnh={p3_img}, Cấu hình={p3_desc}\n"
+        headers_html += f"""\n         + `<th>` 4: `<div class="text-center"><img src="{p3_img}" style="max-height:140px; object-fit:contain;" class="mb-2"><br><span class="fw-bold fs-6 text-dark">{p3_name}</span><br><span class="text-danger fw-bold fs-6">{p3_price}</span><br><form action="/cart/add/{p3_id}" method="POST" class="mt-2"><button type="submit" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm">MUA NGAY</button></form></div>`"""
+        advice_html += f"\n         + `<li>Nên mua <b>{p3_name}</b> nếu bạn... (nêu rõ lý do)</li>`"
+
+    if p4_id:
+        num_cols = 4
+        products_info += f"Sản phẩm 4: ID={p4_id}, Tên={p4_name}, Giá={p4_price}, Ảnh={p4_img}, Cấu hình={p4_desc}\n"
+        headers_html += f"""\n         + `<th>` 5: `<div class="text-center"><img src="{p4_img}" style="max-height:140px; object-fit:contain;" class="mb-2"><br><span class="fw-bold fs-6 text-dark">{p4_name}</span><br><span class="text-danger fw-bold fs-6">{p4_price}</span><br><form action="/cart/add/{p4_id}" method="POST" class="mt-2"><button type="submit" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm">MUA NGAY</button></form></div>`"""
+        advice_html += f"\n         + `<li>Nên mua <b>{p4_name}</b> nếu bạn... (nêu rõ lý do)</li>`"
+
+    # Đóng thẻ div cho phần tư vấn
+    advice_html += "\n       Đóng thẻ `</div>`."
+
     prompt = f"""
-    Hãy tạo mã HTML so sánh 2 sản phẩm:
-    1. {p1_name} (Giá: {p1_price}) - Thông tin: {p1_desc}
-    2. {p2_name} (Giá: {p2_price}) - Thông tin: {p2_desc}
+    Tạo mã HTML so sánh các sản phẩm phong cách CellphoneS:
+    {products_info}
 
-    LƯU Ý QUAN TRỌNG: 
-    Nếu phần "Thông tin cung cấp" bên trên bị thiếu thông số, hãy SỬ DỤNG KIẾN THỨC CỦA BẠN về 2 dòng điện thoại này để điền bổ sung cho đầy đủ và chính xác nhất. Không được để trống quá nhiều.
+    Yêu cầu ĐỊNH DẠNG HTML BẮT BUỘC TỪNG DÒNG CHỮ:
+    - Bước 1: Tạo bảng `<table class="table table-bordered table-striped table-compare align-middle">`
+    - Bước 2: Tạo Header Bám dính: `<thead class="compare-thead bg-white">`
+       Trong thead, tạo 1 thẻ `<tr>` chứa các thẻ `<th>`:
+{headers_html}
+    - Bước 3: Tạo `<tbody>`.
+       Chia nhóm thông số bằng thẻ: `<tr class="table-light"><td colspan="{num_cols + 1}" class="fw-bold text-uppercase text-secondary ps-3 py-2">TÊN NHÓM</td></tr>` (Các nhóm: MÀN HÌNH, VI XỬ LÝ, BỘ NHỚ, CAMERA SAU, CAMERA TRƯỚC, PIN & SẠC, THIẾT KẾ).
+       Liệt kê chi tiết từng dòng `<tr><td>Tên thông số</td><td class="text-center fw-medium">Giá trị 1</td><td class="text-center fw-medium">Giá trị 2</td>...</tr>`. Tự bổ sung kiến thức kỹ thuật nếu cấu hình bị thiếu.
+{advice_html}
 
-    Yêu cầu ĐỊNH DẠNG HTML BẮT BUỘC:
-    - Bước 1: Tạo một bảng `<table class="table table-bordered table-hover">`.
-    Cột 1 là "Thông số kỹ thuật", Cột 2 là tên máy 1, Cột 3 là tên máy 2.
-    BẮT BUỘC phải tạo các hàng (row) sau đây trong bảng:
-      + Kích thước màn hình
-      + Công nghệ màn hình / Độ phân giải
-      + Tần số quét (Hz)
-      + Camera sau
-      + Camera trước
-      + Chipset (CPU)
-      + Dung lượng RAM
-      + Bộ nhớ trong (ROM)
-      + Dung lượng Pin & Công suất Sạc nhanh
-      + Công nghệ NFC
-      + Thẻ SIM
-      + Hệ điều hành
-      + Thiết kế & Trọng lượng
-
-    - Bước 2: Dưới bảng, thêm một thẻ `<div class="alert alert-info mt-4" style="border-radius: 10px;">`.
-    - Trong thẻ div này, tạo tiêu đề `<h5 class="fw-bold text-primary">💡 TƯ VẤN TỪ CHUYÊN GIA AI</h5>`.
-    - Viết 1-2 đoạn văn phân tích chuyên sâu về sự khác biệt lớn nhất giữa 2 máy.
-    - Thêm danh sách `<ul>` chỉ rõ:
-      + <li>Nên mua <b>{p1_name}</b> nếu bạn...</li>
-      + <li>Nên mua <b>{p2_name}</b> nếu bạn...</li>
-
-    CHỈ TRẢ VỀ MÃ HTML CỦA BẢNG VÀ PHẦN TƯ VẤN, KHÔNG GIẢI THÍCH THÊM BẤT CỨ ĐIỀU GÌ.
+    CHỈ TRẢ VỀ HTML, KHÔNG KÈM TEXT HAY MARKDOWN BLOCK NÀO KHÁC.
     """
 
     res = call_gemini_api(prompt, system_instruction=system_instruction)

@@ -255,3 +255,145 @@
 [2026-02-24 17:49:24,076] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 7436.68ms
 [2026-02-24 17:49:37,403] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 13.35ms
 [2026-02-24 17:49:53,507] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 13296.12ms
+[2026-02-24 19:33:23,824] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-24 19:33:23,826] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-24 19:33:28,489] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 23.1ms
+[2026-02-24 19:33:29,915] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 8.59ms
+[2026-02-24 19:33:33,626] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.28ms
+[2026-02-24 19:33:35,357] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 49.92ms
+[2026-02-24 19:33:41,017] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 2.0ms
+[2026-02-24 19:34:05,046] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 20247.75ms
+[2026-02-25 08:40:28,804] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-25 08:40:28,818] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-25 08:40:33,248] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 24.86ms
+[2026-02-25 08:40:40,658] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 50.87ms
+[2026-02-25 08:41:31,091] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 6.97ms
+[2026-02-25 08:41:32,318] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 4.0ms
+[2026-02-25 08:42:19,076] INFO in system_logger: IP: 127.0.0.1 | GET /login | Status: 200 | Time: 8.92ms
+[2026-02-25 08:42:19,128] WARNING in system_logger: IP: 127.0.0.1 | GET /favicon.ico | Status: 404 | Time: 3.0ms
+[2026-02-25 08:42:22,945] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 120.41ms
+[2026-02-25 08:42:23,014] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 60.25ms
+[2026-02-25 08:42:36,722] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.0ms
+[2026-02-25 08:42:39,401] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 5.37ms
+[2026-02-25 08:43:24,588] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 8.17ms
+[2026-02-25 08:43:32,671] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 12.26ms
+[2026-02-25 08:43:34,840] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 6.74ms
+[2026-02-25 08:43:47,110] INFO in system_logger: IP: 127.0.0.1 | POST /product/2/comment | Status: 302 | Time: 18.51ms
+[2026-02-25 08:43:47,124] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 0.59ms
+[2026-02-25 08:54:34,716] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.2ms
+[2026-02-25 08:54:36,096] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 5.0ms
+[2026-02-25 08:55:17,194] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-25 08:55:17,194] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-25 08:55:18,759] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 23.8ms
+[2026-02-25 08:55:20,741] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 63.8ms
+[2026-02-25 08:55:33,034] ERROR in app: Exception on /compare [POST]
+Traceback (most recent call last):
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 661, in compare_page
+    res = cached_ai_call(
+          ^^^^^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 75, in cached_ai_call
+    res = func(*args)
+          ^^^^^^^^^^^
+TypeError: get_comparison_result() takes 10 positional arguments but 20 were given
+[2026-02-25 08:55:33,056] ERROR in system_logger: IP: 127.0.0.1 | POST /compare | Status: 500 | Time: 21.41ms
+[2026-02-25 08:59:55,271] ERROR in app: Exception on /compare [POST]
+Traceback (most recent call last):
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 661, in compare_page
+    res = cached_ai_call(
+          ^^^^^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 75, in cached_ai_call
+    res = func(*args)
+          ^^^^^^^^^^^
+TypeError: get_comparison_result() takes 10 positional arguments but 20 were given
+[2026-02-25 08:59:55,288] ERROR in system_logger: IP: 127.0.0.1 | POST /compare | Status: 500 | Time: 17.04ms
+[2026-02-25 09:00:14,400] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.08ms
+[2026-02-25 09:00:16,224] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 7.83ms
+[2026-02-25 09:00:27,895] ERROR in app: Exception on /compare [POST]
+Traceback (most recent call last):
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 661, in compare_page
+    res = cached_ai_call(
+          ^^^^^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 75, in cached_ai_call
+    res = func(*args)
+          ^^^^^^^^^^^
+TypeError: get_comparison_result() takes 10 positional arguments but 20 were given
+[2026-02-25 09:00:27,895] ERROR in system_logger: IP: 127.0.0.1 | POST /compare | Status: 500 | Time: 0.0ms
+[2026-02-25 09:00:45,406] ERROR in app: Exception on /compare [POST]
+Traceback (most recent call last):
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 661, in compare_page
+    res = cached_ai_call(
+          ^^^^^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 75, in cached_ai_call
+    res = func(*args)
+          ^^^^^^^^^^^
+TypeError: get_comparison_result() takes 10 positional arguments but 20 were given
+[2026-02-25 09:00:45,408] ERROR in system_logger: IP: 127.0.0.1 | POST /compare | Status: 500 | Time: 5.57ms
+[2026-02-25 09:01:29,937] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-25 09:01:29,937] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-25 09:01:29,998] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 27.27ms
+[2026-02-25 09:01:33,265] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 52.35ms
+[2026-02-25 09:02:02,806] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 22462.99ms
+[2026-02-25 09:07:42,514] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-25 09:07:42,514] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-25 09:07:46,818] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 22.33ms
+[2026-02-25 09:07:49,146] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 52.35ms
+[2026-02-25 09:08:23,858] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 28364.89ms
+[2026-02-25 09:10:39,413] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 22517.34ms
+[2026-02-25 09:10:59,139] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.0ms
+[2026-02-25 09:10:59,681] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 3.06ms
+[2026-02-25 09:11:00,917] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 0.0ms
+[2026-02-25 09:11:11,958] INFO in system_logger: IP: 127.0.0.1 | GET /product/1 | Status: 200 | Time: 7.11ms
+[2026-02-25 09:11:44,794] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.21ms
+[2026-02-25 09:11:46,866] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 9.4ms
+[2026-02-25 09:12:01,448] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-25 09:12:01,450] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-25 09:12:01,546] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 17.7ms
+[2026-02-25 09:12:03,428] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 51.58ms

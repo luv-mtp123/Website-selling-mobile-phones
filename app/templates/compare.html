@@ -1,122 +1,134 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="text-center mb-5 pt-3">
-    <h1 class="text-primary fw-bold display-5">
-        <span class="text-dark">AI</span> <span class="text-danger">VS</span> Battle
-    </h1>
-    <p class="lead text-muted">So sánh chi tiết thông số và nhận tư vấn từ chuyên gia AI</p>
-</div>
+<style>
+    /* CSS CHUẨN CELLPHONES DÀNH RIÊNG CHO BẢNG SO SÁNH */
+    .compare-container {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        padding: 30px;
+    }
+    .compare-header-title {
+        font-weight: 800;
+        text-transform: uppercase;
+        color: #212529;
+        margin-bottom: 25px;
+        border-bottom: 3px solid #d70018;
+        display: inline-block;
+        padding-bottom: 8px;
+    }
 
-<div class="card shadow-lg border-0 rounded-4 mb-5 overflow-hidden">
-    <div class="card-header bg-dark text-white p-4 text-center">
-        <h4 class="mb-0 text-uppercase fw-bold">Chọn sản phẩm mà bạn muốn so sánh</h4>
-    </div>
-    <div class="card-body p-5 bg-light">
-        <form method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <div class="row align-items-center">
-                <!-- SP 1 -->
-                <div class="col-md-5">
-                    <div class="form-floating">
-                        <select name="product1" class="form-select shadow-sm fw-bold text-primary" id="p1" required>
-                            <option value="" disabled selected>Chọn sản phẩm trái</option>
-                            {% for p in products %}
-                            <option value="{{ p.id }}" {% if p1 and p1.id == p.id %}selected{% endif %}>{{ p.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <label for="p1">Sản phẩm 1</label>
-                    </div>
-                </div>
+    /* Hiệu ứng Header bám dính khi cuộn (Sticky Header) */
+    .compare-thead th {
+        position: sticky !important;
+        top: 65px; /* Chiều cao Navbar */
+        background-color: #fff !important;
+        z-index: 1020 !important;
+        box-shadow: 0 4px 10px -2px rgba(0,0,0,0.1);
+        padding: 20px 10px;
+        border-bottom: 2px solid #dee2e6 !important;
+    }
 
-                <!-- VS Icon -->
-                <div class="col-md-2 text-center my-3 my-md-0">
-                    <div class="rounded-circle bg-danger text-white d-inline-flex align-items-center justify-content-center shadow-lg" style="width: 70px; height: 70px; font-weight: 900; font-size: 1.5rem; border: 4px solid white;">VS</div>
-                </div>
+    /* Thiết kế riêng cho bảng do AI sinh ra */
+    .table-compare {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .table-compare tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    .table-compare td {
+        vertical-align: middle;
+        padding: 15px;
+    }
+    /* Đổ màu cho hàng tiêu đề nhóm (Màn hình, Camera...) */
+    .table-compare tr.table-light td {
+        background-color: #f1f3f5 !important;
+        color: #495057 !important;
+        font-size: 1.1rem;
+        border-top: 2px solid #dee2e6;
+    }
 
-                <!-- SP 2 -->
-                <div class="col-md-5">
-                    <div class="form-floating">
-                        <select name="product2" class="form-select shadow-sm fw-bold text-danger" id="p2" required>
-                            <option value="" disabled selected>Chọn sản phẩm phải</option>
-                            {% for p in products %}
-                            <option value="{{ p.id }}" {% if p2 and p2.id == p.id %}selected{% endif %}>{{ p.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <label for="p2">Sản phẩm 2</label>
-                    </div>
-                </div>
+    /* Thiết kế Form Chọn máy */
+    .select-form-card {
+        background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+        border: 1px solid #ffc9c9;
+        border-radius: 15px;
+        padding: 25px;
+    }
+    .vs-badge {
+        background: #d70018;
+        color: white;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin: auto;
+        box-shadow: 0 4px 8px rgba(215, 0, 24, 0.3);
+    }
+</style>
+
+<div class="container mt-4 mb-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted fw-bold"><i class="fas fa-home me-1"></i>Trang chủ</a></li>
+            <li class="breadcrumb-item active text-dark fw-bold" aria-current="page">So sánh Điện thoại</li>
+        </ol>
+    </nav>
+
+    <!-- Khu Vực Chọn Sản Phẩm Để So Sánh -->
+    <div class="select-form-card mb-5 shadow-sm">
+        <h4 class="fw-bold mb-4 text-center"><i class="fas fa-balance-scale text-danger me-2"></i>Chọn 2 Sản Phẩm Để So Sánh</h4>
+        <form method="POST" action="/compare" class="row align-items-center">
+            <div class="col-md-5 mb-3 mb-md-0">
+                <label class="fw-bold mb-2 small text-muted">SẢN PHẨM THỨ 1</label>
+                <select name="product1" class="form-select form-select-lg rounded-4 shadow-sm border-0" required>
+                    <option value="" disabled selected>-- Chọn máy cần so sánh --</option>
+                    {% for p in products %}
+                        <option value="{{ p.id }}" {% if p1 and p1.id == p.id %}selected{% endif %}>{{ p.name }} - {{ p.price | vnd }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
-            <div class="text-center mt-5">
-                <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill shadow-sm fw-bold text-uppercase scale-hover">
-                    <i class="fas fa-bolt me-2 text-warning"></i> Phân Tích Ngay
+            <div class="col-md-2 text-center my-3 my-md-0">
+                <div class="vs-badge">VS</div>
+            </div>
+
+            <div class="col-md-5">
+                <label class="fw-bold mb-2 small text-muted">SẢN PHẨM THỨ 2</label>
+                <select name="product2" class="form-select form-select-lg rounded-4 shadow-sm border-0" required>
+                    <option value="" disabled selected>-- Chọn máy đối thủ --</option>
+                    {% for p in products %}
+                        <option value="{{ p.id }}" {% if p2 and p2.id == p.id %}selected{% endif %}>{{ p.name }} - {{ p.price | vnd }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-12 text-center mt-4">
+                <button type="submit" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold shadow">
+                    <i class="fas fa-bolt me-2"></i>THỰC HIỆN SO SÁNH
                 </button>
             </div>
         </form>
     </div>
-</div>
 
-{% if result %}
-<div class="row g-4 animate-up">
-    <!-- Hình ảnh trực quan -->
-    <div class="col-md-12">
-        <div class="row g-0 rounded-4 overflow-hidden shadow-sm mb-4 bg-white">
-            <div class="col-6 border-end p-4 text-center">
-                <h5 class="fw-bold text-primary">{{ p1.name }}</h5>
-                <img src="{{ p1.image_url }}" class="img-fluid my-3" style="max-height: 200px;">
-                <!-- Sử dụng filter | vnd thay vì format tay -->
-                <h4 class="text-danger">{{ p1.price | vnd }}</h4>
-            </div>
-            <div class="col-6 p-4 text-center">
-                <h5 class="fw-bold text-danger">{{ p2.name }}</h5>
-                <img src="{{ p2.image_url }}" class="img-fluid my-3" style="max-height: 200px;">
-                <!-- Sử dụng filter | vnd thay vì format tay -->
-                <h4 class="text-danger">{{ p2.price | vnd }}</h4>
-            </div>
+    <!-- KHU VỰC HIỂN THỊ KẾT QUẢ TỪ AI -->
+    {% if result %}
+    <div class="compare-container">
+        <h3 class="compare-header-title">Kết quả so sánh chi tiết</h3>
+
+        <!-- Render trực tiếp HTML AI sinh ra tại đây -->
+        <div class="table-responsive">
+            {{ result | safe }}
         </div>
-    </div>
 
-    <!-- Kết quả AI -->
-    <div class="col-12">
-        <div class="card shadow border-0 rounded-4">
-            <div class="card-header bg-gradient-primary text-white p-3">
-                <h5 class="mb-0"><i class="fas fa-brain me-2"></i> Kết quả phân tích</h5>
-            </div>
-            <div class="card-body p-4">
-                <div class="table-responsive ai-result-table">
-                    <!-- Hiển thị HTML trực tiếp từ AI -->
-                    {{ result | safe }}
-                </div>
-            </div>
-        </div>
     </div>
+    {% endif %}
+
 </div>
-
-<style>
-    .ai-result-table table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
-    .ai-result-table th, .ai-result-table td { padding: 12px; border: 1px solid #dee2e6; vertical-align: middle; }
-    .ai-result-table th { background-color: #f8f9fa; font-weight: bold; text-align: center; font-size: 1.1rem; }
-
-    .ai-result-table tr td:nth-child(1), .ai-result-table tr th:nth-child(1) {
-        width: 25%;
-        background-color: #f8f9fa;
-        font-weight: 600;
-        color: #495057;
-    }
-    .ai-result-table tr td:nth-child(2), .ai-result-table tr td:nth-child(3),
-    .ai-result-table tr th:nth-child(2), .ai-result-table tr th:nth-child(3) {
-        width: 37.5%;
-        vertical-align: top;
-    }
-    .ai-result-table tbody tr:nth-of-type(odd) {
-        background-color: rgba(0, 0, 0, 0.02);
-    }
-
-    .scale-hover:hover { transform: scale(1.05); transition: 0.3s; }
-    .animate-up { animation: slideUp 0.5s ease-out; }
-    @keyframes slideUp { from {opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
-    .bg-gradient-primary { background: linear-gradient(45deg, #0d6efd, #0043a8); }
-</style>
-{% endif %}
 {% endblock %}

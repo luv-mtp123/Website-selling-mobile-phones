@@ -116,7 +116,6 @@ class AIFeaturesTestCase(unittest.TestCase):
         self.assertEqual(result['brand'], 'Apple')  # Map từ 'iphone' -> 'Apple'
         self.assertEqual(result['category'], 'accessory')  # Map từ 'ốp' -> 'accessory'
 
-        ### ---> [NEW] CÁC TEST CASE BỔ SUNG ĐỂ BẢO VỆ LOGIC KHỎI LỖI REGRESSION <--- ###
         # Case 3: Bẫy phân loại (Có tên hãng điện thoại nhưng thực chất là tìm phụ kiện)
         query_trap = "Ốp lưng dành cho Samsung S24 Ultra"
         result_trap = local_analyze_intent(query_trap)
@@ -136,7 +135,6 @@ class AIFeaturesTestCase(unittest.TestCase):
         self.assertEqual(result_price_2['max_price'], 15000000)  # Phải quy đổi đúng 15 triệu
         self.assertEqual(result_price_2['category'], 'phone')
 
-        ### ---> [BỔ SUNG THÊM TEST CASE NGẮN & KHÓ TỪ BẠN] <--- ###
         # Case 6: Cực ngắn, chỉ gõ mỗi 1 chữ phụ kiện
         query_short = "ốp"
         result_short = local_analyze_intent(query_short)
@@ -152,7 +150,6 @@ class AIFeaturesTestCase(unittest.TestCase):
         # Case 8: Khách chỉ gõ tên dòng máy, không có chữ "điện thoại"
         query_phone = "iphone 15"
         result_phone = local_analyze_intent(query_phone)
-        # [FIXED] Vì 'iphone' đã tự map qua hãng Apple, logic hệ thống để category=None để tự do quét hãng.
         self.assertIsNone(result_phone['category'])
         self.assertEqual(result_phone['brand'], 'Apple')
 
@@ -169,7 +166,6 @@ class AIFeaturesTestCase(unittest.TestCase):
 
         # Kiểm tra nội dung context gửi cho AI
         self.assertIn("Samsung Galaxy A05", context)  # Phải tìm thấy sản phẩm
-        # [QUAN TRỌNG] Kiểm tra định dạng giá tiền Việt Nam (dấu chấm)
         self.assertIn("3.000.000 đ", context)
         self.assertNotIn("iPhone 15 Pro Max", context)  # Không được trộn lẫn Apple vào
 
@@ -202,7 +198,6 @@ class AIFeaturesTestCase(unittest.TestCase):
             self.assertEqual(len(history), 2)
             self.assertEqual(history[1]['user'], 'Nó có màu gì?')
 
-            # [QUAN TRỌNG] Kiểm tra Prompt gửi đi lần 2 phải chứa lịch sử lần 1
             # Lấy arguments mà code đã gọi call_gemini_api
             args, kwargs = mock_gemini.call_args
             prompt_text = args[0]  # The prompt string is the first positional argument
@@ -223,9 +218,10 @@ class AIFeaturesTestCase(unittest.TestCase):
         # Mock trả về HTML giả
         mock_gemini.return_value = "<table>Mock Table</table>"
 
+        # ---> [SỬA LỖI MOCK]: Gọi theo cấu trúc Argument mới truyền hình ảnh và ID <---
         get_comparison_result(
-            "iPhone A", 100, "Desc A",
-            "Samsung B", 90, "Desc B"
+            1, "iPhone A", "100.000 đ", "Desc A", "img_A.jpg",
+            2, "Samsung B", "90.000 đ", "Desc B", "img_B.jpg"
         )
 
         # Kiểm tra Prompt gửi đi
@@ -234,12 +230,9 @@ class AIFeaturesTestCase(unittest.TestCase):
 
         self.assertIn("iPhone A", sent_prompt)
         self.assertIn("Samsung B", sent_prompt)
-        # [ĐÃ SỬA]: Thay đổi từ "Chỉ trả về code HTML" thành một cụm từ thực sự tồn tại
-        # trong chuỗi prompt được định nghĩa tại app/utils.py
-        self.assertIn("CHỈ TRẢ VỀ MÃ HTML", sent_prompt)  # Kiểm tra instruction quan trọng
+        self.assertIn("CHỈ TRẢ VỀ HTML", sent_prompt)  # Kiểm tra instruction quan trọng
 
-    ### ============================================================================== ###
-    ### ---> [NEW: TEST 5 - KIỂM TRA PHÂN TÍCH CẢM XÚC ĐÁNH GIÁ CỦA AI] <--- ###
+    # --- TEST 5: SENTIMENT ANALYSIS ---
     @patch('app.utils.call_gemini_api')
     def test_sentiment_analysis(self, mock_gemini):
         """
@@ -262,7 +255,7 @@ class AIFeaturesTestCase(unittest.TestCase):
         res_neutral = analyze_sentiment("Tôi mới mua, chưa xài nhiều nên chưa rõ.")
         self.assertEqual(res_neutral, "NEUTRAL")
 
-    ### ---> [ĐÃ SỬA: TEST 6 - KIỂM TRA CẢ 2 THUẬT TOÁN GỢI Ý ĐỒNG THỜI] <--- ###
+    # --- TEST 6: RECOMMENDATION SYSTEM ---
     def test_recommendation_system(self):
         """
         Kiểm tra thuật toán Khuyến nghị hệ thống:
@@ -286,9 +279,8 @@ class AIFeaturesTestCase(unittest.TestCase):
             # nên chắc chắn nó phải được hiện ra làm "Sản phẩm tương tự"
             self.assertIn("Samsung Galaxy A05", html_data)
 
-    ### ---> [NEW: TEST 7 - KIỂM TRA LÕI DỰ PHÒNG TEXT-RAG KHI VECTOR DB SẬP] <--- ###
-    @patch('app.utils.GEMINI_API_KEY',
-           'dummy_key')  # [FIXED] Giả lập có API Key để hàm không bị ngắt sớm do thiếu file .env
+    # --- TEST 7: DIRECT TEXT-RAG FALLBACK ---
+    @patch('app.utils.GEMINI_API_KEY', 'dummy_key')
     @patch('app.utils.call_gemini_api')
     def test_direct_text_rag_fallback(self, mock_gemini):
         """
@@ -314,9 +306,8 @@ class AIFeaturesTestCase(unittest.TestCase):
         self.assertEqual(len(result_ids), 1)
         self.assertEqual(result_ids[0], self.p2_id)  # Đảm bảo trả về đúng ID của máy Samsung A05 giá rẻ
 
-    ### ---> [NEW: TEST 8 - KIỂM TRA LÕI DỰ PHÒNG KHI AI BỊ LỖI FORMAT (EDGE CASES)] <--- ###
-    @patch('app.utils.GEMINI_API_KEY',
-           'dummy_key')  # [FIXED] Giả lập có API Key để hàm không bị ngắt sớm do thiếu file .env
+    # --- TEST 8: DIRECT TEXT-RAG EDGE CASES ---
+    @patch('app.utils.GEMINI_API_KEY', 'dummy_key')
     @patch('app.utils.call_gemini_api')
     def test_direct_text_rag_fallback_edge_cases(self, mock_gemini):
         """
@@ -338,7 +329,6 @@ class AIFeaturesTestCase(unittest.TestCase):
         # Hàm của chúng ta phải đủ mạnh để bắt lỗi (try/except) đoạn văn bản này và trả về rỗng một cách an toàn
         self.assertIsInstance(result_malformed, list)
         self.assertEqual(len(result_malformed), 0)
-    ### ============================================================================== ###
 
 
 if __name__ == '__main__':

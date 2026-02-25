@@ -142,6 +142,18 @@
 
 # 
 
+### **✅ Fix Lỗi 500 Đấu Trường So Sánh (Parameter Mismatch):**
+
+### 
+
+#### **Vấn đề: Hệ thống bị văng lỗi 500 Internal Server Error do hàm AI chỉ nhận 10 tham số nhưng Controller lại truyền 20 tham số khi nâng cấp tính năng so sánh 4 máy.**
+
+#### 
+
+#### **Giải pháp: Cập nhật hàm lõi get\_comparison\_result tại utils.py để tiếp nhận tham số động (lên tới 20 tham số cho 4 máy), xử lý vòng lặp nội suy linh hoạt, đảm bảo đồng bộ hóa hoàn toàn với Router và loại bỏ triệt để lỗi 500.**
+
+# 
+
 ## **2. ✨ Tính Năng Mới: Bình Luận \& Đánh Giá (Reviews)**
 
 # 
@@ -651,6 +663,22 @@
 ## 
 
 #### **- Hệ Thống Gợi Ý Sản Phẩm Tương Tự (Content-Based Filtering): Xây dựng thuật toán Python thuần túy thay thế cho AI Vector Search để đảm bảo tính ổn định tuyệt đối (không lo đứt cáp hay hết Quota API). Thuật toán tự động chấm điểm tương đồng (Scoring) giữa các sản phẩm dựa trên 3 tiêu chí trọng số: Cùng hãng sản xuất (+50 điểm), Độ lệch chuẩn mức giá (+10 đến +30 điểm), và Tỷ lệ trùng lặp từ khóa tên máy (+5 điểm/từ). Giúp giao diện trang chi tiết hiển thị danh sách "Sản Phẩm Tương Tự" siêu mượt, logic và chuẩn xác như các sàn TMĐT lớn.**
+
+# 
+
+## **26. ⚖️ Đấu Trường AI So Sánh 4 Sản Phẩm** 
+
+## 
+
+#### **- Giao Diện Cột Bám Dính (Sticky Header): Tái thiết kế toàn diện khu vực So sánh (/compare) mang phong cách của các sàn TMĐT công nghệ hàng đầu. Bảng đối chiếu song song với hình ảnh, giá bán và nút "Mua Ngay" luôn bám dính trên màn hình khi người dùng cuộn xem cấu hình chi tiết.**
+
+#### 
+
+#### **- Nâng Cấp Modal 4 Thiết Bị Cùng Danh Mục: Đột phá giới hạn gốc khi cho phép khách hàng so sánh đối chiếu cùng lúc lên đến 4 thiết bị. Logic Backend được nâng cấp để chỉ cho phép so sánh các sản phẩm "cùng hạng cân" (Điện thoại vs Điện thoại, Phụ kiện vs Phụ kiện). Máy đang xem luôn được khóa cứng ở vị trí số 1.**
+
+#### 
+
+#### **- AI Tư Vấn Chuyên Sâu Đa Luồng (Deep Analysis): Khắc phục triệt để tình trạng AI trả lời hời hợt bằng cách ép buộc AI viết 2-3 đoạn văn phân tích chi tiết. Prompt AI được thiết kế đặc biệt để tự động co giãn từ 2 đến 4 máy. AI không chỉ vẽ bảng thông số mà còn đóng vai chuyên gia công nghệ, phân tích ưu/nhược điểm từng dòng máy và đưa ra quyết định "Nên mua máy nào, cho ai, vì sao?" ở ngay dưới cùng.**
 
 # 
 

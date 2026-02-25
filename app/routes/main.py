@@ -39,7 +39,7 @@ from app.utils import (
     search_vector_db,
     analyze_sentiment,
     direct_gemini_search,
-    get_similar_products  # <--- [NEW] Bổ sung Import Hàm Tìm sản phẩm tương tự
+    get_similar_products
 )
 
 main_bp = Blueprint('main', __name__)
@@ -53,19 +53,18 @@ def cached_ai_call(func, *args):
     cho các câu hỏi trùng lặp nhờ thuật toán băm (MD5 Hash).
     """
     try:
-        ### ---> [ĐÃ SỬA CHỖ NÀY: Nâng Version Cache để xóa sạch các SQL lỗi do Model chết lúc trước] <--- ###
-        cache_key_content = f"{func.__name__}_{str(args)}_v30_flash_search"
+        ### ---> [ĐÃ SỬA CHỖ NÀY: Nâng Version Cache để cập nhật giao diện CellphoneS 4 Sản Phẩm] <--- ###
+        cache_key_content = f"{func.__name__}_{str(args)}_v64_multi_compare"
         key = hashlib.md5(cache_key_content.encode()).hexdigest()
 
         cached = AICache.query.filter_by(prompt_hash=key).first()
         if cached:
             try:
-                # [FIX] Parse Cache an toàn hơn, lọc khoảng trắng
                 text_data = cached.response_text.strip()
                 if text_data.startswith('{') and text_data.endswith('}'):
                     return json.loads(text_data)
                 elif text_data.startswith('[') and text_data.endswith(']'):
-                    return json.loads(text_data)  # [NEW] Hỗ trợ Load Array IDs từ Cache
+                    return json.loads(text_data)
                 return text_data
             except:
                 return cached.response_text
@@ -86,7 +85,6 @@ def cached_ai_call(func, *args):
     return res
 
 
-# Helper tạo filter ChromaDB từ ai_data
 def build_chroma_filter(ai_data):
     """
     Chuyển đổi dữ liệu phân tích ý định tìm kiếm của người dùng thành
@@ -125,10 +123,9 @@ def home():
     products = []
 
     base_query = Product.query.filter_by(is_active=True)
-    ai_data = None  # Cần lưu lại ai_data để dùng cho lớp Fallback phía dưới
+    ai_data = None
 
     if q and len(q.split()) >= 1 and not brand_arg:
-        # Gọi AI kể cả khi truy vấn ngắn (>=2 từ) để bắt chính xác Phụ kiện vs Điện thoại
         if len(q.split()) >= 2:
             ai_data = cached_ai_call(analyze_search_intents, q)
 
@@ -142,7 +139,6 @@ def home():
         if ai_data:
             query = base_query
 
-            # Lọc chính xác bằng SQL
             if ai_data.get('brand'):
                 query = query.filter(Product.brand.ilike(f"%{ai_data['brand']}%"))
                 if "Hãng" not in ai_msg: ai_msg += f" | Hãng: {ai_data['brand']}"
@@ -159,7 +155,6 @@ def home():
             if ai_data.get('keyword'):
                 kw = ai_data['keyword'].strip()
                 if kw:
-                    # [FIXED] Luôn ưu tiên dùng Vector DB để xử lý từ đồng nghĩa ("cáp sạc" -> cáp / sạc)
                     chroma_filter = build_chroma_filter(ai_data)
                     vector_ids = search_vector_db(kw, n_results=20, metadata_filters=chroma_filter)
 
@@ -169,7 +164,7 @@ def home():
                             query = query.filter(Product.id.in_(ids))
                             if "Ngữ nghĩa" not in ai_msg: ai_msg += f" | 🧠 Smart Search"
                         else:
-                            vector_ids = []  # Ép rỗng để đá qua Fallback SQL bên dưới
+                            vector_ids = []
 
                     if not vector_ids:
                         conditions = []
@@ -187,30 +182,24 @@ def home():
 
             products = query.all()
 
-    # [UPDATED] LỚP DỰ PHÒNG TỐI THƯỢNG (KHI VECTOR DB BỊ 404 VÀ SQL BÓ TAY)
     if not products and q:
-        ### ---> [ĐÃ SỬA CHỖ NÀY: Gom toàn bộ kho hàng đưa cho model Text (gemini-flash) đọc và tự lựa chọn máy] <--- ###
         catalog_for_ai = []
         for p in base_query.all():
             catalog_for_ai.append({
                 "id": p.id, "name": p.name, "price": p.price,
                 "category": p.category,
-                "desc": (p.description or "")[:150]  # Lấy đặc điểm máy cho AI tự hiểu "ban đêm, game"
+                "desc": (p.description or "")[:150]
             })
 
         cat_json = json.dumps(catalog_for_ai, ensure_ascii=False)
-        # Gọi trực tiếp Text Model (Giống như hàm Compare)
         flash_ids = cached_ai_call(direct_gemini_search, q, cat_json)
 
         if flash_ids and isinstance(flash_ids, list) and len(flash_ids) > 0:
-            # Truy vấn SQL theo mảng ID trả về từ AI
             unsorted_products = base_query.filter(Product.id.in_(flash_ids)).all()
-            # Giữ nguyên thứ tự AI ưu tiên (Sản phẩm xịn nhất xếp đầu)
             products = sorted(unsorted_products, key=lambda x: flash_ids.index(x.id) if x.id in flash_ids else 999)
             if products:
                 ai_msg = "🧠 Trí tuệ nhân tạo (Gemini Semantic Search)"
         else:
-            ### ---> [TẦNG DỰ PHÒNG CUỐI CÙNG] Rớt xuống đây là khi cả Text AI cũng sập <--- ###
             fallback_query = base_query
             if ai_data and ai_data.get('category'):
                 fallback_query = fallback_query.filter(Product.category.ilike(f"{ai_data['category']}"))
@@ -281,6 +270,7 @@ def product_detail(id):
 
     related_order_ids_query = db.session.query(OrderDetail.order_id).filter_by(product_id=id)
 
+    # 1. Gợi ý Phụ kiện mua kèm (Collaborative Filtering)
     recommendation_query = db.session.query(Product, func.sum(OrderDetail.quantity).label('total_bought')) \
         .join(OrderDetail, Product.id == OrderDetail.product_id) \
         .filter(OrderDetail.order_id.in_(related_order_ids_query)) \
@@ -296,8 +286,16 @@ def product_detail(id):
     if not recs:
         recs = Product.query.filter(Product.category == 'accessory', Product.is_active == True).limit(4).all()
 
-    # ---> [NEW] 2. Kích hoạt Thuật toán Toán học Tìm kiếm các Sản phẩm Tương tự <---
     similar_prods = get_similar_products(p, limit=4)
+
+    # ==============================================================================================
+    # ---> [ĐÃ SỬA CHỖ NÀY: Ép buộc cùng phân loại (cùng điện thoại hoặc phụ kiện) mới được so sánh] <---
+    # ==============================================================================================
+    all_products = Product.query.filter(
+        Product.is_active == True,
+        Product.category == p.category,
+        Product.id != p.id
+    ).all()
 
     comments = Comment.query.options(joinedload(Comment.user)).filter(
         Comment.product_id == id, Comment.parent_id == None, Comment.rating > 0
@@ -325,7 +323,8 @@ def product_detail(id):
         for star in rating_stats['stars']:
             rating_stats['stars'][star]['pct'] = (rating_stats['stars'][star]['count'] / rating_stats['total']) * 100
 
-    return render_template('detail.html', product=p, recommendations=recs, similar_products=similar_prods, comments=comments, questions=questions,
+    return render_template('detail.html', product=p, all_products=all_products, recommendations=recs,
+                           similar_products=similar_prods, comments=comments, questions=questions,
                            rating=rating_stats)
 
 
@@ -609,54 +608,70 @@ def trade_in():
     return render_template('tradein.html')
 
 
-@main_bp.route('/order/cancel/<int:id>')
-@login_required
-def cancel_order_user(id):
-    """
-    Chức năng tự hủy đơn hàng dành cho khách hàng.
-    Nếu đơn hàng chưa được xử lý, hệ thống tự động hoàn lại số lượng tồn kho cho các sản phẩm trong đơn.
-    """
-    order = Order.query.options(joinedload(Order.details)).filter_by(id=id, user_id=current_user.id).first_or_404()
-    if order.status == ORDER_STATUS_PENDING:
-        for d in order.details:
-            p = db.session.get(Product, d.product_id)
-            if p: p.stock_quantity += d.quantity
-        order.status = ORDER_STATUS_CANCELLED
-        db.session.commit()
-        flash(SystemMessages.ORDER_CANCEL_SUCCESS, 'success')
-    return redirect(url_for('main.dashboard'))
-
-
+# ==============================================================================================
+# ---> [NEW: ROUTER SO SÁNH NÂNG CẤP XỬ LÝ TỚI 4 SẢN PHẨM CÙNG LÚC] <---
+# ==============================================================================================
 @main_bp.route('/compare', methods=['GET', 'POST'])
 @csrf.exempt
 def compare_page():
     """
-    Khu vực đấu trường So sánh Sản phẩm.
-    Sử dụng thuật toán Gemini AI để sinh ra bảng đối chiếu tính năng và đưa ra tư vấn.
+    Khu vực đấu trường So sánh Sản phẩm (Hỗ trợ tối đa 4 sản phẩm).
+    Sử dụng thuật toán Gemini AI để sinh ra bảng đối chiếu tính năng CellphoneS Style.
     """
     products = Product.query.filter_by(is_active=True).all()
-    res, p1, p2 = None, None, None
+    res = None
+    selected_prods = []
 
     if request.method == 'POST':
         try:
             id1 = request.form.get('product1')
             id2 = request.form.get('product2')
+            id3 = request.form.get('product3')
+            id4 = request.form.get('product4')
 
             if not id1 or not id2:
-                flash('Vui lòng chọn đủ 2 sản phẩm để so sánh', 'warning')
+                flash('Vui lòng chọn ít nhất 2 sản phẩm để so sánh', 'warning')
             else:
                 p1 = db.session.get(Product, int(id1))
                 p2 = db.session.get(Product, int(id2))
+                p3 = db.session.get(Product, int(id3)) if id3 else None
+                p4 = db.session.get(Product, int(id4)) if id4 else None
 
                 if p1 and p2:
-                    res = cached_ai_call(get_comparison_result, p1.name, p1.price, p1.description or "", p2.name,
-                                         p2.price, p2.description or "")
+                    selected_prods = [p for p in [p1, p2, p3, p4] if p is not None]
+
+                    # Truyền Data động theo cấu trúc Tham số của utils
+                    p1_price_str = "{:,.0f} đ".format(p1.sale_price if p1.is_sale else p1.price).replace(",", ".")
+                    p2_price_str = "{:,.0f} đ".format(p2.sale_price if p2.is_sale else p2.price).replace(",", ".")
+
+                    p3_id = p3.id if p3 else None
+                    p3_name = p3.name if p3 else None
+                    p3_price_str = "{:,.0f} đ".format(p3.sale_price if p3.is_sale else p3.price).replace(",",
+                                                                                                         ".") if p3 else None
+                    p3_desc = p3.description or "" if p3 else None
+                    p3_img = p3.image_url if p3 else None
+
+                    p4_id = p4.id if p4 else None
+                    p4_name = p4.name if p4 else None
+                    p4_price_str = "{:,.0f} đ".format(p4.sale_price if p4.is_sale else p4.price).replace(",",
+                                                                                                         ".") if p4 else None
+                    p4_desc = p4.description or "" if p4 else None
+                    p4_img = p4.image_url if p4 else None
+
+                    res = cached_ai_call(
+                        get_comparison_result,
+                        p1.id, p1.name, p1_price_str, p1.description or "", p1.image_url,
+                        p2.id, p2.name, p2_price_str, p2.description or "", p2.image_url,
+                        p3_id, p3_name, p3_price_str, p3_desc, p3_img,
+                        p4_id, p4_name, p4_price_str, p4_desc, p4_img
+                    )
+
                     if not res:
                         res = f"<div class='alert alert-warning'>{SystemMessages.AI_ERROR}</div>"
         except ValueError:
             flash('Dữ liệu sản phẩm không hợp lệ', 'danger')
 
-    return render_template('compare.html', products=products, result=res, p1=p1, p2=p2)
+    return render_template('compare.html', products=products, result=res, selected_prods=selected_prods)
 
 
 @main_bp.route('/dashboard')

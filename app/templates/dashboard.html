@@ -119,6 +119,11 @@
                     <div class="text-dark small fw-bold mb-2 px-2 text-uppercase fs-6 mt-1">Cá Nhân Của Bạn</div>
                     <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#v-pills-home" type="button"><i class="fas fa-home"></i> Tổng quan M-Member</button>
                     <button class="nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-orders" type="button"><i class="fas fa-shopping-bag"></i> Lịch sử mua hàng</button>
+
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-favorites" type="button">
+                        <i class="fas fa-heart text-danger"></i> Sản phẩm yêu thích <span class="badge bg-danger ms-auto rounded-pill fs-6">{{ current_user.favorites.count() }}</span>
+                    </button>
+
                     <button class="nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-vouchers" type="button"><i class="fas fa-ticket-alt"></i> Kho Voucher <span class="badge bg-danger ms-auto rounded-pill fs-6">3</span></button>
                     <button class="nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-warranty" type="button"><i class="fas fa-shield-alt"></i> Sổ bảo hành</button>
 
@@ -251,7 +256,45 @@
                     </div>
                 </div>
 
-                <!-- [CẬP NHẬT] TAB 3: KHO VOUCHER -->
+                <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-favorites">
+                    <div class="m-member-box">
+                        <div class="m-member-box-header"><span><i class="fas fa-heart me-2 text-danger"></i> Sản Phẩm Đã Yêu Thích</span></div>
+
+                        {% if current_user.favorites.count() > 0 %}
+                            <div class="row row-cols-1 row-cols-md-3 g-4 mt-2">
+                                {% for p in current_user.favorites %}
+                                <div class="col">
+                                    <div class="card h-100 border-2 shadow-sm rounded-4 text-center p-3 position-relative" style="transition: 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                                        <!-- Nút gỡ yêu thích nhanh -->
+                                        <button class="btn btn-sm btn-light text-danger position-absolute top-0 end-0 m-2 rounded-circle shadow-sm" style="width: 35px; height: 35px;" onclick="toggleFavoriteDash({{ p.id }}, this);" title="Bỏ yêu thích">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+
+                                        <a href="/product/{{ p.id }}" class="d-block mt-3">
+                                            <img src="{{ p.image_url }}" class="img-fluid mb-3" style="max-height: 140px; object-fit: contain;" onerror="this.src='https://via.placeholder.com/150'">
+                                        </a>
+                                        <h6 class="fw-bold text-truncate mb-2"><a href="/product/{{ p.id }}" class="text-dark text-decoration-none">{{ p.name }}</a></h6>
+                                        <p class="text-danger fw-bold fs-5 mb-3">{{ p.sale_price if p.is_sale else p.price | vnd }}</p>
+                                        <form action="/cart/add/{{ p.id }}" method="POST" class="mt-auto">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <button type="submit" class="btn btn-outline-danger w-100 rounded-pill fw-bold">THÊM VÀO GIỎ</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5 bg-light rounded-4 border border-2 mt-3">
+                                <i class="far fa-heart fa-4x text-muted mb-4 opacity-50"></i>
+                                <h4 class="text-dark fw-bold mb-2">Bạn chưa yêu thích sản phẩm nào</h4>
+                                <p class="text-muted mb-4">Hãy thả tim những sản phẩm bạn ưng ý để lưu lại nhé!</p>
+                                <a href="/" class="btn btn-lg btn-danger rounded-pill px-5 fw-bold shadow">KHÁM PHÁ NGAY</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- [CẬP NHẬT] TAB KHO VOUCHER -->
                 <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-vouchers">
                     <div class="m-member-box bg-light">
                         <div class="m-member-box-header"><span><i class="fas fa-ticket-alt me-2 text-danger"></i> Kho Voucher Của Bạn</span></div>
@@ -311,7 +354,7 @@
                     </div>
                 </div>
 
-                <!-- [CẬP NHẬT] TAB 4: SỔ BẢO HÀNH -->
+                <!-- [CẬP NHẬT] TAB SỔ BẢO HÀNH -->
                 <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-warranty">
                     <div class="m-member-box">
                         <div class="m-member-box-header"><span><i class="fas fa-shield-alt me-2 text-success"></i> Sổ Bảo Hành Điện Tử</span></div>
@@ -349,7 +392,7 @@
                     </div>
                 </div>
 
-                <!-- [CẬP NHẬT] TAB 5: 10 ĐẶC QUYỀN HẠNG THẺ -->
+                <!-- [CẬP NHẬT] TAB 10 ĐẶC QUYỀN HẠNG THẺ -->
                 <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-benefits">
                     <div class="m-member-box">
                         <div class="m-member-box-header"><span><i class="fas fa-gem me-2 text-warning"></i> 10 Đặc Quyền Hạng Thẻ: <span class="text-danger">{{ member.rank }}</span></span></div>
@@ -370,7 +413,7 @@
                     </div>
                 </div>
 
-                <!-- [CẬP NHẬT] TAB 6: CHỈNH SỬA HỒ SƠ (THÊM GIỚI TÍNH & NGÀY SINH) -->
+                <!-- [CẬP NHẬT] TAB CHỈNH SỬA HỒ SƠ -->
                 <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-profile">
                     <div class="m-member-box">
                         <div class="m-member-box-header"><span><i class="fas fa-user-edit me-2 text-info"></i> Cập Nhật Hồ Sơ Của Bạn</span></div>
@@ -442,7 +485,7 @@
                     </div>
                 </div>
 
-                <!-- [CẬP NHẬT] TAB 7: GIỚI THIỆU NHẬN QUÀ -->
+                <!-- [CẬP NHẬT] TAB GIỚI THIỆU NHẬN QUÀ -->
                 <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-referral">
                     <div class="m-member-box text-center p-5">
                         <img src="https://cdn-icons-png.flaticon.com/512/3214/3214695.png" width="120" class="mb-4">
@@ -566,6 +609,38 @@
             toast: true, position: 'top-end', icon: 'success',
             title: successMessage, showConfirmButton: false, timer: 2000
         });
+    }
+
+    // Tích hợp gỡ Yêu thích trực tiếp từ trong Dashboard
+    async function toggleFavoriteDash(productId, btnElement) {
+        try {
+            const res = await fetch('/api/toggle-favorite/' + productId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await res.json();
+
+            if (data.status === 'removed') {
+                // Hiệu ứng biến mất mượt mà
+                const colElement = btnElement.closest('.col');
+                colElement.style.transition = '0.3s';
+                colElement.style.opacity = '0';
+                colElement.style.transform = 'scale(0.8)';
+
+                setTimeout(() => {
+                    colElement.remove();
+                    // Nếu xoá hết thì reload lại trang để hiện câu thông báo "Chưa có sản phẩm"
+                    const remainingFavs = document.querySelectorAll('#v-pills-favorites .col');
+                    if (remainingFavs.length === 0) {
+                        window.location.reload();
+                    }
+                }, 300);
+
+                Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Đã bỏ Yêu thích', showConfirmButton: false, timer: 2000 });
+            }
+        } catch(e) {
+            console.error(e);
+        }
     }
 </script>
 {% endblock %}

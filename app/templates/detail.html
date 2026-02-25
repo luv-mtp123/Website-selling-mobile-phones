@@ -8,8 +8,21 @@
     .price-old { text-decoration: line-through; color: #999; font-size: 1.2rem; margin-left: 10px; }
 
     /* --- Action Links CellphoneS Style --- */
-    .action-link { font-size: 0.95rem; color: #212529; transition: color 0.2s; }
+    .action-link { font-size: 0.95rem; color: #212529; transition: color 0.2s; cursor: pointer; }
     .action-link:hover { color: #d70018 !important; }
+
+    /* ========================================================================= */
+    /* ---> [NEW: Hiệu ứng Trái Tim Nhấp Nháy (Pulsing Heart) Cực Đẹp] <--- */
+    /* ========================================================================= */
+    @keyframes heart-pulse {
+        0% { transform: scale(1); text-shadow: 0 0 0 rgba(215, 0, 24, 0); }
+        50% { transform: scale(1.25); text-shadow: 0 0 10px rgba(215, 0, 24, 0.6); }
+        100% { transform: scale(1); text-shadow: 0 0 0 rgba(215, 0, 24, 0); }
+    }
+    .heart-pulsing i {
+        animation: heart-pulse 1.2s infinite;
+        color: #d70018 !important;
+    }
 
     /* --- Variant Buttons --- */
     .variant-group { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -96,10 +109,16 @@
                 {% endif %}
             </div>
 
+            <!-- ========================================================================= -->
+            <!-- THANH CHỨC NĂNG CHUẨN CELLPHONES UI + TÍNH NĂNG SO SÁNH 4 MÁY -->
+            <!-- ========================================================================= -->
             <div class="d-flex align-items-center flex-wrap gap-3 mb-4 pb-3 border-bottom" style="font-size: 15px;">
-                <a href="#" class="text-decoration-none text-primary action-link" onclick="Swal.fire('Thành công', 'Đã thêm vào danh sách yêu thích!', 'success'); return false;">
-                    <i class="far fa-heart me-1"></i> Yêu thích
+
+                <a id="favoriteBtn" class="text-decoration-none action-link {% if is_favorited %}text-danger heart-pulsing{% else %}text-primary{% endif %}" onclick="toggleFavorite({{ product.id }}, '{{ current_user.is_authenticated }}'); return false;">
+                    <i id="favIcon" class="{% if is_favorited %}fas{% else %}far{% endif %} fa-heart me-1"></i>
+                    <span id="favText">{% if is_favorited %}Đã yêu thích{% else %}Yêu thích{% endif %}</span>
                 </a>
+
                 <div class="vr text-muted opacity-50"></div>
 
                 <a href="#reviewsContainer" class="text-decoration-none text-primary action-link">
@@ -115,6 +134,9 @@
                 <!-- Nút (+) So sánh với Badge đặc biệt "AI 4 Máy" -->
                 <a href="#" class="text-decoration-none text-primary action-link position-relative d-inline-block" data-bs-toggle="modal" data-bs-target="#compareModal">
                     <i class="fas fa-plus-circle me-1"></i> So sánh
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem; margin-top: -5px; margin-left: 10px; box-shadow: 0 2px 4px rgba(215,0,24,0.3);">
+                        AI 4 Máy
+                    </span>
                 </a>
             </div>
             <!-- ========================================================================= -->
@@ -436,7 +458,7 @@
 
 
 <!-- ========================================================================= -->
-<!-- KHỐI THUẬT TOÁN GỢI Ý SẢN PHẨM TƯƠNG TỰ (ĐÃ SỬA CÚ PHÁP COMMENT CHO HIỂN THỊ ĐÚNG) -->
+<!-- KHỐI THUẬT TOÁN GỢI Ý SẢN PHẨM TƯƠNG TỰ -->
 <!-- ========================================================================= -->
 {% if similar_products %}
 <div class="mt-5 mb-4">
@@ -502,9 +524,6 @@
     </div>
 </div>
 
-<!-- ========================================================================================================= -->
-<!-- ---> [ĐÃ SỬA CHỖ NÀY: Chia 4 cột rõ ràng, khóa hiển thị Máy 1 để khách không thắc mắc "bị mất"] <--- -->
-<!-- ========================================================================================================= -->
 <!-- Modal So Sánh Tối Đa 4 Sản Phẩm -->
 <div class="modal fade" id="compareModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-xl">
@@ -571,47 +590,6 @@
     </div>
 </div>
 
-<!-- Modal Viết Đánh Giá -->
-{% if current_user.is_authenticated %}
-<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow-lg">
-            <form action="/product/{{ product.id }}/comment" method="POST">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-
-                <div class="modal-header bg-danger text-white rounded-top-4">
-                    <h5 class="modal-title fw-bold" id="reviewModalLabel"><i class="fas fa-star me-2"></i>Đánh giá {{ product.name }}</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <div class="modal-body p-4">
-                    <div class="text-center mb-4">
-                        <label class="fw-bold mb-2 text-dark">Chất lượng sản phẩm</label>
-                        <div class="rating-input d-flex justify-content-center flex-row-reverse">
-                            <input type="radio" name="rating" id="star5" value="5" checked><label for="star5" class="fas fa-star"></label>
-                            <input type="radio" name="rating" id="star4" value="4"><label for="star4" class="fas fa-star"></label>
-                            <input type="radio" name="rating" id="star3" value="3"><label for="star3" class="fas fa-star"></label>
-                            <input type="radio" name="rating" id="star2" value="2"><label for="star2" class="fas fa-star"></label>
-                            <input type="radio" name="rating" id="star1" value="1"><label for="star1" class="fas fa-star"></label>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="fw-bold mb-2 text-dark">Chia sẻ trải nghiệm của bạn</label>
-                        <textarea name="content" class="form-control rounded-3 bg-light" rows="4" placeholder="Sản phẩm này dùng có tốt không? Pin, camera như thế nào?..." required></textarea>
-                    </div>
-                </div>
-
-                <div class="modal-footer bg-light rounded-bottom-4">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow"><i class="fas fa-paper-plane me-1"></i> Gửi đánh giá</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-{% endif %}
-
 <script>
     function formatVND(n) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n).replace('₫', 'đ'); }
 
@@ -631,7 +609,7 @@
         }
     }
 
-    // Script Mở/Đóng Khung Trả Lời chung cho cả Đánh Giá và Hỏi Đáp
+    // Mở khung trả lời
     function toggleReplyBox(commentId) {
         const box = document.getElementById('reply-input-' + commentId);
         if(box.classList.contains('d-none')) {
@@ -642,6 +620,45 @@
         }
     }
 
+    // ---> [ĐÃ SỬA CHỖ NÀY: Khắc phục lỗi JS Syntax do thẻ Jinja trong tag Script] <---
+    async function toggleFavorite(productId, isAuthenticated) {
+        if (isAuthenticated === 'False' || isAuthenticated === 'false' || !isAuthenticated) {
+            // Yêu cầu đăng nhập nếu chưa có session
+            window.location.href = '/login';
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/toggle-favorite/' + productId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await res.json();
+
+            const icon = document.getElementById('favIcon');
+            const text = document.getElementById('favText');
+            const btn = document.getElementById('favoriteBtn');
+
+            if (data.status === 'added') {
+                icon.className = 'fas fa-heart me-1';
+                text.innerText = 'Đã yêu thích';
+                btn.classList.remove('text-primary');
+                btn.classList.add('text-danger', 'heart-pulsing');
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã thả tim vào Danh sách Yêu thích ❤️', showConfirmButton: false, timer: 2500 });
+            } else {
+                icon.className = 'far fa-heart me-1';
+                text.innerText = 'Yêu thích';
+                btn.classList.remove('text-danger', 'heart-pulsing');
+                btn.classList.add('text-primary');
+                Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Đã bỏ Yêu thích 💔', showConfirmButton: false, timer: 2500 });
+            }
+        } catch(e) {
+            console.error(e);
+            Swal.fire('Lỗi', 'Không thể kết nối đến máy chủ.', 'error');
+        }
+    }
+
+    // Lọc Review
     function filterReviews(filterType, btnElement) {
         document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
         btnElement.classList.add('active');

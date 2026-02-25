@@ -2,6 +2,16 @@ from flask_login import UserMixin
 from .extensions import db
 from datetime import datetime, timezone
 
+# =========================================================================
+# ---> [NEW: Bảng trung gian (Association Table) cho tính năng Yêu Thích] <---
+# =========================================================================
+user_favorites = db.Table('user_favorites',
+                          db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+                          db.Column('product_id', db.Integer, db.ForeignKey('product.id'), primary_key=True)
+                          )
+
+
+# =========================================================================
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -15,6 +25,10 @@ class User(UserMixin, db.Model):
     orders = db.relationship('Order', backref='user', lazy=True)
     trade_ins = db.relationship('TradeInRequest', backref='user', lazy=True)
     comments = db.relationship('Comment', backref='user', lazy=True)
+
+    # Quan hệ Sản phẩm Yêu thích (Wishlist)
+    favorites = db.relationship('Product', secondary=user_favorites, lazy='dynamic',
+                                backref=db.backref('favorited_by', lazy='dynamic'))
 
     avatar_url = db.Column(db.String(500), default='https://cdn-icons-png.flaticon.com/512/3135/3135715.png')
 

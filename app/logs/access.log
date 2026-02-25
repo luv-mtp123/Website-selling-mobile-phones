@@ -397,3 +397,42 @@ TypeError: get_comparison_result() takes 10 positional arguments but 20 were giv
 [2026-02-25 09:12:01,450] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
 [2026-02-25 09:12:01,546] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 17.7ms
 [2026-02-25 09:12:03,428] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 51.58ms
+[2026-02-25 09:31:20,269] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-25 09:31:20,269] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-25 09:31:26,826] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 25.77ms
+[2026-02-25 09:31:29,347] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 50.1ms
+[2026-02-25 09:31:32,619] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 8.61ms
+[2026-02-25 09:32:01,474] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 22049.4ms
+[2026-02-25 09:32:48,654] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.28ms
+[2026-02-25 09:32:50,167] INFO in system_logger: IP: 127.0.0.1 | GET /product/1 | Status: 200 | Time: 8.85ms
+[2026-02-25 09:33:25,141] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 27657.93ms
+[2026-02-25 09:39:56,970] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-25 09:39:56,970] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-25 10:08:57,055] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-25 10:08:57,055] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-25 10:08:58,970] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 29.87ms
+[2026-02-25 10:09:01,248] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 44.24ms
+[2026-02-25 10:10:07,881] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-25 10:10:07,881] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-25 10:10:12,044] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 21.03ms
+[2026-02-25 10:10:13,893] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 51.74ms
+[2026-02-25 10:10:15,309] INFO in system_logger: IP: 127.0.0.1 | POST /api/toggle-favorite/2 | Status: 200 | Time: 19.73ms
+[2026-02-25 10:10:19,314] INFO in system_logger: IP: 127.0.0.1 | GET /dashboard | Status: 200 | Time: 32.95ms
+[2026-02-25 10:11:01,380] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-25 10:11:01,380] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-25 10:11:03,512] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 22.72ms
+[2026-02-25 10:11:05,264] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 55.08ms
+[2026-02-25 10:11:15,313] INFO in system_logger: IP: 127.0.0.1 | GET /dashboard | Status: 200 | Time: 34.48ms
+[2026-02-25 10:11:19,051] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 9.03ms
+[2026-02-25 10:13:20,178] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-25 10:13:20,178] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-25 10:13:31,031] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-25 10:13:31,031] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-25 10:13:58,988] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-25 10:13:58,988] INFO in notification_worker: ⚙️ Background Job Worker đã khởi động và sẵn sàng nhận tác vụ.
+[2026-02-25 10:14:01,443] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 22.73ms
+[2026-02-25 10:14:04,031] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 53.93ms
+[2026-02-25 10:14:19,343] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 7077.05ms
+[2026-02-25 10:14:24,385] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.01ms
+[2026-02-25 10:14:29,430] INFO in system_logger: IP: 127.0.0.1 | GET /dashboard | Status: 200 | Time: 33.24ms
+[2026-02-25 10:14:39,844] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.0ms

@@ -154,6 +154,14 @@
 
 # 
 
+### **✅ Tối Ưu Code Front-End Linter (Syntax Fixes):**
+
+### 
+
+#### **Giải pháp: Loại bỏ hoàn toàn các cấu trúc Jinja ({% ... %}) ra khỏi các block <style> và <script> tại dashboard.html và detail.html, nhằm khắc phục triệt để lỗi \[GLOBAL] SyntaxError: Unexpected token '%' khi các bộ Linter kiểm tra cú pháp.**
+
+# 
+
 ## **2. ✨ Tính Năng Mới: Bình Luận \& Đánh Giá (Reviews)**
 
 # 
@@ -207,6 +215,10 @@
 #### 
 
 #### **Sticky Actions: Nút "Mua ngay" và "Thêm giỏ" thiết kế nổi bật.**
+
+#### 
+
+#### **- Tính năng Yêu thích Sản phẩm (Wishlist) \& Trái tim Nhấp nháy (Pulse Animation): Tích hợp luồng AJAX mượt mà cho phép người dùng Thả tim / Gỡ tim (Toggle Favorite) không cần tải lại trang, kết hợp hiệu ứng CSS nhấp nháy sống động. Các sản phẩm này sẽ được đồng bộ trực tiếp vào cơ sở dữ liệu (Many-to-Many Relationship).**
 
 # 
 
@@ -666,7 +678,7 @@
 
 # 
 
-## **26. ⚖️ Đấu Trường AI So Sánh 4 Sản Phẩm** 
+## **26. ⚖️ Đấu Trường AI So Sánh 4 Sản Phẩm**
 
 ## 
 

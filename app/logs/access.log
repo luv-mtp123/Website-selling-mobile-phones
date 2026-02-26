@@ -677,3 +677,29 @@ TypeError: get_comparison_result() takes 10 positional arguments but 20 were giv
 [2026-02-26 14:23:07,218] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 64.05ms
 [2026-02-26 14:23:12,974] INFO in system_logger: IP: 127.0.0.1 | POST /product/2/comment | Status: 302 | Time: 12.0ms
 [2026-02-26 14:23:12,993] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 9.04ms
+[2026-02-26 16:08:20,911] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-26 16:08:24,900] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 25.18ms
+[2026-02-26 16:08:28,195] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 61.03ms
+[2026-02-26 16:09:01,017] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 25367.49ms
+[2026-02-26 16:09:30,683] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 3.51ms
+[2026-02-26 16:09:48,880] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-26 16:09:51,161] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 22.69ms
+[2026-02-26 16:09:53,063] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 64.88ms
+[2026-02-26 16:10:26,522] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 27022.82ms
+[2026-02-26 16:11:24,214] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-26 16:11:24,396] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 24.43ms
+[2026-02-26 16:11:26,390] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 61.33ms
+[2026-02-26 16:12:15,333] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.03ms
+[2026-02-26 16:12:16,648] INFO in system_logger: IP: 127.0.0.1 | GET /product/5 | Status: 200 | Time: 8.53ms
+[2026-02-26 16:12:27,987] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-26 16:12:28,252] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 23.67ms
+[2026-02-26 16:12:30,034] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 62.51ms
+[2026-02-26 16:12:34,383] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 12.52ms
+[2026-02-26 16:12:35,769] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.04ms
+[2026-02-26 16:12:36,620] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.0ms
+[2026-02-26 16:12:38,286] INFO in system_logger: IP: 127.0.0.1 | GET /product/7 | Status: 200 | Time: 6.27ms
+[2026-02-26 16:12:47,571] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 11.05ms
+[2026-02-26 16:12:55,030] INFO in system_logger: IP: 127.0.0.1 | GET /dashboard | Status: 200 | Time: 43.06ms
+[2026-02-26 16:12:57,816] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.04ms
+[2026-02-26 16:12:59,946] INFO in system_logger: IP: 127.0.0.1 | GET /product/5 | Status: 200 | Time: 8.51ms
+[2026-02-26 16:13:36,184] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 29898.52ms

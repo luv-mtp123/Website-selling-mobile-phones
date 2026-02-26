@@ -283,7 +283,12 @@ def generate_chatbot_response(user_msg, chat_history=None):
     """
     Module xử lý thông minh của Chatbot CSKH.
     Ghép nối lịch sử trò chuyện (Memory) và bối cảnh kho hàng (RAG) để trả lời.
+    Tích hợp Bộ nhớ đệm (AI Cache) để tăng tốc độ phản hồi và tiết kiệm Quota.
     """
+    import hashlib
+    from app.extensions import db
+    from app.models import AICache
+
     if chat_history is None:
         chat_history = []
 
@@ -302,7 +307,33 @@ def generate_chatbot_response(user_msg, chat_history=None):
     )
     final_prompt = f"{history_text}\nKhách hàng hỏi: '{user_msg}'\n\n{product_context}\n\nAI trả lời:"
 
-    return call_gemini_api(final_prompt, system_instruction)
+    # =========================================================================
+    # ---> [NEW: Kích hoạt AI Cache - Băm Prompt để kiểm tra DB] <---
+    # =========================================================================
+    # Băm toàn bộ final_prompt (chứa tồn kho thực tế) thay vì chỉ user_msg
+    # để AI không bị "học vẹt" khi sản phẩm bất ngờ Hết Hàng.
+    cache_key_content = f"chatbot_{final_prompt}"
+    key = hashlib.md5(cache_key_content.encode('utf-8')).hexdigest()
+
+    cached = AICache.query.filter_by(prompt_hash=key).first()
+    if cached:
+        return cached.response_text
+    # =========================================================================
+
+    response_text = call_gemini_api(final_prompt, system_instruction)
+
+    # ---> [NEW: Lưu kết quả vào DB để dùng cho lần sau] <---
+    if response_text:
+        try:
+            # Kiểm tra chống Race Condition (Trùng lặp insert)
+            if not AICache.query.filter_by(prompt_hash=key).first():
+                db.session.add(AICache(prompt_hash=key, response_text=response_text))
+                db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f"Chatbot Cache Error: {e}")
+
+    return response_text
 
 
 def analyze_search_intents(query):
@@ -418,16 +449,22 @@ def get_comparison_result(p1_id, p1_name, p1_price, p1_desc, p1_img,
     Dữ liệu Giá và Ảnh ĐÃ CÓ SẴN ở trên, hãy đưa đúng vào bảng.
 
     Yêu cầu ĐỊNH DẠNG HTML BẮT BUỘC (Tuyệt đối không thay đổi cấu trúc bảng dưới đây):
-    - Bảng chính: `<table class="table table-bordered table-hover bg-white shadow-sm table-compare align-middle mb-0">`
-    - Thẻ thead: `<thead class="table-light text-center"><tr>{machine_headers}</tr></thead>`
-    - Thẻ tbody: Tự động trích xuất cấu hình và điền vào CÁC HÀNG THEO ĐÚNG THỨ TỰ SAU (cột đầu tiên in đậm `fw-bold`):
-      `<tr><td class="fw-bold">Giá</td> <td class="text-center text-danger fw-bold">...</td> ... </tr>`
-      `<tr><td class="fw-bold">Ảnh sản phẩm</td> <td class="text-center"><img src="..." style="max-height:120px; object-fit:contain;"></td> ... </tr>`
-      `<tr><td class="fw-bold">Màn hình</td> ... </tr>`
-      `<tr><td class="fw-bold">CPU</td> ... </tr>`
-      `<tr><td class="fw-bold">Pin & Sạc</td> ... </tr>`
-      `<tr><td class="fw-bold">Camera chính</td> ... </tr>`
-      `<tr><td class="fw-bold">Điểm nổi bật</td> ... </tr>`
+    - Bước 1: Tạo một bảng `<table class="table table-bordered table-hover">`.
+    Cột 1 là "Thông số kỹ thuật", Cột 2 là tên máy 1, Cột 3 là tên máy 2.
+    BẮT BUỘC phải tạo các hàng (row) sau đây trong bảng:
+      + Kích thước màn hình
+      + Công nghệ màn hình / Độ phân giải
+      + Tần số quét (Hz)
+      + Camera sau
+      + Camera trước
+      + Chipset (CPU)
+      + Dung lượng RAM
+      + Bộ nhớ trong (ROM)
+      + Dung lượng Pin & Công suất Sạc nhanh
+      + Công nghệ NFC
+      + Thẻ SIM
+      + Hệ điều hành
+      + Thiết kế & Trọng lượng
 
     - Sau khi đóng thẻ `</table>`, tạo 1 khối tư vấn AI:
       `<div class="alert alert-info mt-4 p-4 rounded-4 shadow-sm border-0" style="background-color: #e8f9fd;">`

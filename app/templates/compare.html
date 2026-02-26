@@ -57,60 +57,104 @@
         border-radius: 15px;
         padding: 25px;
     }
-    .vs-badge {
-        background: #d70018;
-        color: white;
-        border-radius: 50%;
-        width: 45px;
-        height: 45px;
-        display: flex;
+
+    /* ========================================================================= */
+    /* ---> [NEW: CSS Hiệu ứng màn hình chờ AI Loading Overlay] <--- */
+    /* ========================================================================= */
+    #loadingOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.85);
+        z-index: 9999;
+        display: none;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        font-weight: bold;
-        font-size: 1.2rem;
-        margin: auto;
-        box-shadow: 0 4px 8px rgba(215, 0, 24, 0.3);
+        backdrop-filter: blur(5px);
+    }
+    .ai-spinner {
+        width: 4rem;
+        height: 4rem;
+        color: #d70018;
+    }
+    .loading-text {
+        margin-top: 20px;
+        font-weight: 900;
+        font-size: 1.5rem;
+        color: #d70018;
+        animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+        0% { opacity: 0.6; transform: scale(0.98); }
+        50% { opacity: 1; transform: scale(1.02); }
+        100% { opacity: 0.6; transform: scale(0.98); }
     }
 </style>
+
+<div id="loadingOverlay">
+    <div class="spinner-border ai-spinner" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <div class="loading-text"><i class="fas fa-robot me-2"></i>Chuyên gia AI Đang Phân Tích...</div>
+    <p class="text-muted mt-2 fw-bold">Vui lòng chờ trong giây lát (Khoảng 3-5 giây)</p>
+</div>
 
 <div class="container mt-4 mb-5">
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted fw-bold"><i class="fas fa-home me-1"></i>Trang chủ</a></li>
-            <li class="breadcrumb-item active text-dark fw-bold" aria-current="page">So sánh Điện thoại</li>
+            <li class="breadcrumb-item active text-dark fw-bold" aria-current="page">Đấu Trường AI So Sánh (Tối đa 4 thiết bị)</li>
         </ol>
     </nav>
 
     <!-- Khu Vực Chọn Sản Phẩm Để So Sánh -->
     <div class="select-form-card mb-5 shadow-sm">
-        <h4 class="fw-bold mb-4 text-center"><i class="fas fa-balance-scale text-danger me-2"></i>Chọn 2 Sản Phẩm Để So Sánh</h4>
-        <form method="POST" action="/compare" class="row align-items-center">
-            <div class="col-md-5 mb-3 mb-md-0">
-                <label class="fw-bold mb-2 small text-muted">SẢN PHẨM THỨ 1</label>
-                <select name="product1" class="form-select form-select-lg rounded-4 shadow-sm border-0" required>
-                    <option value="" disabled selected>-- Chọn máy cần so sánh --</option>
-                    {% for p in products %}
-                        <option value="{{ p.id }}" {% if p1 and p1.id == p.id %}selected{% endif %}>{{ p.name }} - {{ p.price | vnd }}</option>
-                    {% endfor %}
-                </select>
+        <h4 class="fw-bold mb-4 text-center"><i class="fas fa-balance-scale text-danger me-2"></i>Chọn Tối Đa 4 Sản Phẩm Để So Sánh</h4>
+        <form method="POST" action="/compare" id="compareForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="row align-items-end g-3 justify-content-center">
+                <div class="col-md-3">
+                    <label class="fw-bold mb-2 small text-danger">Sản phẩm 1 (*)</label>
+                    <select name="product1" class="form-select border-0 shadow-sm rounded-3" required>
+                        <option value="" disabled {% if not selected_prods or selected_prods|length == 0 %}selected{% endif %}>-- Chọn máy --</option>
+                        {% for p in products %}
+                            <option value="{{ p.id }}" {% if selected_prods and selected_prods|length > 0 and selected_prods[0].id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="fw-bold mb-2 small text-danger">Sản phẩm 2 (*)</label>
+                    <select name="product2" class="form-select border-0 shadow-sm rounded-3" required>
+                        <option value="" disabled {% if not selected_prods or selected_prods|length <= 1 %}selected{% endif %}>-- Chọn máy --</option>
+                        {% for p in products %}
+                            <option value="{{ p.id }}" {% if selected_prods and selected_prods|length > 1 and selected_prods[1].id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="fw-bold mb-2 small text-muted">Sản phẩm 3</label>
+                    <select name="product3" class="form-select border-0 shadow-sm rounded-3">
+                        <option value="" {% if not selected_prods or selected_prods|length <= 2 %}selected{% endif %}>-- Không chọn --</option>
+                        {% for p in products %}
+                            <option value="{{ p.id }}" {% if selected_prods and selected_prods|length > 2 and selected_prods[2].id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="fw-bold mb-2 small text-muted">Sản phẩm 4</label>
+                    <select name="product4" class="form-select border-0 shadow-sm rounded-3">
+                        <option value="" {% if not selected_prods or selected_prods|length <= 3 %}selected{% endif %}>-- Không chọn --</option>
+                        {% for p in products %}
+                            <option value="{{ p.id }}" {% if selected_prods and selected_prods|length > 3 and selected_prods[3].id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
-
-            <div class="col-md-2 text-center my-3 my-md-0">
-                <div class="vs-badge">VS</div>
-            </div>
-
-            <div class="col-md-5">
-                <label class="fw-bold mb-2 small text-muted">SẢN PHẨM THỨ 2</label>
-                <select name="product2" class="form-select form-select-lg rounded-4 shadow-sm border-0" required>
-                    <option value="" disabled selected>-- Chọn máy đối thủ --</option>
-                    {% for p in products %}
-                        <option value="{{ p.id }}" {% if p2 and p2.id == p.id %}selected{% endif %}>{{ p.name }} - {{ p.price | vnd }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
             <div class="col-12 text-center mt-4">
-                <button type="submit" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold shadow">
+                <button type="submit" id="btnSubmitCompare" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold shadow">
                     <i class="fas fa-bolt me-2"></i>THỰC HIỆN SO SÁNH
                 </button>
             </div>
@@ -120,7 +164,7 @@
     <!-- KHU VỰC HIỂN THỊ KẾT QUẢ TỪ AI -->
     {% if result %}
     <div class="compare-container">
-        <h3 class="compare-header-title">Kết quả so sánh chi tiết</h3>
+        <h3 class="compare-header-title">Kết quả phân tích từ AI</h3>
 
         <!-- Render trực tiếp HTML AI sinh ra tại đây -->
         <div class="table-responsive">
@@ -131,4 +175,17 @@
     {% endif %}
 
 </div>
+
+<script>
+    document.getElementById('compareForm').addEventListener('submit', function() {
+        // 1. Bật màn hình phủ mờ Loading lên
+        document.getElementById('loadingOverlay').style.display = 'flex';
+
+        // 2. Khóa nút bấm và đổi chữ để chống Spam Click
+        const btn = document.getElementById('btnSubmitCompare');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>ĐANG XỬ LÝ...';
+    });
+</script>
+
 {% endblock %}

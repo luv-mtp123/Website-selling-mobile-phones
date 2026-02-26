@@ -52,6 +52,8 @@ class ModelsTestCase(unittest.TestCase):
         self.assertEqual(p.is_sale, False)
         self.assertEqual(p.stock_quantity, 10)
         self.assertTrue(p.is_active)
+        self.assertEqual(p.cost_price, 0)
+        self.assertFalse(p.auto_pricing)
 
     def test_comment_reply_relationship(self):
         """Kiểm tra tính năng Trả lời Bình luận (Self-referential relationship)"""

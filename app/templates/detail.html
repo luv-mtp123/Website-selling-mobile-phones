@@ -12,7 +12,7 @@
     .action-link:hover { color: #d70018 !important; }
 
     /* ========================================================================= */
-    /* ---> [NEW: Hiệu ứng Trái Tim Nhấp Nháy (Pulsing Heart) Cực Đẹp] <--- */
+    /* ---> Hiệu ứng Trái Tim Nhấp Nháy (Pulsing Heart) Cực Đẹp <--- */
     /* ========================================================================= */
     @keyframes heart-pulse {
         0% { transform: scale(1); text-shadow: 0 0 0 rgba(215, 0, 24, 0); }
@@ -71,7 +71,44 @@
     .rating-input input:checked ~ label, .rating-input label:hover, .rating-input label:hover ~ label { color: #ffc107; }
 
     .reply-box { border-left: 3px solid #dee2e6; margin-left: 55px; padding-left: 15px; margin-top: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px; }
+
+    /* ========================================================================= */
+    /* ---> [NEW: CSS Hiệu ứng màn hình chờ AI Loading Overlay] <--- */
+    /* ========================================================================= */
+    #loadingOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.85);
+        z-index: 9999;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+    }
+    .ai-spinner {
+        width: 4rem;
+        height: 4rem;
+    }
+    .loading-text {
+        margin-top: 20px;
+        font-weight: 900;
+        font-size: 1.5rem;
+        animation: pulse 1.5s infinite;
+    }
 </style>
+
+<!-- ---> [NEW: Khối HTML Loading Overlay (Đã thêm ID để JS thao túng)] <--- -->
+<div id="loadingOverlay">
+    <div class="spinner-border ai-spinner" id="loadingSpinner" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <div class="loading-text" id="loadingText"><i class="fas fa-spinner fa-spin me-2"></i>Đang Xử Lý...</div>
+    <p class="text-muted mt-2 fw-bold" id="loadingSubText">Vui lòng chờ trong giây lát...</p>
+</div>
 
 <nav aria-label="breadcrumb" class="my-4">
     <ol class="breadcrumb">
@@ -455,7 +492,7 @@
 
 
 <!-- ========================================================================= -->
-<!-- KHỐI THUẬT TOÁN GỢI Ý SẢN PHẨM TƯƠNG TỰ -->
+<!-- ---> [NEW: KHỐI THUẬT TOÁN GỢI Ý SẢN PHẨM TƯƠNG TỰ] <--- -->
 <!-- ========================================================================= -->
 {% if similar_products %}
 <div class="mt-5 mb-4">
@@ -658,10 +695,9 @@
         }
     }
 
-    // ---> [ĐÃ SỬA CHỖ NÀY: Khắc phục lỗi JS Syntax do thẻ Jinja trong tag Script] <---
+    // Tích hợp gỡ Yêu thích trực tiếp từ AJAX
     async function toggleFavorite(productId, isAuthenticated) {
         if (isAuthenticated === 'False' || isAuthenticated === 'false' || !isAuthenticated) {
-            // Yêu cầu đăng nhập nếu chưa có session
             window.location.href = '/login';
             return;
         }
@@ -727,5 +763,54 @@
             emptyMsg.style.display = 'none';
         }
     }
+
+    // ---> [NEW: Kích hoạt màn hình chờ Loading cho các luồng gọi AI (Đã tách biệt UX)] <---
+    document.addEventListener("DOMContentLoaded", function() {
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = document.getElementById('loadingText');
+        const loadingSubText = document.getElementById('loadingSubText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+
+        // 1. Loading khi bấm nút AI Phân Tích So Sánh (Trong Modal)
+        const compareForm = document.querySelector('#compareModal form');
+        if (compareForm) {
+            compareForm.addEventListener('submit', function() {
+                // Thay áo UI cho luồng So sánh AI (Màu Đỏ)
+                loadingText.innerHTML = '<i class="fas fa-robot me-2"></i>AI Đang Phân Tích So Sánh...';
+                loadingSubText.innerText = 'Vui lòng chờ trong giây lát (Khoảng 3-5 giây)';
+                loadingText.style.color = '#d70018';
+                loadingSpinner.style.color = '#d70018';
+
+                loadingOverlay.style.display = 'flex';
+                const btn = this.querySelector('button[type="submit"]');
+                if(btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>ĐANG PHÂN TÍCH...';
+                }
+            });
+        }
+
+        // 2. Loading khi Gửi Đánh Giá / Hỏi Đáp (Backend sẽ gọi Sentiment Analysis ngầm)
+        const commentForms = document.querySelectorAll('form');
+        commentForms.forEach(form => {
+            const action = form.getAttribute('action');
+            if (action && action.includes('/comment')) {
+                form.addEventListener('submit', function() {
+                    // Thay áo UI cho luồng Phản hồi Khách hàng (Màu Xanh thân thiện)
+                    loadingText.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Đang Gửi Phản Hồi...';
+                    loadingSubText.innerText = 'Hệ thống đang ghi nhận thông tin, vui lòng chờ...';
+                    loadingText.style.color = '#0d6efd';
+                    loadingSpinner.style.color = '#0d6efd';
+
+                    loadingOverlay.style.display = 'flex';
+                    const btn = this.querySelector('button[type="submit"]');
+                    if(btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>ĐANG GỬI...';
+                    }
+                });
+            }
+        });
+    });
 </script>
 {% endblock %}

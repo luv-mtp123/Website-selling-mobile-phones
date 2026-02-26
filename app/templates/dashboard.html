@@ -104,7 +104,7 @@
                     <form action="/profile/update" method="POST" enctype="multipart/form-data" id="avatarForm">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="avatar-wrapper">
-                            <img src="{{ current_avatar }}" id="avatarPreview" alt="Avatar">
+                            <img src="{{ current_avatar }}" id="avatarPreview" alt="Avatar" loading="lazy">
                             <label for="avatarUpload" class="btn-camera"><i class="fas fa-camera"></i></label>
                             <input type="file" name="avatar" id="avatarUpload" class="d-none" accept="image/*" onchange="document.getElementById('avatarForm').submit(); previewAvatar(this);">
                         </div>
@@ -273,7 +273,7 @@
                                         </button>
 
                                         <a href="/product/{{ p.id }}" class="d-block mt-3">
-                                            <img src="{{ p.image_url }}" class="img-fluid mb-3" style="max-height: 140px; object-fit: contain;" onerror="this.src='https://via.placeholder.com/150'">
+                                            <img src="{{ p.image_url }}" class="img-fluid mb-3" style="max-height: 140px; object-fit: contain;" loading="lazy" onerror="this.src='https://via.placeholder.com/150'">
                                         </a>
                                         <h6 class="fw-bold text-truncate mb-2"><a href="/product/{{ p.id }}" class="text-dark text-decoration-none">{{ p.name }}</a></h6>
                                         <p class="text-danger fw-bold fs-5 mb-3">{{ p.sale_price if p.is_sale else p.price | vnd }}</p>
@@ -485,7 +485,7 @@
                 <!-- [CẬP NHẬT] TAB GIỚI THIỆU NHẬN QUÀ -->
                 <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-referral">
                     <div class="m-member-box text-center p-5">
-                        <img src="https://cdn-icons-png.flaticon.com/512/3214/3214695.png" width="120" class="mb-4">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3214/3214695.png" width="120" class="mb-4" loading="lazy">
                         <h2 class="fw-bold text-danger mb-3">Giới thiệu bạn bè - Nhận quà liền tay!</h2>
                         <p class="text-dark fs-5 mb-4">Nhận ngay Voucher <span class="fw-bold text-danger">200K</span> cho mỗi người bạn đăng ký và hoàn thành đơn hàng đầu tiên qua link của bạn.</p>
 
@@ -564,7 +564,7 @@
             </div>
             <div class="modal-body p-4 text-center bg-white">
                 <h5 class="fw-bold text-dark mb-4">Đưa mã này cho nhân viên thu ngân</h5>
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=MB-{{ current_user.id }}999X" alt="QR Code" class="img-fluid border-2 border-dark p-2 rounded-3 shadow-sm mb-4" style="width: 260px; height: 260px;">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=MB-{{ current_user.id }}999X" alt="QR Code" class="img-fluid border-2 border-dark p-2 rounded-3 shadow-sm mb-4" style="width: 260px; height: 260px;" loading="lazy">
                 <h2 class="fw-bold text-danger letter-spacing-2 mb-4">MB-{{ current_user.id }}999X</h2>
                 <div class="text-dark fs-5 fw-bold bg-light py-3 rounded-pill mt-3 border border-2 mx-4">
                     <i class="fas fa-sync fa-spin me-2"></i> Làm mới sau <span id="qr-countdown" class="text-danger fs-3 mx-1">60</span>s

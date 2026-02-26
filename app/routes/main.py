@@ -137,8 +137,6 @@ def _calculate_user_rank(user_id):
         rank_name = "M-Gold"
 
     return rank_tier, rank_name, total_spent
-
-
 # =======================================================================================
 
 
@@ -388,7 +386,8 @@ def add_comment(id):
 
         # Gọi AI phân tích cảm xúc (Sentiment Analysis) ngầm dưới nền
         if not parent_id and not is_question:
-            analyze_sentiment(content)
+            import threading
+            threading.Thread(target=analyze_sentiment, args=(content,), daemon=True).start()
 
         if parent_id:
             flash(SystemMessages.COMMENT_REPLY_SUCCESS, 'success')
@@ -724,15 +723,13 @@ def compare_page():
 
                     p3_id = p3.id if p3 else None
                     p3_name = p3.name if p3 else None
-                    p3_price_str = "{:,.0f} đ".format(p3.sale_price if p3.is_sale else p3.price).replace(",",
-                                                                                                         ".") if p3 else None
+                    p3_price_str = "{:,.0f} đ".format(p3.sale_price if p3.is_sale else p3.price).replace(",", ".") if p3 else None
                     p3_desc = p3.description or "" if p3 else None
                     p3_img = p3.image_url if p3 else None
 
                     p4_id = p4.id if p4 else None
                     p4_name = p4.name if p4 else None
-                    p4_price_str = "{:,.0f} đ".format(p4.sale_price if p4.is_sale else p4.price).replace(",",
-                                                                                                         ".") if p4 else None
+                    p4_price_str = "{:,.0f} đ".format(p4.sale_price if p4.is_sale else p4.price).replace(",", ".") if p4 else None
                     p4_desc = p4.description or "" if p4 else None
                     p4_img = p4.image_url if p4 else None
 
@@ -862,8 +859,7 @@ def dashboard():
     # Lấy các mã khuyến mãi ĐANG KÍCH HOẠT hiển thị cho Khách hàng lựa chọn
     vouchers = Voucher.query.filter_by(is_active=True).all()
 
-    return render_template('dashboard.html', orders=my_orders, tradeins=my_tradeins, member=member_stats,
-                           vouchers=vouchers)
+    return render_template('dashboard.html', orders=my_orders, tradeins=my_tradeins, member=member_stats, vouchers=vouchers)
 
 
 @main_bp.route('/profile/update', methods=['POST'])

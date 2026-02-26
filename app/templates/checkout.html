@@ -1,7 +1,19 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row justify-content-center">
+<style>
+    /* CSS bổ sung riêng cho khu vực Voucher để không làm ảnh hưởng code cũ của bạn */
+    .voucher-input-group { display: flex; gap: 10px; }
+    .voucher-input-group .form-control { text-transform: uppercase; font-family: monospace; font-weight: bold; letter-spacing: 1px; border: 2px solid #ced4da; }
+    .voucher-input-group .form-control:focus { border-color: #198754; box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25); }
+    #voucher-message { font-weight: bold; margin-top: 8px; font-size: 0.9rem; }
+
+    .price-summary-box { background: #f8f9fa; border: 1px dashed #ced4da; border-radius: 8px; padding: 15px; }
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600; color: #495057; }
+    .summary-total { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 2px dashed #ced4da; font-size: 1.25rem; font-weight: 900; color: #d70018; }
+</style>
+
+<div class="row justify-content-center my-4">
     <div class="col-md-8">
         <div class="card shadow-lg border-0 rounded-4">
             <div class="card-header bg-primary text-white p-3 rounded-top-4">
@@ -9,11 +21,15 @@
             </div>
             <div class="card-body p-4">
                 <div class="alert alert-info">
-                    Bạn đang thanh toán cho đơn hàng trị giá: <strong>{{ total | vnd }}</strong>
+                    Bạn đang thanh toán cho đơn hàng trị giá: <strong id="top_alert_total">{{ total | vnd }}</strong>
                 </div>
 
-                <form method="POST">
+                <form method="POST" id="checkoutForm">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                    <!-- [NEW] Lưu mã Voucher thực sự để gửi về Backend (Bảo mật 2 lớp) -->
+                    <input type="hidden" name="voucher_code" id="final_voucher_code" value=""/>
+
                     <h5 class="mb-3 border-bottom pb-2">Thông tin giao hàng</h5>
                     <div class="mb-3">
                         <label class="form-label">Người nhận</label>
@@ -31,7 +47,7 @@
                     <h5 class="mb-3 mt-4 border-bottom pb-2">Phương thức thanh toán</h5>
 
                     <!-- [UPDATE] Cho phép chọn Banking -->
-                    <div class="card bg-light border-0 mb-3">
+                    <div class="card bg-light border-0 mb-4">
                         <div class="card-body">
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="radio" name="payment" id="cod" value="cod" checked>
@@ -51,12 +67,137 @@
                         </div>
                     </div>
 
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-success btn-lg rounded-pill fw-bold">XÁC NHẬN ĐẶT HÀNG</button>
+                    <!-- ========================================================================= -->
+                    <!-- [NEW: KHU VỰC NHẬP MÃ VOUCHER & TỔNG KẾT TIỀN TÍCH HỢP VÀO FORM CŨ] -->
+                    <!-- ========================================================================= -->
+                    <h5 class="mb-3 mt-4 border-bottom pb-2"><i class="fas fa-ticket-alt text-danger me-2"></i>Mã Khuyến Mãi</h5>
+
+                    <div class="mb-4">
+                        <div class="voucher-input-group">
+                            <input type="text" id="voucher_input_ui" class="form-control" placeholder="Nhập mã giảm giá (VD: TET2026)">
+                            <button type="button" class="btn btn-dark fw-bold px-4 rounded-3" id="btn-apply-voucher" onclick="applyVoucher()">ÁP DỤNG</button>
+                        </div>
+                        <div id="voucher-message"></div>
+                    </div>
+
+                    <div class="price-summary-box mb-4">
+                        <div class="summary-row">
+                            <span>Tạm tính:</span>
+                            <span><span id="raw_total_str">{{ total | vnd }}</span></span>
+                        </div>
+                        <div class="summary-row text-success d-none" id="discount-row">
+                            <span>Voucher giảm giá:</span>
+                            <span>- <span id="discount_str">0 đ</span></span>
+                        </div>
+                        <div class="summary-total">
+                            <span>TỔNG THANH TOÁN:</span>
+                            <span id="final_total_str">{{ total | vnd }}</span>
+                        </div>
+                    </div>
+                    <!-- ========================================================================= -->
+
+                    <div class="d-grid mt-2">
+                        <button type="submit" class="btn btn-success btn-lg rounded-pill fw-bold py-3 shadow-sm">
+                            XÁC NHẬN ĐẶT HÀNG
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Định dạng tiền tệ VNĐ cho Javascript
+    function formatVND(n) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n).replace('₫', 'đ'); }
+
+    // Gắn giá trị thô vào JS để dễ tính toán
+    let rawTotalAmount = {{ total }};
+
+    // Hàm gọi API Kiểm tra Động cơ Voucher (Backend Specification Pattern)
+    async function applyVoucher() {
+        const voucherCode = document.getElementById('voucher_input_ui').value.trim();
+        const msgBox = document.getElementById('voucher-message');
+        const discountRow = document.getElementById('discount-row');
+        const btnApply = document.getElementById('btn-apply-voucher');
+
+        if (!voucherCode) {
+            msgBox.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Vui lòng nhập mã trước!</span>';
+            return;
+        }
+
+        // Đổi trạng thái nút
+        btnApply.innerText = "ĐANG XỬ LÝ...";
+        btnApply.disabled = true;
+
+        try {
+            const response = await fetch('/api/apply-voucher', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    code: voucherCode,
+                    total: rawTotalAmount
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // UI: Báo thành công màu xanh lá
+                msgBox.innerHTML = `<span class="text-success"><i class="fas fa-check-circle"></i> ${data.message}</span>`;
+
+                // UI: Cập nhật giao diện tiền tệ
+                discountRow.classList.remove('d-none');
+                document.getElementById('discount_str').innerText = formatVND(data.discount_amount);
+
+                let newTotalVND = formatVND(data.new_total);
+                document.getElementById('final_total_str').innerText = newTotalVND;
+                document.getElementById('top_alert_total').innerText = newTotalVND; // Cập nhật luôn thẻ alert bên trên
+
+                // FORM: Gắn mã voucher hợp lệ vào Input ẩn để chốt đơn lên Server an toàn
+                document.getElementById('final_voucher_code').value = voucherCode;
+
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã áp dụng mã giảm giá!', showConfirmButton: false, timer: 2000 });
+                }
+
+                // Đổi nút thành Hủy để đổi mã khác
+                btnApply.innerText = "HỦY MÃ";
+                btnApply.classList.replace('btn-dark', 'btn-outline-danger');
+                btnApply.onclick = removeVoucher;
+            } else {
+                // UI: Báo lỗi màu đỏ
+                msgBox.innerHTML = `<span class="text-danger"><i class="fas fa-times-circle"></i> ${data.message}</span>`;
+                removeVoucher(false); // Reset lại trạng thái tính tiền
+            }
+        } catch (error) {
+            msgBox.innerHTML = '<span class="text-danger"><i class="fas fa-wifi"></i> Lỗi kết nối đến hệ thống kiểm duyệt.</span>';
+            console.error("Voucher API Error:", error);
+        } finally {
+            btnApply.disabled = false;
+            if(btnApply.innerText === "ĐANG XỬ LÝ...") btnApply.innerText = "ÁP DỤNG";
+        }
+    }
+
+    // Hàm Hủy mã và reset lại tiền
+    function removeVoucher(clearInput = true) {
+        if(clearInput) document.getElementById('voucher_input_ui').value = '';
+        document.getElementById('final_voucher_code').value = '';
+
+        document.getElementById('discount-row').classList.add('d-none');
+
+        let originalTotalVND = formatVND(rawTotalAmount);
+        document.getElementById('final_total_str').innerText = originalTotalVND;
+        document.getElementById('top_alert_total').innerText = originalTotalVND;
+
+        const btnApply = document.getElementById('btn-apply-voucher');
+        btnApply.innerText = "ÁP DỤNG";
+        btnApply.classList.replace('btn-outline-danger', 'btn-dark');
+        btnApply.onclick = applyVoucher;
+
+        if(clearInput) {
+            document.getElementById('voucher-message').innerHTML = '<span class="text-muted"><i class="fas fa-info-circle"></i> Đã gỡ mã giảm giá.</span>';
+        }
+    }
+</script>
 {% endblock %}

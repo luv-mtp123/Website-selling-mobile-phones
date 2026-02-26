@@ -13,9 +13,11 @@ from app import create_app, db
 ### ---> [ĐÃ SỬA CHỖ NÀY: Import thêm User, Order, OrderDetail để tạo Data Test Gợi ý] <--- ###
 from app.models import User, Product, Order, OrderDetail
 
-### ---> [ĐÃ SỬA CHỖ NÀY: Import thêm hàm analyze_sentiment và direct_gemini_search] <--- ###
-from app.utils import get_comparison_result, local_analyze_intent, build_product_context, analyze_sentiment, \
-    direct_gemini_search
+### ---> [ĐÃ SỬA CHỖ NÀY: Import thêm các hàm mới cho Chiến dịch 1] <--- ###
+from app.utils import (
+    get_comparison_result, local_analyze_intent, build_product_context,
+    analyze_sentiment, direct_gemini_search, generate_local_comparison_html
+)
 from flask import session
 
 
@@ -30,6 +32,8 @@ class AIFeaturesTestCase(unittest.TestCase):
     6. Recommendation System (Gợi ý mua kèm & Gợi ý tương tự)
     7. Direct Text-RAG Search (Bypass Vector DB 404)
     8. Direct Text-RAG Search Edge Cases (Bắt lỗi AI ảo giác)
+    9. Local Comparison Fallback (Chống sập trang 500)
+    10. Extreme Edge Cases (Bẫy từ khóa, Xử lý chuỗi rác)
     """
 
     def setUp(self):
@@ -230,7 +234,9 @@ class AIFeaturesTestCase(unittest.TestCase):
 
         self.assertIn("iPhone A", sent_prompt)
         self.assertIn("Samsung B", sent_prompt)
-        self.assertIn("CHỈ TRẢ VỀ HTML", sent_prompt)  # Kiểm tra instruction quan trọng
+
+        # ---> [ĐÃ SỬA CHỖ NÀY: Cập nhật Assert cho khớp với Prompt mới trong utils.py] <---
+        self.assertIn("CHỈ TRẢ VỀ MÃ HTML", sent_prompt)  # Kiểm tra instruction quan trọng
 
     # --- TEST 5: SENTIMENT ANALYSIS ---
     @patch('app.utils.call_gemini_api')
@@ -329,6 +335,60 @@ class AIFeaturesTestCase(unittest.TestCase):
         # Hàm của chúng ta phải đủ mạnh để bắt lỗi (try/except) đoạn văn bản này và trả về rỗng một cách an toàn
         self.assertIsInstance(result_malformed, list)
         self.assertEqual(len(result_malformed), 0)
+
+    # ==============================================================================
+    # ---> [NEW: CHIẾN DỊCH 1 - TĂNG CƯỜNG TEST EDGE CASES CHO PYTHON BACKEND] <---
+    # ==============================================================================
+
+    # --- TEST 9: LOCAL COMPARISON FALLBACK (Python Thuần) ---
+    def test_local_comparison_fallback(self):
+        """
+        Kiểm tra chức năng tự cứu (Local Fallback) khi So sánh đa máy.
+        Mục tiêu: Đảm bảo khi Google AI sập, Python thuần tự động kích hoạt
+        để vẽ bảng HTML mà không văng lỗi 500.
+        """
+        print("\n[AI Test 9] Testing Local Comparison Fallback HTML Generator...")
+        p1 = db.session.get(Product, self.p1_id)
+        p2 = db.session.get(Product, self.p2_id)
+        p3 = db.session.get(Product, self.p3_id)
+
+        # Gọi trực tiếp hàm lõi dự phòng
+        html_output = generate_local_comparison_html(p1, p2, p3)
+
+        # Đảm bảo bảng HTML chứa đủ tên của 3 sản phẩm
+        self.assertIn("iPhone 15 Pro Max", html_output)
+        self.assertIn("Samsung Galaxy A05", html_output)
+        self.assertIn("Ốp lưng iPhone 15", html_output)
+
+        # Cảnh báo an toàn phải được hiển thị
+        self.assertIn("CHẾ ĐỘ DỰ PHÒNG", html_output)
+        self.assertIn("Hệ thống AI Gemini tạm thời đang bảo trì", html_output)
+
+    # --- TEST 10: EDGE CASES FOR INTENT PARSING (Phòng thủ lỗi Logic) ---
+    def test_intent_parsing_edge_cases(self):
+        """
+        Kiểm tra các kịch bản dị biệt (Edge Cases) khi phân tích câu hỏi người dùng.
+        Mục tiêu: Tăng mức độ phủ sóng code (Code Coverage) và chặn đứng bug tiềm ẩn.
+        """
+        print("\n[AI Test 10] Testing Intent Parsing Edge Cases (Robustness)...")
+
+        # Kịch bản 1: Khách hàng chỉ nhập khoảng trắng (Không được sập Regex)
+        res_empty = local_analyze_intent("      ")
+        self.assertEqual(res_empty['keyword'], "")
+        self.assertIsNone(res_empty['category'])
+
+        # Kịch bản 2: Khách hàng nhập toàn từ khóa vô nghĩa (stop words)
+        res_stop = local_analyze_intent("tôi muốn mua cho cần dưới khoảng")
+        self.assertEqual(res_stop['keyword'], "")
+
+        # Kịch bản 3: Khách hàng nhập số tiền khổng lồ vượt quá giới hạn thông thường
+        res_huge = local_analyze_intent("tìm điện thoại 100 củ")
+        self.assertEqual(res_huge['max_price'], 100000000)
+        self.assertEqual(res_huge['category'], 'phone')
+
+        # Kịch bản 4: Gõ sai khoảng cách (không có dấu cách giữa số và chữ "triệu")
+        res_no_space = local_analyze_intent("điện thoại 12triệu")
+        self.assertEqual(res_no_space['max_price'], 12000000)
 
 
 if __name__ == '__main__':

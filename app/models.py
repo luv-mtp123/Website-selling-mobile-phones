@@ -115,3 +115,28 @@ class TradeInRequest(db.Model):
     valuation_price = db.Column(db.Integer, default=0)
     admin_note = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+# =========================================================================
+# ---> [NEW: BẢNG DỮ LIỆU ĐỘNG CƠ VOUCHER (VOUCHER RULE ENGINE)] <---
+# =========================================================================
+class Voucher(db.Model):
+    """
+    Mô hình dữ liệu lưu trữ các Chiến dịch Khuyến mãi (Vouchers).
+    Được quản lý hoàn toàn bởi Admin.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(50), unique=True, nullable=False)
+    discount_type = db.Column(db.String(20), default='percent')  # 'percent' hoặc 'fixed'
+    discount_value = db.Column(db.Integer, nullable=False)
+    max_discount = db.Column(db.Integer, nullable=True)  # Mức giảm tối đa (nếu dùng %)
+    min_order_value = db.Column(db.Integer, default=0)  # Đơn hàng tối thiểu
+    valid_from = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    valid_to = db.Column(db.DateTime, nullable=False)
+    required_rank = db.Column(db.Integer, default=1)  # 1: M-New, 2: M-Gold, 3: M-Plat, 4: M-Diamond
+    is_active = db.Column(db.Boolean, default=True)
+    description = db.Column(db.String(255), nullable=True)
+
+    # UI Customization (Giữ lại giao diện đẹp)
+    icon = db.Column(db.String(50), default='fas fa-ticket-alt')
+    color_theme = db.Column(db.String(50), default='danger')  # 'danger', 'primary', 'warning'

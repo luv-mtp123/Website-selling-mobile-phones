@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
+{% set default_avatar = 'https://img.freepik.com/free-vector/cute-horse-holding-gold-coin-cartoon-vector-icon-illustration-animal-nature-icon-concept-isolated_138676-7201.jpg' %}
+{% set current_avatar = current_user.avatar_url if current_user.avatar_url and current_user.avatar_url != 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' else default_avatar %}
+
 <style>
     /* --- CSS CHUẨN M-MEMBER (ĐỘC QUYỀN & RÕ NÉT 100%) --- */
     body { background-color: #f4f6f8; }
@@ -87,8 +90,6 @@
 
     .tradein-banner { background: linear-gradient(90deg, #000 0%, #222 100%); color: #ffc107; border-radius: 16px; padding: 35px 30px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
 
-    {% set default_avatar = 'https://img.freepik.com/free-vector/cute-horse-holding-gold-coin-cartoon-vector-icon-illustration-animal-nature-icon-concept-isolated_138676-7201.jpg' %}
-    {% set current_avatar = current_user.avatar_url if current_user.avatar_url and current_user.avatar_url != 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' else default_avatar %}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -124,7 +125,8 @@
                         <i class="fas fa-heart text-danger"></i> Sản phẩm yêu thích <span class="badge bg-danger ms-auto rounded-pill fs-6">{{ current_user.favorites.count() }}</span>
                     </button>
 
-                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-vouchers" type="button"><i class="fas fa-ticket-alt"></i> Kho Voucher <span class="badge bg-danger ms-auto rounded-pill fs-6">3</span></button>
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-vouchers" type="button"><i class="fas fa-ticket-alt"></i> Kho Voucher <span class="badge bg-danger ms-auto rounded-pill fs-6">{{ vouchers|length }}</span></button>
+
                     <button class="nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-warranty" type="button"><i class="fas fa-shield-alt"></i> Sổ bảo hành</button>
 
                     <div class="text-dark small fw-bold mt-4 mb-2 px-2 text-uppercase fs-6">Tiện Ích Nâng Cao</div>
@@ -294,62 +296,57 @@
                     </div>
                 </div>
 
-                <!-- [CẬP NHẬT] TAB KHO VOUCHER -->
                 <div class="tab-pane fade animate__animated animate__fadeIn" id="v-pills-vouchers">
                     <div class="m-member-box bg-light">
                         <div class="m-member-box-header"><span><i class="fas fa-ticket-alt me-2 text-danger"></i> Kho Voucher Của Bạn</span></div>
                         <div class="row g-4 mt-2">
-                            <!-- Voucher 1 -->
-                            <div class="col-md-6">
-                                <div class="voucher-card shadow-sm">
-                                    <div class="voucher-left text-center">
-                                        <i class="fas fa-percent fs-1 mb-2"></i>
-                                        <h5 class="fw-bold mb-0">10%</h5>
-                                    </div>
-                                    <div class="voucher-right">
-                                        <h5 class="fw-bold text-dark mb-1">Giảm 10% Đơn hàng Mới</h5>
-                                        <small class="text-muted d-block mb-3">Áp dụng cho mọi sản phẩm. Tối đa 500k.</small>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="badge bg-warning text-dark px-3 py-2 border border-danger">HSD: 30/12/2026</span>
-                                            <button class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">Dùng Ngay</button>
+                            {% if vouchers %}
+                                {% for v in vouchers %}
+                                <div class="col-md-6">
+                                    <div class="voucher-card shadow-sm border-{{ v.color_theme }}">
+
+                                        <!-- Render màu Gradient dựa trên cấu hình Database -->
+                                        {% if v.color_theme == 'danger' %}
+                                            <div class="voucher-left text-center" style="background: linear-gradient(135deg, #ffe5e5, #ffcccc); border-right-color: #d70018; color: #d70018;">
+                                        {% elif v.color_theme == 'primary' %}
+                                            <div class="voucher-left text-center" style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); border-right-color: #0d6efd; color: #0d6efd;">
+                                        {% else %}
+                                            <div class="voucher-left text-center" style="background: linear-gradient(135deg, #fff3cd, #ffecb3); border-right-color: #ffc107; color: #d39e00;">
+                                        {% endif %}
+
+                                            <i class="{{ v.icon }} fs-1 mb-2"></i>
+                                            <h5 class="fw-bold mb-0">
+                                                {% if v.discount_type == 'percent' %}
+                                                    {{ v.discount_value }}%
+                                                {% else %}
+                                                    {% if v.discount_value >= 1000 %}
+                                                        {{ (v.discount_value / 1000)|int }}K
+                                                    {% else %}
+                                                        {{ v.discount_value }}
+                                                    {% endif %}
+                                                {% endif %}
+                                            </h5>
+                                            <small class="fw-bold mt-1 text-dark" style="font-size: 0.7rem;">MÃ: {{ v.code }}</small>
+                                        </div>
+
+                                        <div class="voucher-right">
+                                            <h5 class="fw-bold text-dark mb-1">{{ v.description.split('.')[0] if v.description else 'Khuyến mãi hấp dẫn' }}</h5>
+                                            <small class="text-muted d-block mb-3">{{ v.description.split('.')[1:]|join('.') if v.description and '.' in v.description else 'Áp dụng khi thanh toán.' }}</small>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-light text-dark px-3 py-2 border border-{{ v.color_theme }}">HSD: {{ v.valid_to.strftime('%d/%m/%Y') }}</span>
+                                                <!-- Khi nhấn Dùng Ngay sẽ gọi logic Copy Text và Redirect sang mua sắm -->
+                                                <button class="btn btn-{{ v.color_theme }} btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="copyVoucherToClipboard('{{ v.code }}')">Dùng Ngay</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <!-- Voucher 2 -->
-                            <div class="col-md-6">
-                                <div class="voucher-card shadow-sm">
-                                    <div class="voucher-left text-center" style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); border-right-color: #0d6efd; color: #0d6efd;">
-                                        <i class="fas fa-truck fs-1 mb-2"></i>
-                                        <h5 class="fw-bold mb-0">FREE</h5>
-                                    </div>
-                                    <div class="voucher-right">
-                                        <h5 class="fw-bold text-dark mb-1">Miễn Phí Vận Chuyển</h5>
-                                        <small class="text-muted d-block mb-3">Dành riêng cho hạng thẻ M-Member của bạn.</small>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="badge bg-light text-dark border px-3 py-2">HSD: 15/06/2026</span>
-                                            <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold">Dùng Ngay</button>
-                                        </div>
-                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="col-12 text-center py-4 border rounded-3 bg-white shadow-sm mt-3">
+                                    <i class="fas fa-ticket-alt fa-3x text-muted opacity-25 mb-3 mt-3"></i>
+                                    <p class="text-muted fw-bold">Hiện chưa có mã giảm giá nào được phát hành.</p>
                                 </div>
-                            </div>
-                            <!-- Voucher 3 -->
-                            <div class="col-md-6">
-                                <div class="voucher-card shadow-sm">
-                                    <div class="voucher-left text-center" style="background: linear-gradient(135deg, #fff3cd, #ffecb3); border-right-color: #ffc107; color: #d39e00;">
-                                        <i class="fas fa-gift fs-1 mb-2"></i>
-                                        <h5 class="fw-bold mb-0">QUÀ</h5>
-                                    </div>
-                                    <div class="voucher-right">
-                                        <h5 class="fw-bold text-dark mb-1">Tặng Tai Nghe Bluetooth</h5>
-                                        <small class="text-muted d-block mb-3">Áp dụng khi mua điện thoại từ 10 Triệu.</small>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="badge bg-light text-dark border px-3 py-2">HSD: 01/05/2026</span>
-                                            <button class="btn btn-warning text-dark btn-sm rounded-pill px-3 fw-bold">Dùng Ngay</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -608,6 +605,27 @@
         Swal.fire({
             toast: true, position: 'top-end', icon: 'success',
             title: successMessage, showConfirmButton: false, timer: 2000
+        });
+    }
+
+    // JS MỚI: Dành cho tính năng Voucher
+    function copyVoucherToClipboard(code) {
+        const tempInput = document.createElement("input");
+        tempInput.value = code;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Lưu mã thành công!',
+            text: 'Mã ' + code + ' đã được lưu vào bộ nhớ. Khi thanh toán giỏ hàng bạn hãy dùng nó nhé!',
+            showConfirmButton: true,
+            confirmButtonText: 'Đã hiểu - Mua sắm ngay',
+            confirmButtonColor: '#d70018'
+        }).then((result) => {
+            if (result.isConfirmed) { window.location.href = '/'; }
         });
     }
 

@@ -157,8 +157,13 @@
     </div>
 </div>
 
+<!-- ========================================================================= -->
+<!-- QUẢN TRỊ TABS -->
+<!-- ========================================================================= -->
 <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
     <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pills-product">Sản phẩm</button></li>
+
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-voucher"><i class="fas fa-ticket-alt"></i> Quản lý Voucher</button></li>
     <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-order">Đơn hàng</button></li>
     <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-user">Người dùng</button></li>
     <li class="nav-item"><button class="nav-link text-success border-success" data-bs-toggle="pill" data-bs-target="#pills-tradein"><i class="fas fa-sync-alt me-1"></i> Thu cũ đổi mới</button></li>
@@ -215,6 +220,68 @@
             </div>
         </div>
     </div>
+
+    <div class="tab-pane fade" id="pills-voucher">
+        <div class="card shadow border-0 rounded-4 overflow-hidden mb-5">
+            <div class="card-header bg-white p-3 d-flex justify-content-between align-items-center border-bottom">
+                <h5 class="mb-0 fw-bold text-danger"><i class="fas fa-ticket-alt me-2"></i>Chiến dịch Khuyến Mãi (Voucher)</h5>
+                <button class="btn btn-danger rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#addVoucherModal"><i class="fas fa-plus me-2"></i> Phát hành Mã mới</button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Mã Code</th>
+                                <th>Chi tiết giảm giá</th>
+                                <th>Điều kiện áp dụng</th>
+                                <th>Hạn sử dụng</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for v in vouchers %}
+                            <tr class="{% if not v.is_active %}table-secondary opacity-75{% endif %}">
+                                <td class="ps-4"><span class="badge bg-dark fs-6 font-monospace">{{ v.code }}</span></td>
+                                <td>
+                                    {% if v.discount_type == 'percent' %}
+                                        <div class="fw-bold text-danger fs-5">-{{ v.discount_value }}%</div>
+                                        {% if v.max_discount %}<small class="text-muted">Tối đa: {{ v.max_discount | vnd }}</small>{% endif %}
+                                    {% else %}
+                                        <div class="fw-bold text-danger fs-5">-{{ v.discount_value | vnd }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="small fw-bold">Đơn tối thiểu: <span class="text-primary">{{ v.min_order_value | vnd }}</span></div>
+                                    <div class="small fw-bold mt-1">Hạng Y/cầu: <span class="text-warning">VIP Tier {{ v.required_rank }}</span></div>
+                                </td>
+                                <td><span class="badge bg-light text-dark border"><i class="far fa-clock"></i> {{ v.valid_to.strftime('%d/%m/%Y %H:%M') }}</span></td>
+                                <td>
+                                    {% if v.is_active %}<span class="badge bg-success">Đang kích hoạt</span>
+                                    {% else %}<span class="badge bg-danger">Đã khóa</span>{% endif %}
+                                </td>
+                                <td>
+                                    <a href="/admin/voucher/toggle/{{ v.id }}" class="btn btn-sm btn-outline-{{ 'warning' if v.is_active else 'success' }} fw-bold me-1">
+                                        <i class="fas fa-{{ 'lock' if v.is_active else 'unlock' }}"></i>
+                                    </a>
+                                    <a href="/admin/voucher/delete/{{ v.id }}" class="btn btn-sm btn-outline-danger fw-bold" onclick="return confirm('Bạn chắc chắn muốn XÓA VĨNH VIỄN mã này?')">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted fw-bold">Chưa có mã giảm giá nào được phát hành.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ========================================================================================================= -->
 
     <!-- TAB 2: Đơn hàng -->
     <div class="tab-pane fade" id="pills-order">
@@ -392,6 +459,9 @@
         </div>
     </div>
 
+    <!-- ========================================================================= -->
+    <!-- PHÂN BIỆT ĐÁNH GIÁ VÀ CÂU HỎI TRONG ADMIN -->
+    <!-- ========================================================================= -->
     <div class="tab-pane fade" id="pills-comments">
         <div class="card shadow border-0 rounded-4 overflow-hidden mb-5">
             <div class="card-header bg-white p-3">
@@ -495,6 +565,90 @@
                 <div class="modal-footer bg-light rounded-bottom-4">
                     <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Đóng</button>
                     <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow"><i class="fas fa-paper-plane me-1"></i> Phản hồi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- MODAL PHÁT HÀNH VOUCHER CHO ADMIN -->
+<!-- ============================================= -->
+<div class="modal fade" id="addVoucherModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <form action="/admin/voucher/add" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                <div class="modal-header bg-danger text-white rounded-top-4">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-ticket-alt me-2"></i>Tạo Chiến Dịch Voucher Mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Mã Voucher Code <span class="text-danger">*</span></label>
+                            <input type="text" name="code" class="form-control text-uppercase font-monospace" placeholder="VD: TET2026, FREESHIP" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Hạng thẻ áp dụng <span class="text-danger">*</span></label>
+                            <select name="required_rank" class="form-select text-dark fw-bold">
+                                <option value="1">M-New (Tất cả mọi người)</option>
+                                <option value="2">M-Gold (Khách quen)</option>
+                                <option value="3">M-Platinum (VIP)</option>
+                                <option value="4">M-Diamond (Siêu VIP)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Loại giảm giá</label>
+                            <select name="discount_type" class="form-select">
+                                <option value="percent">Theo Phần trăm (%)</option>
+                                <option value="fixed">Số tiền Cố định (VNĐ)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-danger">Giá trị giảm <span class="text-danger">*</span></label>
+                            <input type="number" name="discount_value" class="form-control" placeholder="10 hoặc 50000" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Giảm tối đa (Nếu là %)</label>
+                            <input type="number" name="max_discount" class="form-control" placeholder="VD: 500000">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-primary">Giá trị đơn hàng tối thiểu</label>
+                            <input type="number" name="min_order_value" class="form-control" placeholder="VD: 1000000 (Mặc định: 0)" value="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Hạn sử dụng (Hết ngày) <span class="text-danger">*</span></label>
+                            <input type="datetime-local" name="valid_to" class="form-control" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Mô tả hiển thị (UI)</label>
+                            <input type="text" name="description" class="form-control" placeholder="VD: Giảm 10% Đơn hàng Mới. Áp dụng cho mọi sản phẩm.">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Màu thẻ (UI Theme)</label>
+                            <select name="color_theme" class="form-select">
+                                <option value="danger">Đỏ (Mặc định)</option>
+                                <option value="primary">Xanh dương</option>
+                                <option value="warning">Vàng Gold</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Mã Icon (FontAwesome)</label>
+                            <input type="text" name="icon" class="form-control" value="fas fa-ticket-alt">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow"><i class="fas fa-paper-plane me-2"></i>Phát hành Voucher</button>
                 </div>
             </form>
         </div>

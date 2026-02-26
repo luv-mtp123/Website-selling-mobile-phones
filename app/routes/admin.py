@@ -1,18 +1,26 @@
+"""
+Module Controller dành riêng cho Quản trị viên (Admin).
+Chứa toàn bộ nghiệp vụ quản lý hệ thống: Xem báo cáo Data Science, Quản lý kho hàng,
+Duyệt thu cũ đổi mới, Kiểm duyệt bình luận và Quản lý/Phát hành các chiến dịch Voucher.
+"""
+
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, send_file
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
 from sqlalchemy import func, desc
 from datetime import datetime, timedelta
-from app.extensions import db
-
-from app.models import Product, User, Order, TradeInRequest, OrderDetail, Comment
 import json
-from app.utils import sync_product_to_vector_db
-
 import pandas as pd
 import io
 
-# ---> [NEW] IMPORT HẰNG SỐ HỆ THỐNG <---
+# Import Extensions & Models
+from app.extensions import db
+from app.models import Product, User, Order, TradeInRequest, OrderDetail, Comment, Voucher
+
+# Import Lõi tiện ích
+from app.utils import sync_product_to_vector_db
+
+# Import Hằng số hệ thống
 from app.constants import (
     ORDER_STATUS_COMPLETED,
     ORDER_STATUS_CANCELLED,
@@ -29,8 +37,8 @@ admin_bp = Blueprint('admin', __name__)
 @login_required
 def check_admin():
     """
-    Middleware kiểm tra quyền quản trị viên.
-    Sẽ tự động chặn (abort 403) nếu người dùng hiện tại không phải là admin.
+    Middleware bức tường lửa (Firewall) cục bộ cho Admin Blueprint.
+    Tự động chặn (abort 403) nếu phát hiện request đến từ người dùng không phải Quản trị viên.
     """
     if current_user.role != 'admin':
         abort(403)
@@ -39,22 +47,23 @@ def check_admin():
 @admin_bp.route('/admin')
 def dashboard():
     """
-    Trang tổng quan (Dashboard) của Quản trị viên.
-    Hiển thị biểu đồ doanh thu, thống kê đơn hàng, phân tích người dùng,
-    và các thuật toán tìm ra khung giờ vàng chốt đơn (Sử dụng Pandas).
+    Trang tổng quan (Dashboard) hệ thống điều hành của Quản trị viên.
+    Thực hiện hàng loạt truy vấn phức tạp để render biểu đồ doanh thu, thống kê đơn hàng,
+    phân tích người dùng, quản lý Voucher và trích xuất Insight bằng Pandas.
     """
     products = Product.query.order_by(Product.id.desc()).all()
     users = User.query.all()
     orders = Order.query.options(joinedload(Order.user)).order_by(Order.date_created.desc()).all()
     tradeins = TradeInRequest.query.options(joinedload(TradeInRequest.user)).order_by(
         TradeInRequest.created_at.desc()).all()
-
     comments = Comment.query.options(joinedload(Comment.user), joinedload(Comment.product)).order_by(
         Comment.created_at.desc()).all()
 
-    # Sử dụng Hằng số thay vì text cứng 'Completed'
-    total_revenue = db.session.query(func.sum(Order.total_price)).filter(Order.status == ORDER_STATUS_COMPLETED).scalar() or 0
+    # Lấy toàn bộ Voucher để Admin quản lý (Bao gồm cả mã đang khóa)
+    vouchers = Voucher.query.order_by(Voucher.id.desc()).all()
 
+    total_revenue = db.session.query(func.sum(Order.total_price)).filter(
+        Order.status == ORDER_STATUS_COMPLETED).scalar() or 0
     total_orders_count = Order.query.count()
     total_products_count = Product.query.count()
     total_users_count = User.query.count()
@@ -79,12 +88,7 @@ def dashboard():
         d = seven_days_ago + timedelta(days=i)
         d_str = d.strftime('%Y-%m-%d')
         chart_dates.append(d.strftime('%d/%m'))
-        total = 0
-        for key, val in rev_map.items():
-            if str(key).startswith(d_str):
-                total = val
-                break
-        chart_revenues.append(total)
+        chart_revenues.append(rev_map.get(d_str, 0))
 
     top_products = db.session.query(
         OrderDetail.product_name,
@@ -92,6 +96,7 @@ def dashboard():
     ).join(Order).filter(Order.status == ORDER_STATUS_COMPLETED).group_by(OrderDetail.product_name).order_by(
         desc('total_qty')).limit(5).all()
 
+    # Phân tích Data Science lấy Insight từ Dữ liệu Lớn bằng Pandas
     best_month_product = "Chưa có dữ liệu"
     peak_hour = "Chưa có dữ liệu"
 
@@ -102,15 +107,14 @@ def dashboard():
     if completed_orders:
         df = pd.DataFrame(completed_orders, columns=['order_id', 'date_created', 'product_name', 'quantity'])
         df['date_created'] = pd.to_datetime(df['date_created'])
-
         df['hour'] = df['date_created'].dt.hour
+
         if not df['hour'].empty:
             peak_hour_val = df['hour'].mode()[0]
             peak_hour = f"{peak_hour_val}:00 - {peak_hour_val + 1}:00"
 
         current_month = datetime.now().month
         current_year = datetime.now().year
-
         this_month_df = df[
             (df['date_created'].dt.month == current_month) & (df['date_created'].dt.year == current_year)]
 
@@ -121,21 +125,12 @@ def dashboard():
 
     return render_template(
         'admin_dashboard.html',
-        products=products,
-        users=users,
-        orders=orders,
-        tradeins=tradeins,
-        comments=comments,
-        total_revenue=total_revenue,
-        total_orders_count=total_orders_count,
-        total_products_count=total_products_count,
-        total_users_count=total_users_count,
-        status_data=status_data,
-        chart_dates=json.dumps(chart_dates),
-        chart_revenues=json.dumps(chart_revenues),
-        top_products=top_products,
-        best_month_product=best_month_product,
-        peak_hour=peak_hour
+        products=products, users=users, orders=orders, tradeins=tradeins, comments=comments,
+        vouchers=vouchers,
+        total_revenue=total_revenue, total_orders_count=total_orders_count,
+        total_products_count=total_products_count, total_users_count=total_users_count,
+        status_data=status_data, chart_dates=json.dumps(chart_dates), chart_revenues=json.dumps(chart_revenues),
+        top_products=top_products, best_month_product=best_month_product, peak_hour=peak_hour
     )
 
 
@@ -143,12 +138,10 @@ def dashboard():
 @login_required
 def export_revenue_report():
     """
-    Xuất báo cáo doanh thu dưới dạng file Excel (.xlsx).
-    Sử dụng thư viện Pandas và Openpyxl để định dạng tiền tệ và độ rộng cột tự động.
+    Trích xuất Báo cáo Doanh thu định dạng Excel (.xlsx).
+    Sử dụng Pandas và Openpyxl xử lý trong bộ nhớ đệm In-Memory (BytesIO)
+    giúp không bị nghẽn ổ cứng, format cột tự động.
     """
-    if current_user.role != 'admin':
-        abort(403)
-
     orders = db.session.query(
         Order.id, Order.date_created, Order.total_price, Order.payment_method, Order.status,
         User.full_name, User.username
@@ -156,12 +149,11 @@ def export_revenue_report():
         Order.date_created.desc()).all()
 
     if not orders:
-        flash("Chưa có đơn hàng nào hoàn thành để xuất báo cáo.", "warning")
+        flash("Chưa có đơn hàng nào hoàn thành.", "warning")
         return redirect(url_for('admin.dashboard'))
 
     df = pd.DataFrame(orders,
                       columns=['Mã Đơn', 'Ngày Đặt', 'Tổng Tiền', 'Thanh Toán', 'Trạng Thái', 'Tên Khách', 'Username'])
-
     df['Khách Hàng'] = df['Tên Khách'].combine_first(df['Username'])
     df = df.drop(columns=['Tên Khách', 'Username'])
     df['Ngày Đặt'] = pd.to_datetime(df['Ngày Đặt']).dt.strftime('%d/%m/%Y %H:%M')
@@ -172,44 +164,28 @@ def export_revenue_report():
         df.to_excel(writer, sheet_name='Báo Cáo Doanh Thu', index=False)
         worksheet = writer.sheets['Báo Cáo Doanh Thu']
         for row in range(2, len(df) + 2):
-            cell = worksheet.cell(row=row, column=5)
-            cell.number_format = '#,##0 "VNĐ"'
-
+            worksheet.cell(row=row, column=5).number_format = '#,##0 "VNĐ"'
         for col in worksheet.columns:
-            max_length = 0
-            column_letter = col[0].column_letter
-            for cell in col:
-                try:
-                    if len(str(cell.value)) > max_length:
-                        max_length = len(str(cell.value))
-                except:
-                    pass
-            adjusted_width = (max_length + 3)
-            worksheet.column_dimensions[column_letter].width = adjusted_width
+            max_length = max((len(str(cell.value)) for cell in col), default=0)
+            worksheet.column_dimensions[col[0].column_letter].width = (max_length + 3)
 
     output.seek(0)
-    timestamp = datetime.now().strftime("%d%m%Y_%H%M")
-    filename = f"Bao_Cao_Doanh_Thu_Thang_{datetime.now().month}_{timestamp}.xlsx"
-
-    return send_file(
-        output,
-        download_name=filename,
-        as_attachment=True,
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    filename = f"Bao_Cao_Doanh_Thu_Thang_{datetime.now().month}_{datetime.now().strftime('%d%m%Y_%H%M')}.xlsx"
+    return send_file(output, download_name=filename, as_attachment=True,
+                     mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
 @admin_bp.route('/admin/order/update/<int:id>/<status>')
 def update_order_status(id, status):
     """
-    Cập nhật trạng thái của đơn hàng.
-    Nếu chuyển từ trạng thái khác sang Đã Hủy (Cancelled), hệ thống sẽ tự động hoàn trả số lượng sản phẩm lại vào kho.
+    Quy trình cập nhật trạng thái vòng đời của Đơn hàng.
+    Có chứa cơ chế phòng ngự (Safeguard) tự động hoàn trả số lượng lại kho
+    nếu Admin thao tác chuyển đơn hàng về trạng thái Hủy.
     """
     order = Order.query.options(joinedload(Order.details)).get_or_404(id)
     old_status = order.status
-    valid_statuses = VALID_ORDER_STATUSES
 
-    if status not in valid_statuses:
+    if status not in VALID_ORDER_STATUSES:
         flash(SystemMessages.INVALID_STATUS, 'danger')
         return redirect(url_for('admin.dashboard'))
 
@@ -220,58 +196,48 @@ def update_order_status(id, status):
     if status == ORDER_STATUS_CANCELLED and old_status != ORDER_STATUS_CANCELLED:
         for detail in order.details:
             product = db.session.get(Product, detail.product_id)
-            if product:
-                product.stock_quantity += detail.quantity
+            if product: product.stock_quantity += detail.quantity
         flash(SystemMessages.ORDER_REFUNDED, 'info')
 
     order.status = status
     db.session.commit()
-    flash(f'Cập nhật đơn hàng thành công: {status}', 'success')
+    flash(f'Cập nhật thành công: {status}', 'success')
     return redirect(url_for('admin.dashboard'))
 
 
 @admin_bp.route('/admin/product/add', methods=['POST'])
 def add_product():
     """
-    Thêm mới một sản phẩm vào hệ thống.
-    Ghi nhận dữ liệu vào CSDL SQLite và đồng thời đồng bộ hóa Vector Embeddings lên ChromaDB.
+    Nghiệp vụ thêm mới Sản phẩm vào kho hàng.
+    Sau khi lưu vào Relational DB, hệ thống tự kích hoạt Trigger
+    đồng bộ hóa Vector DB để cập nhật bộ não AI ngay lập tức.
     """
     try:
-        name = request.form.get('name')
-        brand = request.form.get('brand')
-        price = request.form.get('price', default=0, type=int)
-        desc = request.form.get('description')
-        img = request.form.get('image_url')
-        cat = request.form.get('category', 'phone')
-        is_sale = 'is_sale' in request.form
-        sale_price = request.form.get('sale_price', default=0, type=int)
-        is_active = 'is_active' in request.form
-        stock = request.form.get('stock_quantity', default=10, type=int)
-
-        new_product = Product(
-            name=name, brand=brand, price=price, description=desc,
-            image_url=img, category=cat, is_sale=is_sale, sale_price=sale_price,
-            is_active=is_active, stock_quantity=stock
+        new_p = Product(
+            name=request.form.get('name'), brand=request.form.get('brand'),
+            price=request.form.get('price', default=0, type=int),
+            description=request.form.get('description'), image_url=request.form.get('image_url'),
+            category=request.form.get('category', 'phone'),
+            is_sale='is_sale' in request.form,
+            sale_price=request.form.get('sale_price', default=0, type=int),
+            is_active='is_active' in request.form,
+            stock_quantity=request.form.get('stock_quantity', default=10, type=int)
         )
-
-        db.session.add(new_product)
+        db.session.add(new_p)
         db.session.commit()
-
-        sync_product_to_vector_db(new_product)
-
-        flash(f'{SystemMessages.PRODUCT_ADD_SUCCESS} ({name})', 'success')
+        sync_product_to_vector_db(new_p)
+        flash(SystemMessages.PRODUCT_ADD_SUCCESS, 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Lỗi khi thêm sản phẩm: {str(e)}', 'danger')
-
+        flash(f'Lỗi thêm sản phẩm: {e}', 'danger')
     return redirect(url_for('admin.dashboard'))
 
 
 @admin_bp.route('/admin/product/edit/<int:id>', methods=['GET', 'POST'])
 def edit_product(id):
     """
-    Chỉnh sửa thông tin của một sản phẩm đã có.
-    Hỗ trợ chỉnh sửa thông tin JSON (Colors, Versions) và tự động đồng bộ lại Vector Search.
+    Chỉnh sửa thông tin, giá, thuộc tính của một sản phẩm.
+    Hỗ trợ xử lý JSON mảng cho màu sắc/phiên bản động.
     """
     product = Product.query.get_or_404(id)
 
@@ -313,8 +279,8 @@ def edit_product(id):
 @admin_bp.route('/admin/product/delete/<int:id>')
 def delete_product(id):
     """
-    Xóa vĩnh viễn một sản phẩm khỏi CSDL.
-    Các bình luận liên kết sẽ tự động bị xóa theo tính năng Cascade Delete-Orphan.
+    Nghiệp vụ xóa vĩnh viễn Sản phẩm.
+    Sẽ kích hoạt xóa theo chuỗi (Cascade Delete) loại bỏ toàn bộ Comment liên đới.
     """
     product = Product.query.get_or_404(id)
     db.session.delete(product)
@@ -326,8 +292,8 @@ def delete_product(id):
 @admin_bp.route('/admin/tradein/update', methods=['POST'])
 def update_tradein():
     """
-    Cập nhật trạng thái của yêu cầu Thu cũ Đổi mới.
-    Cho phép Admin định giá máy cũ hoặc từ chối kèm theo ghi chú công khai cho người dùng.
+    Phê duyệt hoặc Từ chối yêu cầu Thu cũ lên đời (Trade-in) từ Khách hàng.
+    Cập nhật giá thẩm định và lưu trữ phản hồi của chuyên viên.
     """
     req_id = request.form.get('id')
     action = request.form.get('action')
@@ -338,11 +304,82 @@ def update_tradein():
     if action == 'approve':
         req.status = TRADEIN_STATUS_APPROVED
         req.valuation_price = price
-        req.admin_note = note or "Đã định giá."
     elif action == 'reject':
         req.status = TRADEIN_STATUS_REJECTED
-        req.admin_note = note or "Không đạt yêu cầu."
 
+    req.admin_note = note or "Đã xử lý."
     db.session.commit()
     flash(SystemMessages.TRADEIN_PROCESSED, 'success')
+    return redirect(url_for('admin.dashboard'))
+
+
+# =========================================================================
+# BỘ API QUẢN LÝ ĐỘNG CƠ KHUYẾN MÃI (VOUCHER RULE ENGINE)
+# =========================================================================
+
+@admin_bp.route('/admin/voucher/add', methods=['POST'])
+def add_voucher():
+    """
+    Nghiệp vụ: Tạo Chiến dịch Khuyến mãi (Voucher) mới.
+    Admin nạp đầu vào từ form HTML, hệ thống lưu trữ vào CSDL với các quy tắc
+    chặt chẽ để khách hàng có thể săn mã và áp dụng.
+    """
+    try:
+        code = request.form.get('code', '').strip().upper()
+        if Voucher.query.filter_by(code=code).first():
+            flash(f'Mã Voucher {code} đã tồn tại!', 'danger')
+            return redirect(url_for('admin.dashboard'))
+
+        valid_to_str = request.form.get('valid_to')
+        valid_to_date = datetime.strptime(valid_to_str, '%Y-%m-%dT%H:%M') if valid_to_str else (
+                    datetime.now() + timedelta(days=30))
+
+        new_voucher = Voucher(
+            code=code,
+            discount_type=request.form.get('discount_type', 'percent'),
+            discount_value=request.form.get('discount_value', type=int),
+            max_discount=request.form.get('max_discount', type=int) or None,
+            min_order_value=request.form.get('min_order_value', type=int, default=0),
+            valid_to=valid_to_date,
+            required_rank=request.form.get('required_rank', type=int, default=1),
+            description=request.form.get('description', ''),
+            icon=request.form.get('icon', 'fas fa-ticket-alt'),
+            color_theme=request.form.get('color_theme', 'danger'),
+            is_active=True
+        )
+        db.session.add(new_voucher)
+        db.session.commit()
+        flash(f'Phát hành thành công mã giảm giá: {code}', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Lỗi tạo Voucher: {str(e)}', 'danger')
+
+    return redirect(url_for('admin.dashboard'))
+
+
+@admin_bp.route('/admin/voucher/toggle/<int:id>')
+def toggle_voucher(id):
+    """
+    Nghiệp vụ: Tạm khóa hoặc Mở khóa lại một mã giảm giá khẩn cấp.
+    Đóng vai trò như công tắc An toàn khi mã bị tuồn ra ngoài sai quy định.
+    """
+    voucher = Voucher.query.get_or_404(id)
+    voucher.is_active = not voucher.is_active
+    db.session.commit()
+    status_msg = "Mở khóa" if voucher.is_active else "Đã khóa"
+    flash(f'{status_msg} mã Voucher {voucher.code} thành công!', 'info')
+    return redirect(url_for('admin.dashboard'))
+
+
+@admin_bp.route('/admin/voucher/delete/<int:id>')
+def delete_voucher(id):
+    """
+    Nghiệp vụ: Thu hồi (Xóa vĩnh viễn) mã giảm giá khỏi hệ thống.
+    """
+    voucher = Voucher.query.get_or_404(id)
+    code = voucher.code
+    db.session.delete(voucher)
+    db.session.commit()
+    flash(f'Đã thu hồi vĩnh viễn mã Voucher {code}.', 'success')
     return redirect(url_for('admin.dashboard'))

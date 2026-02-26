@@ -1,3 +1,9 @@
+"""
+Module Main Controller điều phối các nghiệp vụ chính dành cho Khách hàng (User/Guest).
+Bao gồm: Tìm kiếm thông minh (Hybrid Search), Giỏ hàng, Đặt hàng (Checkout),
+Trang chi tiết sản phẩm, Dashboard M-Member và Áp dụng Voucher (Khuyến mãi).
+"""
+
 import os
 import time
 import json
@@ -12,9 +18,9 @@ from sqlalchemy import or_, and_, func, desc
 
 # Import Extensions & Models
 from app.extensions import db, csrf
-from app.models import Product, Order, OrderDetail, AICache, TradeInRequest, Comment
+from app.models import Product, Order, OrderDetail, AICache, TradeInRequest, Comment, Voucher
 
-# ---> [NEW] IMPORT HẰNG SỐ HỆ THỐNG ĐỂ THAY THẾ HARDCODE <---
+# Import Hằng số cấu hình hệ thống
 from app.constants import (
     ORDER_STATUS_PENDING,
     ORDER_STATUS_COMPLETED,
@@ -27,7 +33,7 @@ from app.constants import (
     PAYMENT_METHOD_BANKING
 )
 
-# Import Utils
+# Import Thư viện tiện ích & Thuật toán lõi
 from app.utils import (
     analyze_search_intents,
     local_analyze_intent,
@@ -40,40 +46,37 @@ from app.utils import (
     analyze_sentiment,
     direct_gemini_search,
     get_similar_products,
-    generate_local_comparison_html
+    generate_local_comparison_html,
+    VoucherValidatorEngine
 )
 
 main_bp = Blueprint('main', __name__)
 
 
-# --- AI Cache Helper ---
 def cached_ai_call(func, *args):
     """
     Trình bọc (Wrapper) lưu trữ kết quả gọi API AI vào Cache Database.
-    Hỗ trợ hệ thống giảm tải API Quota và tăng tốc độ xử lý câu trả lời lên gấp 10 lần
-    cho các câu hỏi trùng lặp nhờ thuật toán băm (MD5 Hash).
+    Giảm tải API Quota và tăng tốc độ xử lý câu trả lời lên gấp 10 lần nhờ mã băm (MD5).
     """
     try:
-        ### ---> [ĐÃ SỬA CHỖ NÀY: Nâng Version Cache để cập nhật giao diện CellphoneS 4 Sản Phẩm] <--- ###
-        cache_key_content = f"{func.__name__}_{str(args)}_v61_multi_compare"
+        cache_key_content = f"{func.__name__}_{str(args)}_v230_final"
         key = hashlib.md5(cache_key_content.encode()).hexdigest()
 
         cached = AICache.query.filter_by(prompt_hash=key).first()
         if cached:
             try:
-                # [FIX] Parse Cache an toàn hơn, lọc khoảng trắng
                 text_data = cached.response_text.strip()
                 if text_data.startswith('{') and text_data.endswith('}'):
                     return json.loads(text_data)
                 elif text_data.startswith('[') and text_data.endswith(']'):
                     return json.loads(text_data)
                 return text_data
-            except:
+            except Exception:
                 return cached.response_text
     except Exception as e:
         print(f"Cache Error: {e}")
 
-    # Gọi hàm thực thi (Call API)
+    # Thực thi API thực tế nếu không có Cache
     res = func(*args)
 
     if res:
@@ -82,17 +85,18 @@ def cached_ai_call(func, *args):
             if not AICache.query.filter_by(prompt_hash=key).first():
                 db.session.add(AICache(prompt_hash=key, response_text=val))
                 db.session.commit()
-        except:
+        except Exception:
             pass
     return res
 
 
 def build_chroma_filter(ai_data):
     """
-    Chuyển đổi dữ liệu phân tích ý định tìm kiếm của người dùng thành
-    định dạng siêu dữ liệu (Metadata filter) để phục vụ cho Hybrid Search trên ChromaDB.
+    Chuyển đổi dữ liệu phân tích ý định tìm kiếm thành định dạng metadata filter (JSON).
+    Phục vụ cho chức năng Hybrid Search của ChromaDB.
     """
-    if not ai_data: return None
+    if not ai_data:
+        return None
     conditions = []
     if ai_data.get('category'):
         conditions.append({"category": ai_data['category']})
@@ -106,9 +110,37 @@ def build_chroma_filter(ai_data):
     return None
 
 
-# =========================================================
-# ROUTES CHÍNH
-# =========================================================
+# =======================================================================================
+# ---> [NEW: HELPER CALCULATE USER RANK] <---
+# Khắc phục lỗi bảo mật: Tự động tính hạng thẻ từ Backend để chống thao túng (Spoofing)
+# =======================================================================================
+def _calculate_user_rank(user_id):
+    """
+    Thuật toán kế toán tính toán Cấp bậc VIP của Người dùng dựa trên tổng chi tiêu.
+    Được sử dụng chung cho việc hiển thị Dashboard và xác thực Voucher.
+    Tránh việc lặp lại mã (DRY - Don't Repeat Yourself).
+    """
+    completed_orders = Order.query.filter_by(user_id=user_id, status=ORDER_STATUS_COMPLETED).all()
+    total_spent = sum(o.total_price for o in completed_orders)
+
+    rank_tier = 1
+    rank_name = "M-New"
+
+    if total_spent >= 50000000:
+        rank_tier = 4
+        rank_name = "M-Diamond"
+    elif total_spent >= 20000000:
+        rank_tier = 3
+        rank_name = "M-Platinum"
+    elif total_spent >= 5000000:
+        rank_tier = 2
+        rank_name = "M-Gold"
+
+    return rank_tier, rank_name, total_spent
+
+
+# =======================================================================================
+
 
 @main_bp.route('/')
 def home():
@@ -125,10 +157,10 @@ def home():
     products = []
 
     base_query = Product.query.filter_by(is_active=True)
-    ai_data = None  # Cần lưu lại ai_data để dùng cho lớp Fallback phía dưới
+    ai_data = None
 
     if q and len(q.split()) >= 1 and not brand_arg:
-        # Gọi AI kể cả khi truy vấn ngắn (>=2 từ) để bắt chính xác Phụ kiện vs Điện thoại
+        # Gọi AI với các truy vấn dài để phân tích chính xác
         if len(q.split()) >= 2:
             ai_data = cached_ai_call(analyze_search_intents, q)
 
@@ -142,10 +174,11 @@ def home():
         if ai_data:
             query = base_query
 
-            # Lọc chính xác bằng SQL
+            # Lọc chính xác bằng SQL (Hãng, Giá, Danh mục)
             if ai_data.get('brand'):
                 query = query.filter(Product.brand.ilike(f"%{ai_data['brand']}%"))
-                if "Hãng" not in ai_msg: ai_msg += f" | Hãng: {ai_data['brand']}"
+                if "Hãng" not in ai_msg:
+                    ai_msg += f" | Hãng: {ai_data['brand']}"
 
             if ai_data.get('category'):
                 query = query.filter(Product.category.ilike(f"{ai_data['category']}"))
@@ -156,10 +189,10 @@ def home():
             if ai_data.get('max_price'):
                 query = query.filter(Product.price <= int(ai_data['max_price']))
 
+            # Lọc ngữ nghĩa thông minh (Vector Search)
             if ai_data.get('keyword'):
                 kw = ai_data['keyword'].strip()
                 if kw:
-                    # [FIXED] Luôn ưu tiên dùng Vector DB để xử lý từ đồng nghĩa ("cáp sạc" -> cáp / sạc)
                     chroma_filter = build_chroma_filter(ai_data)
                     vector_ids = search_vector_db(kw, n_results=20, metadata_filters=chroma_filter)
 
@@ -167,9 +200,10 @@ def home():
                         ids = [int(i) for i in vector_ids if i.isdigit()]
                         if ids:
                             query = query.filter(Product.id.in_(ids))
-                            if "Ngữ nghĩa" not in ai_msg: ai_msg += f" | 🧠 Smart Search"
+                            if "Ngữ nghĩa" not in ai_msg:
+                                ai_msg += f" | 🧠 Smart Search"
                         else:
-                            vector_ids = []  # Ép rỗng để đá qua Fallback SQL bên dưới
+                            vector_ids = []  # Ép rỗng để chuyển qua SQL Fallback
 
                     if not vector_ids:
                         conditions = []
@@ -187,9 +221,8 @@ def home():
 
             products = query.all()
 
-    # [UPDATED] LỚP FALLBACK NẾU KẾT QUẢ RỖNG
+    # LỚP FALLBACK (SQL THUẦN) NẾU TÌM KIẾM AI THẤT BẠI
     if not products and q:
-        # Nếu đã có ai_data từ bước trên, hãy duy trì bộ lọc Category ở Fallback
         fallback_query = base_query
         if ai_data and ai_data.get('category'):
             fallback_query = fallback_query.filter(Product.category.ilike(f"{ai_data['category']}"))
@@ -202,8 +235,7 @@ def home():
             fallback_query = fallback_query.filter(Product.price <= int(ai_data['max_price']))
 
         search_words = q.split()
-        stop_words = SEARCH_STOP_WORDS
-        keywords = [w for w in search_words if w.lower() not in stop_words]
+        keywords = [w for w in search_words if w.lower() not in SEARCH_STOP_WORDS]
 
         if keywords:
             conditions = []
@@ -248,24 +280,20 @@ def home():
 def product_detail(id):
     """
     Xử lý truy xuất thông tin chi tiết một sản phẩm.
-    Tích hợp thuật toán Collaborative Filtering để gợi ý mua kèm phụ kiện.
-    Tích hợp thêm Content-Based Recommendation (Thuật toán toán học gợi ý sản phẩm tương tự).
+    Tích hợp thuật toán Collaborative Filtering (Gợi ý mua kèm phụ kiện)
+    và Content-Based Recommendation (Gợi ý máy tương tự).
     """
     p = Product.query.filter_by(id=id, is_active=True).first_or_404()
     try:
         p.colors_list = json.loads(p.colors) if p.colors else []
         p.versions_list = json.loads(p.versions) if p.versions else []
-    except:
+    except Exception:
         p.colors_list, p.versions_list = [], []
 
-    # ==============================================================================================
-    # ---> [ĐÃ SỬA CHỖ NÀY: Xóa .subquery() để khắc phục cảnh báo SAWarning của SQLAlchemy 2.0] <---
-    # ==============================================================================================
-
-    # 1. Tìm tất cả các OrderID (Giỏ hàng) đã từng chứa sản phẩm này (Không dùng .subquery() nữa)
+    # 1. Tìm tất cả các OrderID đã từng chứa sản phẩm này (Ngăn lỗi SAWarning của SQLAlchemy)
     related_order_ids_query = db.session.query(OrderDetail.order_id).filter_by(product_id=id)
 
-    # 2. Tìm các sản phẩm (Phụ kiện) xuất hiện nhiều nhất trong các Giỏ hàng đó
+    # 2. Tìm các sản phẩm Phụ kiện xuất hiện nhiều nhất trong các Giỏ hàng trên
     recommendation_query = db.session.query(Product, func.sum(OrderDetail.quantity).label('total_bought')) \
         .join(OrderDetail, Product.id == OrderDetail.product_id) \
         .filter(OrderDetail.order_id.in_(related_order_ids_query)) \
@@ -278,12 +306,11 @@ def product_detail(id):
 
     recs = [item[0] for item in recommendation_query]
 
-    # Fallback: Nếu điện thoại mới ra chưa ai mua kèm phụ kiện, lấy đại 4 phụ kiện random
+    # Fallback: Nếu không có dữ liệu ML, lấy 4 phụ kiện ngẫu nhiên đang Active
     if not recs:
         recs = Product.query.filter(Product.category == 'accessory', Product.is_active == True).limit(4).all()
 
-    # ==============================================================================================
-
+    # Thuật toán điểm tương đồng (Máy cùng hãng, cùng hạng giá)
     similar_prods = get_similar_products(p, limit=4)
 
     all_products = Product.query.filter(
@@ -292,17 +319,16 @@ def product_detail(id):
         Product.id != p.id
     ).all()
 
-    # 1. Lấy Bình luận đánh giá (có sao)
+    # Tách biệt Bình luận Đánh giá (Review) và Hỏi đáp (Q&A)
     comments = Comment.query.options(joinedload(Comment.user)).filter(
         Comment.product_id == id, Comment.parent_id == None, Comment.rating > 0
     ).order_by(Comment.created_at.desc()).all()
 
-    # 2. Lấy Câu hỏi Hỏi Đáp (không có sao, rating = 0)
     questions = Comment.query.options(joinedload(Comment.user)).filter_by(
         product_id=id, parent_id=None, rating=0
     ).order_by(Comment.created_at.desc()).all()
 
-    # [REFACTOR] Tính toán Rating Logic ở Backend thay vì HTML
+    # Tính toán Thống kê Đánh giá (Rating Engine)
     rating_stats = {
         'total': 0, 'avg': 0,
         'stars': {5: {'count': 0, 'pct': 0}, 4: {'count': 0, 'pct': 0}, 3: {'count': 0, 'pct': 0},
@@ -321,13 +347,9 @@ def product_detail(id):
         for star in rating_stats['stars']:
             rating_stats['stars'][star]['pct'] = (rating_stats['stars'][star]['count'] / rating_stats['total']) * 100
 
-    # =========================================================================
-    # ---> [NEW: Kiểm tra xem sản phẩm này đã được User Yêu thích chưa] <---
-    # =========================================================================
     is_favorited = False
     if current_user.is_authenticated:
         is_favorited = p in current_user.favorites
-    # =========================================================================
 
     return render_template('detail.html', product=p, all_products=all_products, recommendations=recs,
                            similar_products=similar_prods, comments=comments, questions=questions,
@@ -338,23 +360,22 @@ def product_detail(id):
 @login_required
 def add_comment(id):
     """
-    Xử lý gửi bình luận hoặc câu hỏi từ người dùng lên hệ thống.
-    Cho phép trả lời lồng nhau (Nested Replies) và tự động ghi nhận điểm đánh giá.
+    Lưu trữ bình luận, đánh giá hoặc câu hỏi của Khách hàng vào Cơ sở dữ liệu.
+    Hỗ trợ luồng trả lời trực tiếp (Nested Reply) cho Admin.
     """
     content = request.form.get('content', '').strip()
-
     is_question = request.form.get('is_question') == 'true'
     parent_id = request.form.get('parent_id', type=int)
 
     if is_question or parent_id:
-        final_rating = 0  # Câu hỏi hoặc câu trả lời thì không có sao (rating=0)
+        final_rating = 0  # Câu hỏi/Trả lời không yêu cầu xếp hạng sao
     else:
         rating = request.form.get('rating', default=5, type=int)
-        if rating not in [1, 2, 3, 4, 5]: rating = 5
+        if rating not in [1, 2, 3, 4, 5]:
+            rating = 5
         final_rating = rating
 
     if content:
-        # Nếu là bình luận thường thì lưu rating, nếu là reply thì không cần tính rating
         new_comment = Comment(
             user_id=current_user.id,
             product_id=id,
@@ -365,8 +386,9 @@ def add_comment(id):
         db.session.add(new_comment)
         db.session.commit()
 
+        # Gọi AI phân tích cảm xúc (Sentiment Analysis) ngầm dưới nền
         if not parent_id and not is_question:
-            sentiment_result = analyze_sentiment(content)
+            analyze_sentiment(content)
 
         if parent_id:
             flash(SystemMessages.COMMENT_REPLY_SUCCESS, 'success')
@@ -375,7 +397,6 @@ def add_comment(id):
         else:
             flash(SystemMessages.COMMENT_REVIEW_SUCCESS, 'success')
 
-    # Nếu người trả lời là Admin, hãy quay lại trang Admin thay vì trang sản phẩm
     if request.form.get('source') == 'admin':
         return redirect(url_for('admin.dashboard'))
 
@@ -385,8 +406,8 @@ def add_comment(id):
 @main_bp.route('/cart')
 def view_cart():
     """
-    Hiển thị giao diện Giỏ hàng.
-    Lấy dữ liệu tạm thời từ phiên truy cập (Session) của khách hàng để tính toán tổng tiền.
+    Render giao diện Giỏ hàng (Cart).
+    Tính toán tổng tiền dựa trên bộ nhớ đệm Session tạm thời của người dùng.
     """
     cart = session.get('cart', {})
     total = 0
@@ -407,13 +428,14 @@ def view_cart():
 @main_bp.route('/cart/add/<int:id>', methods=['POST'])
 def add_to_cart(id):
     """
-    Xử lý thêm sản phẩm vào Giỏ hàng trong bộ nhớ đệm.
-    Kiểm tra chặt chẽ số lượng tồn kho (Inventory) trước khi cho phép thêm.
+    Cập nhật dữ liệu Sản phẩm vào Giỏ hàng nội bộ (Session Storage).
+    Chặn đứng hành vi thêm vào giỏ nếu số lượng yêu cầu vượt quá tồn kho thực tế (Inventory).
     """
     p = Product.query.filter_by(id=id, is_active=True).first_or_404()
     if p.stock_quantity <= 0:
         flash(SystemMessages.CART_OUT_OF_STOCK, 'danger')
         return redirect(request.referrer)
+
     cart = session.get('cart', {})
     sid = str(id)
     if cart.get(sid, {}).get('quantity', 0) + 1 > p.stock_quantity:
@@ -434,8 +456,7 @@ def add_to_cart(id):
 @main_bp.route('/cart/update/<int:id>/<action>')
 def update_cart(id, action):
     """
-    Cho phép khách hàng thay đổi số lượng hoặc xóa sản phẩm khỏi Giỏ hàng.
-    Cập nhật trực tiếp vào Session lưu trữ.
+    Điều chỉnh số lượng (+/-) hoặc xóa hẳn sản phẩm khỏi Giỏ hàng trong Session.
     """
     cart = session.get('cart', {})
     sid = str(id)
@@ -448,7 +469,8 @@ def update_cart(id, action):
                 flash(SystemMessages.CART_EXCEED_STOCK, 'warning')
         elif action == 'decrease':
             cart[sid]['quantity'] -= 1
-            if cart[sid]['quantity'] <= 0: del cart[sid]
+            if cart[sid]['quantity'] <= 0:
+                del cart[sid]
         elif action == 'delete':
             del cart[sid]
     session['cart'] = cart
@@ -459,12 +481,14 @@ def update_cart(id, action):
 @login_required
 def checkout():
     """
-    Quy trình thanh toán chính thức (Checkout).
-    Bảo vệ chống Race Condition bằng with_for_update() để trừ đúng tồn kho khi nhiều
-    khách hàng cùng đặt một sản phẩm cùng lúc.
+    Xử lý luồng Đặt hàng an toàn (Checkout Process).
+    - Tích hợp động cơ Voucher (Giảm giá trực tiếp vào Hóa đơn).
+    - Áp dụng Pessimistic Locking (`with_for_update`) trên SQLAlchemy để khóa Row,
+      đảm bảo không bao giờ xảy ra lỗi Bán Lố (Race Condition Overselling).
     """
     cart = session.get('cart', {})
-    if not cart: return redirect(url_for('main.home'))
+    if not cart:
+        return redirect(url_for('main.home'))
 
     total = sum(item['price'] * item['quantity'] for item in cart.values())
     final_items = []
@@ -479,6 +503,28 @@ def checkout():
         try:
             payment_method = request.form.get('payment', PAYMENT_METHOD_COD)
 
+            # =====================================================================
+            # [SECURITY FIX]: XÁC THỰC LẠI VOUCHER Ở BACKEND TRƯỚC KHI TRỪ TIỀN
+            # Ngăn chặn hacker sửa HTML để mua hàng giá 0đ
+            # =====================================================================
+            voucher_code = request.form.get('voucher_code', '').strip().upper()
+            discount_amount = 0
+
+            if voucher_code:
+                voucher = Voucher.query.filter_by(code=voucher_code).first()
+                if voucher:
+                    user_rank_tier, _, _ = _calculate_user_rank(current_user.id)
+                    engine = VoucherValidatorEngine()
+                    is_valid, _ = engine.validate(voucher, total, user_rank_tier)
+
+                    if is_valid:
+                        discount_amount = engine.calculate_discount(voucher, total)
+
+            # Đảm bảo tổng tiền không bao giờ bị âm
+            final_total = max(0, total - discount_amount)
+            # =====================================================================
+
+            # Locking Database tránh xung đột giao dịch
             for i in final_items:
                 prod = db.session.query(Product).filter_by(id=i['p'].id).with_for_update().first()
                 if not prod or prod.stock_quantity < i['qty']:
@@ -487,9 +533,10 @@ def checkout():
                     return redirect(url_for('main.view_cart'))
                 prod.stock_quantity -= i['qty']
 
+            # Tạo đơn hàng với mức giá đã được chiết khấu
             order = Order(
                 user_id=current_user.id,
-                total_price=total,
+                total_price=final_total,
                 address=request.form.get('address'),
                 phone=request.form.get('phone'),
                 payment_method=payment_method,
@@ -525,8 +572,9 @@ def checkout():
 @login_required
 def payment_qr(order_id):
     """
-    Hiển thị giao diện thanh toán chuyển khoản qua mã QR Động (VietQR).
-    Hỗ trợ đồng hồ đếm ngược (Countdown) cho các giao dịch treo nhằm hủy và thu hồi hàng tự động.
+    Kết nối API Cổng thanh toán VietQR.
+    Tạo bộ đếm ngược (Countdown) cho các đơn hàng Chuyển khoản, tự động thu hồi
+    nếu khách không thanh toán kịp trong 3 phút.
     """
     order = Order.query.filter_by(id=order_id, user_id=current_user.id).first_or_404()
 
@@ -555,8 +603,8 @@ def payment_qr(order_id):
 @login_required
 def check_payment_status(order_id):
     """
-    API kiểm tra định kỳ (Polling) trạng thái thanh toán từ trình duyệt.
-    Xác minh xem tiền đã vào tài khoản và đơn hàng đã sang trạng thái Xác nhận chưa.
+    API hỗ trợ Long-Polling cho giao diện người dùng.
+    Liên tục quét Database để xác nhận giao dịch chuyển khoản đã thành công chưa.
     """
     order = db.session.get(Order, order_id)
     if not order or order.user_id != current_user.id:
@@ -575,8 +623,8 @@ def check_payment_status(order_id):
 @main_bp.route('/test/simulate-bank-success/<int:order_id>')
 def simulate_bank_success(order_id):
     """
-    Môi trường kiểm thử giả lập (Sandbox) cho phép ép một đơn hàng
-    đang treo sang trạng thái Đã Thanh Toán thành công mà không cần chuyển khoản thật.
+    Endpoint (Sandbox) giả lập tín hiệu ngân hàng trả về thành công.
+    Phục vụ cho các Tester thao tác mà không cần chuyển tiền thực tế.
     """
     if not current_user.is_authenticated:
         return "Vui lòng đăng nhập để test"
@@ -592,11 +640,13 @@ def simulate_bank_success(order_id):
 @login_required
 def trade_in():
     """
-    Khu vực tiếp nhận yêu cầu Thu cũ Đổi mới.
-    Cho phép khách hàng tải ảnh minh chứng tình trạng thiết bị cũ lên Server an toàn.
+    Cổng tiếp nhận yêu cầu Thu Cũ Đổi Mới.
+    Có tích hợp Middleware quét định dạng tệp tải lên để phòng ngừa mã độc.
     """
     if request.method == 'POST':
-        if 'image' not in request.files: return redirect(request.url)
+        if 'image' not in request.files:
+            return redirect(request.url)
+
         file = request.files['image']
         is_valid, msg = validate_image_file(file)
         if not is_valid:
@@ -607,12 +657,16 @@ def trade_in():
         filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
-        db.session.add(TradeInRequest(user_id=current_user.id, device_name=request.form.get('device_name'),
-                                      condition=request.form.get('condition'),
-                                      image_proof=f"/static/uploads/{filename}"))
+        db.session.add(TradeInRequest(
+            user_id=current_user.id,
+            device_name=request.form.get('device_name'),
+            condition=request.form.get('condition'),
+            image_proof=f"/static/uploads/{filename}"
+        ))
         db.session.commit()
         flash(SystemMessages.TRADEIN_SUCCESS, 'success')
         return redirect(url_for('main.dashboard'))
+
     return render_template('tradein.html')
 
 
@@ -620,29 +674,28 @@ def trade_in():
 @login_required
 def cancel_order_user(id):
     """
-    Chức năng tự hủy đơn hàng dành cho khách hàng.
-    Nếu đơn hàng chưa được xử lý, hệ thống tự động hoàn lại số lượng tồn kho cho các sản phẩm trong đơn.
+    Cho phép Khách hàng tự hủy đơn hàng Pending.
+    Bao gồm thủ tục Kế toán ngược: Hoàn trả số lượng hàng bị giam vào Kho chính.
     """
     order = Order.query.options(joinedload(Order.details)).filter_by(id=id, user_id=current_user.id).first_or_404()
     if order.status == ORDER_STATUS_PENDING:
         for d in order.details:
             p = db.session.get(Product, d.product_id)
-            if p: p.stock_quantity += d.quantity
+            if p:
+                p.stock_quantity += d.quantity
         order.status = ORDER_STATUS_CANCELLED
         db.session.commit()
         flash(SystemMessages.ORDER_CANCEL_SUCCESS, 'success')
     return redirect(url_for('main.dashboard'))
 
 
-# ==============================================================================================
-# ---> [NEW: ROUTER SO SÁNH NÂNG CẤP XỬ LÝ TỚI 4 SẢN PHẨM CÙNG LÚC] <---
-# ==============================================================================================
 @main_bp.route('/compare', methods=['GET', 'POST'])
 @csrf.exempt
 def compare_page():
     """
-    Khu vực đấu trường So sánh Sản phẩm (Hỗ trợ tối đa 4 sản phẩm).
-    Sử dụng thuật toán Gemini AI để sinh ra bảng đối chiếu tính năng CellphoneS Style.
+    Trung tâm Phân tích Sản phẩm (Đấu trường AI).
+    Tự động gọi Google Gemini phân tích đa chiều lên tới 4 thiết bị cùng lúc.
+    Sẽ kích hoạt Lõi Logic Local (Local Fallback HTML) nếu AI bị sập hoặc quá tải.
     """
     products = Product.query.filter_by(is_active=True).all()
     res = None
@@ -666,7 +719,6 @@ def compare_page():
                 if p1 and p2:
                     selected_prods = [p for p in [p1, p2, p3, p4] if p is not None]
 
-                    # Truyền Data động theo cấu trúc Tham số của utils
                     p1_price_str = "{:,.0f} đ".format(p1.sale_price if p1.is_sale else p1.price).replace(",", ".")
                     p2_price_str = "{:,.0f} đ".format(p2.sale_price if p2.is_sale else p2.price).replace(",", ".")
 
@@ -692,6 +744,7 @@ def compare_page():
                         p4_id, p4_name, p4_price_str, p4_desc, p4_img
                     )
 
+                    # Kích hoạt Local Fallback Mode nếu AI hết Quota
                     if not res:
                         res = generate_local_comparison_html(p1, p2, p3, p4)
         except ValueError:
@@ -700,16 +753,12 @@ def compare_page():
     return render_template('compare.html', products=products, result=res, selected_prods=selected_prods)
 
 
-# =========================================================================
-# ---> [NEW: API Xử lý Thêm / Bỏ Sản phẩm Yêu Thích qua AJAX] <---
-# =========================================================================
 @main_bp.route('/api/toggle-favorite/<int:id>', methods=['POST'])
 @login_required
 @csrf.exempt
 def toggle_favorite_api(id):
     """
-    API nội bộ cho phép người dùng thả tim (Yêu thích) sản phẩm.
-    Sử dụng AJAX (Fetch API) để thực thi ngầm mà không cần tải lại trang.
+    Cung cấp API cho phép Client thêm/xóa Sản phẩm Yêu thích bằng công nghệ AJAX.
     """
     p = Product.query.get_or_404(id)
 
@@ -724,70 +773,106 @@ def toggle_favorite_api(id):
     return jsonify({'status': status})
 
 
-# =========================================================================
+@main_bp.route('/api/apply-voucher', methods=['POST'])
+@login_required
+@csrf.exempt
+def apply_voucher_api():
+    """
+    API Dành cho Khách hàng: Cung cấp mã Voucher đang có để được giảm giá.
+    Sẽ đẩy mã Code qua hệ thống VoucherValidatorEngine (Design Pattern: Specification).
+    Để bảo mật, hệ thống sẽ tự động tính toán lại Rank của User trực tiếp từ Database.
+    """
+    code = request.json.get('code', '').strip().upper()
+    order_total = request.json.get('total', 0)
+
+    # [SECURITY FIX] Tính toán lại Rank trực tiếp từ DB thay vì nhận từ Frontend
+    user_rank_tier, _, _ = _calculate_user_rank(current_user.id)
+
+    if not code:
+        return jsonify({'success': False, 'message': 'Vui lòng nhập mã giảm giá!'})
+
+    voucher = Voucher.query.filter_by(code=code).first()
+    if not voucher:
+        return jsonify({'success': False, 'message': 'Mã giảm giá không tồn tại hoặc sai chính tả.'})
+
+    # Nạp Động cơ Xác thực đa điều kiện
+    engine = VoucherValidatorEngine()
+    is_valid, message = engine.validate(voucher, order_total, user_rank_tier)
+
+    if not is_valid:
+        return jsonify({'success': False, 'message': message})
+
+    # Tính toán con số hoàn hảo
+    discount_amount = engine.calculate_discount(voucher, order_total)
+
+    return jsonify({
+        'success': True,
+        'message': message,
+        'discount_amount': discount_amount,
+        'new_total': order_total - discount_amount
+    })
+
 
 @main_bp.route('/dashboard')
 @login_required
 def dashboard():
     """
-    Bảng điều khiển (Dashboard) của khách hàng đăng nhập.
-    Bao gồm thống kê chi tiêu, hiển thị cấp bậc hội viên theo RFM Model và lịch sử giao dịch.
+    Hệ sinh thái thông tin Cá nhân (M-Member Dashboard).
+    Hiển thị thông tin Hạng thẻ VIP (RFM Model), Đơn hàng, Lịch sử Thu Cũ và
+    kho Voucher do Admin phân phối.
     """
     my_orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.date_created.desc()).all()
     my_tradeins = TradeInRequest.query.filter_by(user_id=current_user.id).order_by(
         TradeInRequest.created_at.desc()).all()
 
-    total_spent = sum(o.total_price for o in my_orders if o.status == ORDER_STATUS_COMPLETED)
     pending_orders = sum(1 for o in my_orders if o.status == ORDER_STATUS_PENDING)
     total_orders = len(my_orders)
 
-    rank_tier = 1
-    rank = "M-New"
-    next_rank = "M-Gold"
-    needed_for_next = 5000000 - total_spent
-    progress_percent = (total_spent / 5000000) * 25
+    # Sử dụng chung Helper Logic để đồng bộ với Checkout/Voucher
+    rank_tier, rank_name, total_spent = _calculate_user_rank(current_user.id)
 
-    if total_spent >= 50000000:
-        rank_tier = 4;
-        rank = "M-Diamond";
+    if rank_tier == 4:
         next_rank = "Đã Đạt Cấp Tối Đa"
-        needed_for_next = 0;
+        needed_for_next = 0
         progress_percent = 100
-    elif total_spent >= 20000000:
-        rank_tier = 3;
-        rank = "M-Platinum";
+    elif rank_tier == 3:
         next_rank = "M-Diamond"
         needed_for_next = 50000000 - total_spent
         progress_percent = 75 + ((total_spent - 20000000) / 30000000) * 25
-    elif total_spent >= 5000000:
-        rank_tier = 2;
-        rank = "M-Gold";
+    elif rank_tier == 2:
         next_rank = "M-Platinum"
         needed_for_next = 20000000 - total_spent
         progress_percent = 50 + ((total_spent - 5000000) / 15000000) * 25
+    else:
+        next_rank = "M-Gold"
+        needed_for_next = 5000000 - total_spent
+        progress_percent = (total_spent / 5000000) * 25
 
     member_stats = {
         'total_spent': total_spent,
         'pending_orders': pending_orders,
         'total_orders': total_orders,
         'rank_tier': rank_tier,
-        'rank': rank,
+        'rank': rank_name,
         'next_rank': next_rank,
         'needed_for_next': needed_for_next,
         'progress_percent': progress_percent
     }
 
-    return render_template('dashboard.html', orders=my_orders, tradeins=my_tradeins, member=member_stats)
+    # Lấy các mã khuyến mãi ĐANG KÍCH HOẠT hiển thị cho Khách hàng lựa chọn
+    vouchers = Voucher.query.filter_by(is_active=True).all()
+
+    return render_template('dashboard.html', orders=my_orders, tradeins=my_tradeins, member=member_stats,
+                           vouchers=vouchers)
 
 
 @main_bp.route('/profile/update', methods=['POST'])
 @login_required
 def update_profile():
-    """
-    Tiếp nhận và cập nhật thông tin họ tên, thông tin bảo mật của người dùng hiện tại.
-    """
+    """Cho phép cập nhật thông tin họ tên (và các Profile fields khác)."""
     full_name = request.form.get('full_name')
-    if full_name: current_user.full_name = full_name
+    if full_name:
+        current_user.full_name = full_name
     db.session.commit()
     flash(SystemMessages.PROFILE_UPDATE_SUCCESS, 'success')
     return redirect(url_for('main.dashboard'))
@@ -797,15 +882,17 @@ def update_profile():
 @csrf.exempt
 def chatbot_api():
     """
-    Endpoint giao tiếp với Bot tư vấn thông minh (Gemini AI).
-    Sử dụng Session để ghi nhớ lịch sử hội thoại gần nhất giúp AI xử lý ngữ cảnh liền mạch.
+    Kênh giao tiếp Server-side với Bot AI Tư vấn Bán hàng.
+    Bảo toàn ngữ cảnh Session, tránh đứt đoạn hội thoại của người dùng.
     """
     msg = request.json.get('message', '').strip()
-    if not msg: return jsonify({'response': "Mời bạn hỏi ạ!"})
+    if not msg:
+        return jsonify({'response': "Mời bạn hỏi ạ!"})
 
     keywords = CHATBOT_QUICK_REPLIES
     for k, v in keywords.items():
-        if k in msg.lower(): return jsonify({'response': v})
+        if k in msg.lower():
+            return jsonify({'response': v})
 
     try:
         chat_history = session.get('chat_history', [])

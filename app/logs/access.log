@@ -703,3 +703,255 @@ TypeError: get_comparison_result() takes 10 positional arguments but 20 were giv
 [2026-02-26 16:12:57,816] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.04ms
 [2026-02-26 16:12:59,946] INFO in system_logger: IP: 127.0.0.1 | GET /product/5 | Status: 200 | Time: 8.51ms
 [2026-02-26 16:13:36,184] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 29898.52ms
+[2026-02-26 16:28:59,276] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-26 16:28:59,848] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 23.68ms
+[2026-02-26 16:29:07,917] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 2743.37ms
+[2026-02-26 16:29:28,363] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2092.98ms
+[2026-02-26 16:33:06,421] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 14.18ms
+[2026-02-26 16:33:44,633] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 28610.8ms
+[2026-02-26 17:17:04,580] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-26 17:17:28,039] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-26 17:17:52,793] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 23.52ms
+[2026-02-26 17:17:57,289] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 291.4ms
+[2026-02-26 17:21:59,133] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-26 17:22:05,859] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-26 17:22:13,506] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 22.0ms
+[2026-02-26 17:22:16,142] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.0ms
+[2026-02-26 17:22:19,212] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 208.23ms
+[2026-02-26 17:32:16,849] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-26 17:32:18,054] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 24.12ms
+[2026-02-26 17:32:22,552] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 1157.97ms
+[2026-02-26 17:32:22,568] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 819.5ms
+[2026-02-26 17:32:45,551] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 1880.93ms
+[2026-02-26 17:38:28,606] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 799.15ms
+[2026-02-26 21:40:51,666] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-26 21:40:57,525] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 22.83ms
+[2026-02-26 21:41:02,702] INFO in system_logger: IP: 127.0.0.1 | GET /product/11 | Status: 200 | Time: 60.28ms
+[2026-02-26 21:41:07,283] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 12.54ms
+[2026-02-26 21:41:08,925] INFO in system_logger: IP: 127.0.0.1 | GET /login | Status: 200 | Time: 3.96ms
+[2026-02-26 21:41:08,977] WARNING in system_logger: IP: 127.0.0.1 | GET /favicon.ico | Status: 404 | Time: 3.0ms
+[2026-02-26 21:41:10,352] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.51ms
+[2026-02-26 21:41:26,169] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2761.39ms
+[2026-02-26 21:41:38,452] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.62ms
+[2026-02-28 10:52:20,684] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 10:54:35,672] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 10:54:38,604] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 26.03ms
+[2026-02-28 10:54:41,406] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 59.08ms
+[2026-02-28 10:54:56,899] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.0ms
+[2026-02-28 10:55:04,775] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2248.51ms
+[2026-02-28 10:55:04,838] WARNING in system_logger: IP: 127.0.0.1 | GET /favicon.ico | Status: 404 | Time: 3.99ms
+[2026-02-28 10:57:02,402] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 49228.53ms
+[2026-02-28 10:57:42,671] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 59114.12ms
+[2026-02-28 10:58:04,080] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3029.65ms
+[2026-02-28 10:58:45,578] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.0ms
+[2026-02-28 10:58:46,873] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 23.0ms
+[2026-02-28 10:58:49,323] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.92ms
+[2026-02-28 10:58:50,830] INFO in system_logger: IP: 127.0.0.1 | GET /product/5 | Status: 200 | Time: 14.99ms
+[2026-02-28 10:59:25,902] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 28044.18ms
+[2026-02-28 10:59:53,304] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.0ms
+[2026-02-28 10:59:56,096] INFO in system_logger: IP: 127.0.0.1 | GET /product/17 | Status: 200 | Time: 10.04ms
+[2026-02-28 10:59:58,140] INFO in system_logger: IP: 127.0.0.1 | GET /login | Status: 200 | Time: 4.0ms
+[2026-02-28 10:59:59,069] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.03ms
+[2026-02-28 11:00:02,095] INFO in system_logger: IP: 127.0.0.1 | GET /product/33 | Status: 200 | Time: 7.99ms
+[2026-02-28 11:00:03,889] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.98ms
+[2026-02-28 11:05:30,170] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 11:06:52,256] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 11:06:58,132] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 24.01ms
+[2026-02-28 11:07:06,746] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2170.6ms
+[2026-02-28 11:08:23,238] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 49252.81ms
+[2026-02-28 11:10:50,063] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 11:10:51,659] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 27.0ms
+[2026-02-28 11:11:46,577] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 51624.98ms
+[2026-02-28 11:12:47,047] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4244.4ms
+[2026-02-28 11:25:17,935] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 11:25:20,558] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 38.0ms
+[2026-02-28 11:25:28,724] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 4111.45ms
+[2026-02-28 11:26:25,645] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.0ms
+[2026-02-28 11:26:36,113] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2084.57ms
+[2026-02-28 11:30:20,427] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 11:30:22,629] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 21.04ms
+[2026-02-28 11:30:34,546] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 8722.82ms
+[2026-02-28 11:31:49,056] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 11:31:53,192] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 20.01ms
+[2026-02-28 11:32:21,764] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 11:33:44,554] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 11:33:46,442] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 23.04ms
+[2026-02-28 11:34:03,505] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 13074.05ms
+[2026-02-28 11:34:38,273] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2161.19ms
+[2026-02-28 11:34:40,089] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 13336.89ms
+[2026-02-28 11:35:23,958] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 13710.52ms
+[2026-02-28 11:36:28,539] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 11:36:31,145] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2289.15ms
+[2026-02-28 11:36:49,816] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 14433.75ms
+[2026-02-28 11:37:20,060] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 12812.07ms
+[2026-02-28 11:37:36,257] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 9.99ms
+[2026-02-28 11:37:41,391] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 32.0ms
+[2026-02-28 11:37:43,613] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.0ms
+[2026-02-28 11:52:46,485] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 11:54:19,460] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 11:54:23,830] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 21.03ms
+[2026-02-28 11:54:44,835] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 16226.02ms
+[2026-02-28 12:13:33,078] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 12:13:33,452] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 34.03ms
+[2026-02-28 12:14:00,450] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 22701.25ms
+[2026-02-28 12:14:16,430] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 12:25:08,996] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 12:25:11,920] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 22.99ms
+[2026-02-28 12:25:40,058] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 24670.35ms
+[2026-02-28 12:29:15,003] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 13128.77ms
+[2026-02-28 12:30:17,604] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2237.84ms
+[2026-02-28 12:30:31,813] ERROR in app: Exception on / [GET]
+Traceback (most recent call last):
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 163, in home
+    ai_data = cached_ai_call(analyze_search_intents, q)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 80, in cached_ai_call
+    res = func(*args)
+          ^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\utils.py", line 381, in analyze_search_intents
+    res = call_ollama_api(prompt, system_instruction=system_instruction, model="qwen2.5:3b", is_json=True)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: call_ollama_api() got an unexpected keyword argument 'is_json'
+[2026-02-28 12:30:31,821] ERROR in system_logger: IP: 127.0.0.1 | GET / | Status: 500 | Time: 9.0ms
+[2026-02-28 16:36:13,107] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.0ms
+[2026-02-28 16:47:32,805] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 16:47:39,014] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 16:56:16,340] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 16:56:47,411] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 24.03ms
+[2026-02-28 16:57:12,926] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 15139.86ms
+[2026-02-28 16:57:23,830] INFO in system_logger: IP: 127.0.0.1 | GET /product/10 | Status: 200 | Time: 52.14ms
+[2026-02-28 16:58:08,375] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 8701.55ms
+[2026-02-28 17:01:49,418] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 12.96ms
+[2026-02-28 17:02:01,815] ERROR in app: Exception on /compare [POST]
+Traceback (most recent call last):
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 566, in compare_page
+    res = cached_ai_call(get_comparison_result, p1.name, p1.price, p1.description or "", p2.name,
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 55, in cached_ai_call
+    res = func(*args)
+          ^^^^^^^^^^^
+TypeError: get_comparison_result() missing 4 required positional arguments: 'p2_name', 'p2_price', 'p2_desc', and 'p2_img'
+[2026-02-28 17:02:01,821] ERROR in system_logger: IP: 127.0.0.1 | POST /compare | Status: 500 | Time: 8.0ms
+[2026-02-28 17:02:20,186] ERROR in app: Exception on /compare [POST]
+Traceback (most recent call last):
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 566, in compare_page
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 55, in cached_ai_call
+TypeError: get_comparison_result() missing 4 required positional arguments: 'p2_name', 'p2_price', 'p2_desc', and 'p2_img'
+[2026-02-28 17:02:20,188] ERROR in system_logger: IP: 127.0.0.1 | POST /compare | Status: 500 | Time: 4.0ms
+[2026-02-28 17:02:22,550] ERROR in app: Exception on /compare [POST]
+Traceback (most recent call last):
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 566, in compare_page
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 55, in cached_ai_call
+TypeError: get_comparison_result() missing 4 required positional arguments: 'p2_name', 'p2_price', 'p2_desc', and 'p2_img'
+[2026-02-28 17:02:22,551] ERROR in system_logger: IP: 127.0.0.1 | POST /compare | Status: 500 | Time: 3.0ms
+[2026-02-28 17:03:06,712] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 10.0ms
+[2026-02-28 17:03:09,066] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 11.0ms
+[2026-02-28 17:03:26,384] INFO in system_logger: IP: 127.0.0.1 | GET /login | Status: 200 | Time: 4.0ms
+[2026-02-28 17:04:44,241] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.05ms
+[2026-02-28 17:04:44,796] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 3.0ms
+[2026-02-28 17:04:51,026] ERROR in app: Exception on /compare [POST]
+Traceback (most recent call last):
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 566, in compare_page
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 55, in cached_ai_call
+TypeError: get_comparison_result() missing 4 required positional arguments: 'p2_name', 'p2_price', 'p2_desc', and 'p2_img'
+[2026-02-28 17:04:51,027] ERROR in system_logger: IP: 127.0.0.1 | POST /compare | Status: 500 | Time: 3.0ms
+[2026-02-28 17:06:06,304] INFO in system_logger: IP: 127.0.0.1 | GET /login | Status: 200 | Time: 0.0ms
+[2026-02-28 17:06:10,795] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 118.05ms
+[2026-02-28 17:06:10,866] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 50.99ms
+[2026-02-28 17:06:20,575] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.0ms
+[2026-02-28 17:06:22,117] INFO in system_logger: IP: 127.0.0.1 | GET /product/1 | Status: 200 | Time: 8.0ms
+[2026-02-28 17:06:27,327] INFO in system_logger: IP: 127.0.0.1 | POST /product/1/comment | Status: 302 | Time: 2146.46ms
+[2026-02-28 17:06:27,343] INFO in system_logger: IP: 127.0.0.1 | GET /product/1 | Status: 200 | Time: 6.04ms
+[2026-02-28 17:06:59,681] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 17:07:01,040] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 22.0ms
+[2026-02-28 17:07:03,483] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 13.0ms
+[2026-02-28 17:07:04,487] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.0ms
+[2026-02-28 17:07:05,984] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 60.0ms
+[2026-02-28 17:07:11,194] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 2.0ms
+[2026-02-28 17:08:18,780] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 32802.2ms
+[2026-02-28 17:08:29,656] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.04ms
+[2026-02-28 17:08:30,392] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 2.0ms
+[2026-02-28 17:08:31,021] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.0ms
+[2026-02-28 17:08:32,706] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 9.0ms
+[2026-02-28 17:08:44,352] INFO in system_logger: IP: 127.0.0.1 | POST /api/toggle-favorite/2 | Status: 200 | Time: 8.96ms
+[2026-02-28 17:08:48,374] INFO in system_logger: IP: 127.0.0.1 | GET /dashboard | Status: 200 | Time: 41.03ms
+[2026-02-28 17:08:56,941] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 3.0ms
+[2026-02-28 17:08:58,978] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 52.04ms
+[2026-02-28 17:09:14,214] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.95ms
+[2026-02-28 17:09:15,435] INFO in system_logger: IP: 127.0.0.1 | GET /trade-in | Status: 200 | Time: 5.01ms
+[2026-02-28 17:09:15,465] INFO in system_logger: IP: 127.0.0.1 | GET /trade-in | Status: 200 | Time: 1.0ms
+[2026-02-28 17:09:20,342] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.04ms
+[2026-02-28 17:09:20,814] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 2.0ms
+[2026-02-28 17:09:21,991] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.0ms
+[2026-02-28 17:09:22,376] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.03ms
+[2026-02-28 17:09:26,043] INFO in system_logger: IP: 127.0.0.1 | GET /product/31 | Status: 200 | Time: 8.03ms
+[2026-02-28 17:10:41,576] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 10.0ms
+[2026-02-28 17:10:58,439] INFO in system_logger: IP: 127.0.0.1 | GET /product/1 | Status: 200 | Time: 15.0ms
+[2026-02-28 17:11:22,481] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 11733.86ms
+[2026-02-28 17:14:37,517] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-02-28 17:14:37,905] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 21.0ms
+[2026-02-28 17:14:48,440] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 4997.89ms
+[2026-02-28 17:15:50,896] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 361.87ms
+[2026-02-28 17:16:00,189] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.0ms
+[2026-02-28 17:16:28,757] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 5478.53ms
+[2026-02-28 17:17:02,240] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 4933.03ms

@@ -1,6 +1,6 @@
 """
 Module chứa toàn bộ Thư viện Tiện ích (Utilities) và Thuật toán Lõi (Core Algorithms).
-Bao gồm: Giao tiếp AI (Gemini), Quản trị Vector DB (Chroma), Hệ thống tìm kiếm Fallback, 
+Bao gồm: Giao tiếp AI (Gemini), Quản trị Vector DB (Chroma), Hệ thống tìm kiếm Fallback,
 Thuật toán Khuyến nghị, So sánh sản phẩm và Động cơ Khuyến mãi (Voucher Engine).
 Tuyệt đối không chứa các module liên quan đến SMTP/Email.
 """
@@ -37,19 +37,37 @@ except Exception as e:
 
 class GeminiEmbeddingFunction(embedding_functions.EmbeddingFunction):
     """
-    Hàm sinh Vector nhúng (Embedding) sử dụng model Text-Embedding mới nhất của Google.
-    Chuyển đổi ngôn ngữ tự nhiên thành mảng số thực đa chiều (768 chiều).
+    Hàm sinh Vector nhúng (Embedding) tự động dò tìm model khả dụng của Google.
+    Chuyển đổi ngôn ngữ tự nhiên thành mảng số thực đa chiều.
+    Áp dụng Dynamic Model Discovery để tránh lỗi 404 Not Found.
     """
+    _cached_model = None
+
     def __call__(self, input: list[str]) -> list[list[float]]:
         """Thực thi gọi API Google để lấy chuỗi Vector."""
-        model = 'models/text-embedding-004'
+
+        # ---> [NEW: Tự động truy vấn Google để lấy đúng tên Model được hỗ trợ] <---
+        if not self._cached_model:
+            try:
+                for m in genai.list_models():
+                    if 'embedContent' in m.supported_generation_methods:
+                        self._cached_model = m.name
+                        print(f"✅ Đã tìm thấy Embedding Model khả dụng: {self._cached_model}")
+                        break
+            except Exception as e:
+                print(f"⚠️ Lỗi quét danh sách Model: {e}")
+
+            # Fallback an toàn nếu API Key bị hạn chế quyền ListModels
+            if not self._cached_model:
+                self._cached_model = 'models/text-embedding-004'
+
         embeddings = []
         for text in input:
             try:
-                res = genai.embed_content(model=model, content=text, task_type="retrieval_document")
+                res = genai.embed_content(model=self._cached_model, content=text, task_type="retrieval_document")
                 embeddings.append(res['embedding'])
             except Exception as e:
-                print(f"❌ Embedding API Error (Quota?): {e}")
+                print(f"❌ Embedding API Error ({self._cached_model}): {e}")
                 raise ValueError("API Hết Quota hoặc Lỗi")
         return embeddings
 

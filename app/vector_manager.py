@@ -30,7 +30,8 @@ class AIVectorManager:
 
         class GeminiEmbed(embedding_functions.EmbeddingFunction):
             def __call__(self, input: list[str]) -> list[list[float]]:
-                model = 'models/text-embedding-004'
+                # ---> [ĐÃ SỬA CHỖ NÀY: Cập nhật đồng bộ mô hình tiêu chuẩn] <---
+                model = 'models/embedding-001'
                 embeddings = []
                 for text in input:
                     try:

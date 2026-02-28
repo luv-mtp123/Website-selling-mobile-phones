@@ -3,6 +3,8 @@
 
 Chào mừng bạn đến với **MobileStore**! Đây là dự án thương mại điện tử hiện đại được xây dựng bằng **Python Flask**, tích hợp sâu **Google Gemini AI**. Phiên bản này đã được tái cấu trúc (Refactor) toàn diện sang mô hình **Modular MVC** và cập nhật giao diện Tết Bính Ngọ 2026.
 
+# Chúc bạn có trải nghiệm tuyệt vời với MobileStore phiên bản Tết 2026! 🚀🌸
+
 ---
 
 ## 🚀 Các Cập Nhật Mới Nhất (Latest Updates)
@@ -382,5 +384,3 @@ MobileStore/
 | **Khách hàng** | `khach` | `123456` | Trải nghiệm mua sắm, tích điểm & Chatbot. |
 
 ---
-
-# Chúc bạn có trải nghiệm tuyệt vời với MobileStore phiên bản Tết 2026! 🚀🌸

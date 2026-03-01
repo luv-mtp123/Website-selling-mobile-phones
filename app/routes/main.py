@@ -158,18 +158,30 @@ def home():
     ai_data = None
 
     if q and len(q.split()) >= 1 and not brand_arg:
-        # Gọi AI với các truy vấn dài để phân tích chính xác
-        if len(q.split()) >= 2:
-            ai_data = cached_ai_call(analyze_search_intents, q)
+        # ---> [NÂNG CẤP LỚP 2: SMART ROUTING] <---
+        # Chạy Local Regex trước. Nếu nó đủ giỏi (tìm được cả hãng và loại, hoặc từ khóa rõ ràng),
+        # ta tin tưởng nó và BỎ QUA LUÔN GEMINI để tiết kiệm Quota.
+        local_data = local_analyze_intent(q)
 
-        if not ai_data:
-            ai_data = local_analyze_intent(q)
-            if ai_data and any(v for k, v in ai_data.items() if k not in ['sort'] and v is not None):
-                ai_msg = "🔍 Phân tích nhu cầu (Local Mode)"
+        is_local_smart_enough = (
+                (local_data.get('brand') and local_data.get('category')) or
+                local_data.get('min_price') or local_data.get('max_price')
+        )
+
+        if is_local_smart_enough:
+            ai_data = local_data
+            ai_msg = "⚡ Phân tích siêu tốc (Smart Local Mode)"
         else:
-            ai_msg = "🤖 AI đã phân tích nhu cầu"
+            # Nếu câu nói quá phức tạp, gọi AI (Đã được bọc Cache)
+            ai_data = cached_ai_call(analyze_search_intents, q)
+            if ai_data:
+                ai_msg = "🤖 AI đã phân tích ngữ nghĩa"
+            else:
+                ai_data = local_data
+                ai_msg = "🔍 Phân tích nhu cầu cơ bản"
 
-        if ai_data:
+        # Chắc chắn ai_data là một từ điển (Dict) thì mới cho phép xử lý
+        if ai_data and isinstance(ai_data, dict):
             query = base_query
 
             # Lọc chính xác bằng SQL (Hãng, Giá, Danh mục)

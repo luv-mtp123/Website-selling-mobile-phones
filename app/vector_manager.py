@@ -1,22 +1,39 @@
 import os
+# Tắt Telemetry qua biến môi trường trước khi import chromadb để đảm bảo không rò rỉ log
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+
 import chromadb
-import google.generativeai as genai
 from chromadb.utils import embedding_functions
+
+# =========================================================================
+# [HOTFIX] Khóa mõm triệt để lỗi rác Telemetry của ChromaDB 0.4.22
+# Sử dụng kỹ thuật Monkey Patching đúng chuẩn Python tránh lỗi Argument Mismatch
+# =========================================================================
+try:
+    from chromadb.telemetry.posthog import Posthog  # type: ignore
+
+    def mock_capture(self, *args, **kwargs):
+        pass
+
+    Posthog.capture = mock_capture
+except Exception:
+    pass
 
 
 class AIVectorManager:
     """
     Hệ thống quản lý Vector Database (ChromaDB) cao cấp cho tính năng RAG.
-    Chịu trách nhiệm mã hóa ngôn ngữ tự nhiên thành Vector đa chiều.
+    Đã NÂNG CẤP LỚP 1: Chuyển sang mô hình nhúng (Embedding) Offline đa ngôn ngữ.
+    Chạy bằng sức mạnh CPU Local, giải phóng 100% Quota của Google.
     """
 
     def __init__(self, db_path="./chroma_db", collection_name="mobile_store_products"):
-        self.api_key = os.environ.get("GEMINI_API_KEY")
-        if self.api_key:
-            genai.configure(api_key=self.api_key)
-
+        # Đã loại bỏ hoàn toàn việc gọi GEMINI_API_KEY vì không cần dùng Google cho Vector nữa
         try:
-            self.client = chromadb.PersistentClient(path=db_path)
+            self.client = chromadb.PersistentClient(
+                path=db_path,
+                settings=chromadb.Settings(anonymized_telemetry=False)
+            )
             self.collection = self.client.get_or_create_collection(
                 name=collection_name,
                 embedding_function=self._get_embedding_function()
@@ -26,24 +43,22 @@ class AIVectorManager:
             self.collection = None
 
     def _get_embedding_function(self):
-        """Hàm nhúng (Embedding) độc quyền dùng model Google mới nhất"""
+        """Hàm nhúng (Embedding) Offline đa ngôn ngữ (Tiết kiệm 100% API Quota)"""
 
-        class GeminiEmbed(embedding_functions.EmbeddingFunction):
+        class LocalEmbed(embedding_functions.EmbeddingFunction):
+            def __init__(self):
+                # Tải model đa ngôn ngữ cực nhẹ (~400MB) vào RAM, chạy siêu tốc trên máy
+                self.ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="paraphrase-multilingual-MiniLM-L12-v2")
+
             def __call__(self, input: list[str]) -> list[list[float]]:
-                # ---> [ĐÃ SỬA CHỖ NÀY: Cập nhật đồng bộ mô hình tiêu chuẩn] <---
-                model = 'models/embedding-001'
-                embeddings = []
-                for text in input:
-                    try:
-                        res = genai.embed_content(model=model, content=text, task_type="retrieval_document")
-                        embeddings.append(res['embedding'])
-                    except Exception as e:
-                        print(f"Google Embedding API Error: {e}")
-                        # Trả về vector rỗng (768 chiều) nếu lỗi để không gãy hệ thống
-                        embeddings.append([0.0] * 768)
-                return embeddings
+                try:
+                    return self.ef(input)
+                except Exception as e:
+                    print(f"Local Embedding API Error: {e}")
+                    # Trả về vector rỗng (384 chiều) nếu lỗi để không gãy hệ thống
+                    return [[0.0] * 384] * len(input)
 
-        return GeminiEmbed()
+        return LocalEmbed()
 
     def add_product_to_brain(self, product_id, name, brand, category, description, price):
         """Đưa kiến thức về 1 sản phẩm vào não bộ AI"""
@@ -73,5 +88,5 @@ class AIVectorManager:
         return {
             "status": "online",
             "memory_count": count,
-            "dimension": "768d (Google Standard)"
+            "dimension": "384d (Local Sentence-Transformers)"
         }

@@ -9,7 +9,8 @@ import os
 import json
 import re
 import chromadb
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from chromadb.utils import embedding_functions
 from flask import url_for
 from itsdangerous import URLSafeTimedSerializer
@@ -23,10 +24,6 @@ os.environ["ANONYMIZED_TELEMETRY"] = "False"
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
-# --- CẤU HÌNH TRUE RAG (VECTOR DB) ---
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-
 # Khởi tạo ChromaDB (Lưu file local tại thư mục chroma_db)
 try:
     chroma_client = chromadb.PersistentClient(path="./chroma_db")
@@ -35,56 +32,30 @@ except Exception as e:
     chroma_client = None
 
 
-class GeminiEmbeddingFunction(embedding_functions.EmbeddingFunction):
-    """
-    Hàm sinh Vector nhúng (Embedding) tự động dò tìm model khả dụng của Google.
-    Chuyển đổi ngôn ngữ tự nhiên thành mảng số thực đa chiều.
-    Áp dụng Dynamic Model Discovery để tránh lỗi 404 Not Found.
-    """
-    _cached_model = None
+class LocalEmbeddingFunction(embedding_functions.EmbeddingFunction):
+    """Sử dụng Vector Model Offline để miễn phí 100% API Quota"""
+    def __init__(self):
+        self.ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="paraphrase-multilingual-MiniLM-L12-v2")
 
     def __call__(self, input: list[str]) -> list[list[float]]:
-        """Thực thi gọi API Google để lấy chuỗi Vector."""
-
-        # ---> [NEW: Tự động truy vấn Google để lấy đúng tên Model được hỗ trợ] <---
-        if not self._cached_model:
-            try:
-                for m in genai.list_models():
-                    if 'embedContent' in m.supported_generation_methods:
-                        self._cached_model = m.name
-                        print(f"✅ Đã tìm thấy Embedding Model khả dụng: {self._cached_model}")
-                        break
-            except Exception as e:
-                print(f"⚠️ Lỗi quét danh sách Model: {e}")
-
-            # Fallback an toàn nếu API Key bị hạn chế quyền ListModels
-            if not self._cached_model:
-                self._cached_model = 'models/text-embedding-004'
-
-        embeddings = []
-        for text in input:
-            try:
-                res = genai.embed_content(model=self._cached_model, content=text, task_type="retrieval_document")
-                embeddings.append(res['embedding'])
-            except Exception as e:
-                print(f"❌ Embedding API Error ({self._cached_model}): {e}")
-                raise ValueError("API Hết Quota hoặc Lỗi")
-        return embeddings
-
+        try:
+            return self.ef(input)
+        except Exception as e:
+            print(f"❌ Local Embedding Error: {e}")
+            return [[0.0] * 384] * len(input)
 
 # Khởi tạo Collection lưu trữ
 try:
-    if chroma_client and GEMINI_API_KEY:
+    if chroma_client:
         product_collection = chroma_client.get_or_create_collection(
             name="mobile_store_products",
-            embedding_function=GeminiEmbeddingFunction()
+            embedding_function=LocalEmbeddingFunction()
         )
     else:
         product_collection = None
 except Exception as e:
     print(f"⚠️ ChromaDB Collection Error: {e}")
     product_collection = None
-
 
 def validate_image_file(file):
     """
@@ -210,22 +181,55 @@ def get_similar_products(current_product, limit=4):
     return [item[1] for item in scored_products[:limit]]
 
 
-def call_gemini_api(prompt, system_instruction=None):
+# =========================================================================
+# LÕI GIAO TIẾP VỚI GOOGLE GEMINI (TỐI ƯU HÓA ROTATION KEY & SDK MỚI)
+# =========================================================================
+def call_gemini_api(prompt, system_instruction=None, is_json=False):
     """
-    Hàm lõi gọi giao thức tới Google Gemini API.
-    Xử lý thiết lập System Instruction để ép khuôn tính cách và hành vi AI.
+    Hàm lõi gọi Google Gemini có tính năng xoay vòng API Key (Key Rotation)
+    Đã được tối ưu bộ lọc chuỗi để chống lỗi 400 INVALID_ARGUMENT.
     """
-    if not GEMINI_API_KEY: return None
-    try:
-        model = genai.GenerativeModel(
-            model_name="gemini-2.5-flash",
-            system_instruction=system_instruction
-        )
-        response = model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        print(f"Gemini API Error: {e}")
+    raw_keys = os.environ.get("GEMINI_API_KEY", "")
+
+    # Xử lý chuỗi key an toàn hơn: Cắt theo dấu phẩy, loại bỏ khoảng trắng, lọc bỏ key rỗng
+    api_keys = [k.strip() for k in raw_keys.split(",") if k.strip()]
+
+    if not api_keys:
+        print("❌ System Error: Không tìm thấy GEMINI_API_KEY trong file .env")
         return None
+
+    config_kwargs = {}
+    if system_instruction:
+        config_kwargs['system_instruction'] = system_instruction
+
+    if is_json:
+        config_kwargs['response_mime_type'] = "application/json"
+
+    config = types.GenerateContentConfig(**config_kwargs) if config_kwargs else None
+
+    # Thử lần lượt từng API Key
+    for key in api_keys:
+        try:
+            temp_client = genai.Client(api_key=key)
+            response = temp_client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+                config=config
+            )
+            return response.text
+        except Exception as e:
+            error_str = str(e).lower()
+            # Bắt cả lỗi 429 (Hết Quota) và 400 (Key sai/bị khóa) để trượt sang key tiếp theo
+            if "429" in error_str or "quota" in error_str or "exhausted" in error_str or "400" in error_str or "invalid" in error_str:
+                hidden_key = f"...{key[-4:]}" if len(key) > 4 else "UNKNOWN"
+                print(f"⚠️ Key ({hidden_key}) gặp lỗi ({error_str[:30]}...). Đang thử Key tiếp theo...")
+                continue
+            else:
+                print(f"Gemini API Error: {e}")
+                return None
+
+    print("❌ TOÀN BỘ API KEY ĐÃ HỎNG HOẶC HẾT HẠN MỨC. Hệ thống AI đang tạm liệt!")
+    return None
 
 
 def direct_gemini_search(query, catalog_json):
@@ -247,11 +251,15 @@ def direct_gemini_search(query, catalog_json):
     if not res: return []
 
     try:
-        clean = re.sub(r"```json|```", "", res).strip()
-        match = re.search(r"\[.*\]", clean, re.DOTALL)
-        if match:
-            ids = json.loads(match.group(0))
-            return [int(i) for i in ids]
+        # Bóc tách an toàn: Chống sập nếu AI sinh ra dict kiểu {"ids": [1, 2]}
+        parsed_data = json.loads(res.strip())
+
+        if isinstance(parsed_data, dict):
+            parsed_data = parsed_data.get('ids', parsed_data.get('data', []))
+
+        if isinstance(parsed_data, list):
+            return [int(i) for i in parsed_data if str(i).isdigit() or isinstance(i, int)]
+
         return []
     except Exception as e:
         print(f"Direct AI Search Parse Error: {e}")
@@ -310,40 +318,51 @@ def generate_chatbot_response(user_msg, chat_history=None):
     if chat_history is None:
         chat_history = []
 
-    product_context = build_product_context(user_msg)
+    # ---> [HOTFIX]: KHÔI PHỤC LẠI BỘ LỌC CHÀO HỎI VÀ PROMPT GỐC CỦA SẾP <---
+    user_msg_lower = user_msg.lower().strip()
+    greetings = ['chào', 'xin chào', 'hello', 'hi', 'alo', 'ê', 'bot']
+    is_greeting = len(user_msg_lower.split()) < 4 and any(g in user_msg_lower for g in greetings)
+
+    if is_greeting:
+        product_context = "Không tải kho hàng vì khách chỉ đang chào."
+        system_instruction = (
+            "Bạn là nhân viên tư vấn bán hàng dễ thương của MobileStore.\n"
+            "Khách vừa nói lời chào. Hãy chào lại lịch sự, tự nhiên, kèm theo 1 biểu tượng cảm xúc (Ví dụ: Dạ em chào anh/chị ạ! 🌸).\n"
+            "Chỉ dừng lại ở mức chào hỏi. TUYỆT ĐỐI KHÔNG tự bịa ra hay liệt kê bất kỳ tên sản phẩm thiết bị nào để tư vấn lúc này."
+        )
+        final_prompt = f"Khách nói: '{user_msg}'"
+    else:
+        product_context = build_product_context(user_msg)
+        system_instruction = (
+            "Bạn là chuyên gia tư vấn bán hàng của MobileStore. Tên bạn là Trợ lý AI.\n"
+            "QUY TẮC TỐI THƯỢNG:\n"
+            "1. CHỈ TƯ VẤN CÁC SẢN PHẨM CÓ TRONG 'KHO HÀNG THỰC TẾ ĐANG BÁN' BÊN DƯỚI.\n"
+            "2. Tuyệt đối KHÔNG tự bịa thêm tên sản phẩm, KHÔNG bịa giá.\n"
+            "3. Trả lời cực kỳ tự nhiên, ngắn gọn (dưới 80 từ), sử dụng emoji thân thiện.\n"
+            "4. Nếu khách hỏi máy không có trong danh sách kho, hãy lịch sự xin lỗi và gợi ý máy khác có trong kho.\n\n"
+            f"{product_context}"
+        )
+        final_prompt = f"Câu hỏi của khách: '{user_msg}'"
 
     history_text = ""
     if chat_history:
         history_text = "\n--- LỊCH SỬ HỘI THOẠI ---\n"
         for turn in chat_history:
             history_text += f"User: {turn['user']}\nAI: {turn['ai']}\n"
+        final_prompt = f"{history_text}\n{final_prompt}"
 
-    system_instruction = (
-        "Bạn là Chuyên gia tư vấn công nghệ AI của MobileStore. "
-        "Hãy tư vấn dựa trên danh sách 'KHO HÀNG THỰC TẾ' được cung cấp. "
-        "Nếu sản phẩm khách hỏi không có trong kho, hãy lịch sự báo hết hàng và gợi ý sản phẩm tương tự."
-    )
-    final_prompt = f"{history_text}\nKhách hàng hỏi: '{user_msg}'\n\n{product_context}\n\nAI trả lời:"
-
-    # =========================================================================
-    # ---> [NEW: Kích hoạt AI Cache - Băm Prompt để kiểm tra DB] <---
-    # =========================================================================
-    # Băm toàn bộ final_prompt (chứa tồn kho thực tế) thay vì chỉ user_msg
-    # để AI không bị "học vẹt" khi sản phẩm bất ngờ Hết Hàng.
-    cache_key_content = f"chatbot_{final_prompt}"
+    # Đổi tên key thành v8 để loại bỏ 100% bộ nhớ rác bị ngáo lúc nãy
+    cache_key_content = f"chatbot_v8_{final_prompt}"
     key = hashlib.md5(cache_key_content.encode('utf-8')).hexdigest()
 
     cached = AICache.query.filter_by(prompt_hash=key).first()
     if cached:
         return cached.response_text
-    # =========================================================================
 
     response_text = call_gemini_api(final_prompt, system_instruction)
 
-    # ---> [NEW: Lưu kết quả vào DB để dùng cho lần sau] <---
     if response_text:
         try:
-            # Kiểm tra chống Race Condition (Trùng lặp insert)
             if not AICache.query.filter_by(prompt_hash=key).first():
                 db.session.add(AICache(prompt_hash=key, response_text=response_text))
                 db.session.commit()
@@ -352,6 +371,7 @@ def generate_chatbot_response(user_msg, chat_history=None):
             print(f"Chatbot Cache Error: {e}")
 
     return response_text
+
 
 
 def analyze_search_intents(query):
@@ -373,7 +393,8 @@ def analyze_search_intents(query):
     {"brand": "Apple/Samsung...", "category": "phone/accessory", "min_price": Số, "max_price": Số, "keyword": "Từ khóa", "sort": "price_asc/price_desc"}
     """
     prompt = f"Câu hỏi: '{query}'\n\nTrả về JSON:"
-    res = call_gemini_api(prompt, system_instruction=system_instruction)
+    # Ép Gemini cấu trúc response trả về 100% JSON (Tránh lỗi 500)
+    res = call_gemini_api(prompt, system_instruction=system_instruction,is_json=True)
     if not res: return None
 
     try:

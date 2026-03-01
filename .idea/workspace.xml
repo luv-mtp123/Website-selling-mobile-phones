@@ -8,9 +8,13 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/logs/access.log" beforeDir="false" afterPath="$PROJECT_DIR$/app/logs/access.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routes/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/vector_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/vector_manager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data_exports/DW_EXPORT_20260224_123737.zip" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/instance/mobilestore.db" beforeDir="false" afterPath="$PROJECT_DIR$/instance/mobilestore.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rag_sync.py" beforeDir="false" afterPath="$PROJECT_DIR$/rag_sync.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

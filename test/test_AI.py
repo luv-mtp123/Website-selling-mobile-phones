@@ -86,7 +86,7 @@ class AIFeaturesTestCase(unittest.TestCase):
         u1 = User(username='testuser', email='test@mail.com', password='123', full_name='Test User')
         db.session.add(u1)
         db.session.commit()
-
+        # Lắp ghép trí nhớ (Memory)
         # Tạo 1 Order: Khách mua iPhone 15 (p1) CÙNG VỚI Ốp lưng (p3)
         o1 = Order(user_id=u1.id, total_price=35500000, address='HCM', phone='0123', status='Completed')
         db.session.add(o1)
@@ -206,9 +206,39 @@ class AIFeaturesTestCase(unittest.TestCase):
             args, kwargs = mock_gemini.call_args
             prompt_text = args[0]  # The prompt string is the first positional argument
 
-            # Prompt gửi đi phải chứa câu hỏi cũ để AI hiểu từ "Nó"
+            # ---> [ĐÃ SỬA LỖI MOCK]: Cập nhật Assert khớp với Prompt Memory mới nhất trong utils.py <---
             self.assertIn("LỊCH SỬ HỘI THOẠI", prompt_text)
             self.assertIn("iPhone 15 giá bao nhiêu?", prompt_text)
+
+    # ==============================================================================
+    # ---> [NEW] BỔ SUNG TEST LUỒNG CHÀO HỎI (GREETING BYPASS) <---
+    # ==============================================================================
+    @patch('app.utils.call_gemini_api')
+    def test_chatbot_greeting_filter(self, mock_gemini):
+        """
+        Kiểm tra Bộ lọc Chào hỏi Thông minh (Greeting Bypass).
+        Mục tiêu: Đảm bảo khi khách chỉ 'say hi', AI không tải RAG Database (Tiết kiệm Token).
+        """
+        print("\n[AI Test 3.1] Testing Chatbot Greeting Filter (Bypass RAG)...")
+        mock_gemini.return_value = "Dạ em chào anh/chị ạ! 🌸"
+
+        with self.client:
+            self.client.post('/api/chatbot', json={'message': 'xin chào shop'})
+
+            # ---> [FIX LỖI LẤY PARAM]: Hàm call_gemini_api hiện dùng tham số vị trí (args) cho system_instruction
+            args, kwargs = mock_gemini.call_args
+            system_instruction = kwargs.get('system_instruction')
+            if not system_instruction and len(args) > 1:
+                system_instruction = args[1]
+
+            if system_instruction is None:
+                system_instruction = ""
+
+            # Đảm bảo KHÔNG CÓ chuỗi KHO HÀNG (Vì không được gọi RAG)
+            self.assertNotIn("KHO HÀNG THỰC TẾ", system_instruction)
+            # Đảm bảo hệ thống dùng đúng chỉ thị chào hỏi
+            self.assertIn("Khách vừa nói lời chào", system_instruction)
+            self.assertIn("Chỉ dừng lại ở mức chào hỏi", system_instruction)
 
     # --- TEST 4: COMPARISON LOGIC (So sánh) ---
     @patch('app.utils.call_gemini_api')
@@ -294,8 +324,8 @@ class AIFeaturesTestCase(unittest.TestCase):
         """
         print("\n[AI Test 7] Testing Direct Text-RAG Fallback (Bypass Vector DB 404)...")
 
-        # Giả lập AI Model Text Flash hoạt động tốt và trả về format JSON ID của p2 (Samsung A05)
-        mock_gemini.return_value = f"```json\n[{self.p2_id}]\n```"
+        # ---> [FIX LỖI JSON Parse]: Hàm utils.py hiện tại parse thẳng kết quả, không còn cắt rác markdown
+        mock_gemini.return_value = f"[{self.p2_id}]"
 
         # Giả lập kho hàng được chuyển thành JSON để gửi cho AI đọc
         catalog_mock = '[{"id": %d, "name": "iPhone 15 Pro Max", "price": 35000000}, {"id": %d, "name": "Samsung Galaxy A05", "price": 3000000}]' % (
@@ -323,7 +353,8 @@ class AIFeaturesTestCase(unittest.TestCase):
         catalog_mock = '[{"id": %d, "name": "iPhone 15 Pro Max", "price": 35000000}]' % self.p1_id
 
         # Edge Case 1: AI không tìm thấy máy nào phù hợp (VD khách tìm Nokia nhưng kho chỉ có iPhone)
-        mock_gemini.return_value = "```json\n[]\n```"
+        # ---> [FIX LỖI JSON Parse]: Cập nhật định dạng chuẩn thay cho markdown rác
+        mock_gemini.return_value = "[]"
         result_empty = direct_gemini_search("Điện thoại Nokia đập đá", catalog_mock)
         self.assertIsInstance(result_empty, list)
         self.assertEqual(len(result_empty), 0)

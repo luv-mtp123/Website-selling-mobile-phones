@@ -12,10 +12,8 @@ from chromadb.utils import embedding_functions
 try:
     from chromadb.telemetry.posthog import Posthog  # type: ignore
 
-    def mock_capture(self, *args, **kwargs):
-        pass
-
-    Posthog.capture = mock_capture
+    # ---> [HOTFIX]: Dùng lambda để nuốt sạch mọi tham số, diệt tận gốc lỗi crash log
+    Posthog.capture = lambda *args, **kwargs: None
 except Exception:
     pass
 

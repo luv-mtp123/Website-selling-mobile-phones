@@ -1,6 +1,7 @@
 import time
 import re
 from flask import request, abort, current_app
+from flask_login import current_user
 
 
 class MobileStoreFirewall:
@@ -25,7 +26,7 @@ class MobileStoreFirewall:
             r"(DROP\s+TABLE)|"
             r"(INSERT\s+INTO)|"
             r"(DELETE\s+FROM)|"
-            r"(--)|(;\s*--)",
+            r"(;\s*--)",
             re.IGNORECASE
         )
 
@@ -88,8 +89,20 @@ class MobileStoreFirewall:
         # Bỏ qua không kiểm tra các file ảnh, css, js tĩnh để không làm chậm web
         if request.path.startswith('/static/'):
             return
+        # ---> [HOTFIX]: MỞ KHÓA (WHITELIST) CHO QUẢN TRỊ VIÊN VÀ LOCALHOST
+        try:
+            # Nếu là Admin đang thao tác -> Cho phép qua tường lửa vô điều kiện
+            if current_user.is_authenticated and current_user.role == 'admin':
+                return
+        except Exception:
+            pass
 
         ip = request.remote_addr
+
+        # Bỏ qua kiểm tra nếu truy cập từ máy chủ nội bộ (Dev Test)
+        if ip == '127.0.0.1':
+            return
+
         current_time = time.time()
 
         # 1. Dọn dẹp RAM

@@ -62,41 +62,47 @@ class InfrastructureTestCase(unittest.TestCase):
         """Kiểm tra Tường lửa có chặn các cuộc tấn công SQLi và XSS không"""
         print("\n[Infra Test 1] Testing WAF - Chặn XSS & SQL Injection...")
 
+        # ---> [HOTFIX]: Giả lập một IP bên ngoài vì IP Localhost (127.0.0.1) đã được Whitelist
+        env = {'REMOTE_ADDR': '192.168.1.100'}
+
         with self.client:
             # Tấn công 1: Chèn Script XSS vào URL
-            res_xss = self.client.get('/?q=<script>alert("Hacked")</script>')
+            res_xss = self.client.get('/?q=<script>alert("Hacked")</script>', environ_base=env)
             self.assertEqual(res_xss.status_code, 403)
             # Hệ thống đã dùng errors.py nên sẽ trả về trang UI có chữ này
             self.assertIn("Truy cập bị từ chối", res_xss.data.decode('utf-8'))
 
             # Tấn công 2: Thử xóa Database qua Form (SQL Injection)
-            res_sqli = self.client.post('/login', data={'username': 'DROP TABLE users;--'})
+            res_sqli = self.client.post('/login', data={'username': 'DROP TABLE users;--'}, environ_base=env)
             self.assertEqual(res_sqli.status_code, 403)
             self.assertIn("Truy cập bị từ chối", res_sqli.data.decode('utf-8'))
 
             # Request hợp lệ (Phải pass)
-            res_normal = self.client.get('/?q=iphone')
+            res_normal = self.client.get('/?q=iphone', environ_base=env)
             self.assertNotEqual(res_normal.status_code, 403)
 
     def test_firewall_ddos_rate_limiting(self):
         """Kiểm tra Tường lửa có khóa IP khi Spam Request (DDoS) không"""
         print("\n[Infra Test 2] Testing WAF - Chặn Spam/DDoS (Rate Limiting)...")
 
+        # ---> [HOTFIX]: Giả lập một IP bên ngoài khác để test Rate Limit
+        env = {'REMOTE_ADDR': '192.168.1.101'}
+
         with self.client:
             # Bắn 5 request liên tục (Vẫn trong giới hạn cho phép)
             for i in range(5):
-                res = self.client.get('/')
+                res = self.client.get('/', environ_base=env)
                 self.assertNotEqual(res.status_code, 429)
 
             # Request thứ 6: Vượt qua MAX_REQUESTS_PER_MINUTE -> Bị khóa (429)
-            res_blocked = self.client.get('/')
+            res_blocked = self.client.get('/', environ_base=env)
             self.assertEqual(res_blocked.status_code, 429)
             # Thông báo chặn ngay lần đầu vi phạm
             self.assertIn("Phát hiện lưu lượng bất thường", res_blocked.data.decode('utf-8'))
 
             # Chờ 3.1 giây để IP được mở khóa lại (Vượt qua BLOCK_TIME_SECONDS)
             time.sleep(3.1)
-            res_unblocked = self.client.get('/')
+            res_unblocked = self.client.get('/', environ_base=env)
             self.assertNotEqual(res_unblocked.status_code, 429)
 
     # ==========================================

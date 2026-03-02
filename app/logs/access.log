@@ -1109,3 +1109,150 @@ TypeError: get_comparison_result() missing 4 required positional arguments: 'p2_
 [2026-03-01 22:26:11,915] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2411.63ms
 [2026-03-01 22:26:26,740] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 1.01ms
 [2026-03-01 22:26:50,704] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 2771.46ms
+[2026-03-02 09:59:31,247] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-02 09:59:31,751] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 20.83ms
+[2026-03-02 09:59:42,377] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3834.84ms
+[2026-03-02 09:59:42,444] WARNING in system_logger: IP: 127.0.0.1 | GET /favicon.ico | Status: 404 | Time: 4.03ms
+[2026-03-02 09:59:54,060] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 3226.57ms
+[2026-03-02 10:01:16,511] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 6445.28ms
+[2026-03-02 10:01:36,022] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 4738.17ms
+[2026-03-02 10:02:05,643] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 8017.23ms
+[2026-03-02 10:02:34,558] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3360.77ms
+[2026-03-02 10:03:22,389] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3905.11ms
+[2026-03-02 10:03:29,516] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 0.0ms
+[2026-03-02 10:03:43,578] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 14.05ms
+[2026-03-02 10:04:31,163] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 15.21ms
+[2026-03-02 10:05:04,319] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.4ms
+[2026-03-02 10:52:53,218] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-02 10:52:55,425] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 19.74ms
+[2026-03-02 10:53:06,315] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2941.23ms
+[2026-03-02 10:53:29,493] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4785.86ms
+[2026-03-02 10:53:59,587] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3318.66ms
+[2026-03-02 10:56:40,425] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 0.0ms
+[2026-03-02 10:56:43,215] INFO in system_logger: IP: 127.0.0.1 | GET /product/5 | Status: 200 | Time: 116.94ms
+[2026-03-02 10:56:47,381] INFO in system_logger: IP: 127.0.0.1 | GET /login | Status: 200 | Time: 4.94ms
+[2026-03-02 11:55:34,227] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-02 11:57:31,053] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 24.57ms
+[2026-03-02 11:57:35,427] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2403.54ms
+[2026-03-02 11:57:52,520] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3414.71ms
+[2026-03-02 11:57:53,441] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3467.33ms
+[2026-03-02 11:58:09,039] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3353.07ms
+[2026-03-02 11:58:52,851] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 21.93ms
+[2026-03-02 11:59:22,494] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3587.22ms
+[2026-03-02 12:29:00,660] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-02 12:29:08,258] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 19.05ms
+[2026-03-02 12:29:28,717] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3944.8ms
+[2026-03-02 12:29:35,407] INFO in system_logger: IP: 127.0.0.1 | GET /product/21 | Status: 200 | Time: 53.1ms
+[2026-03-02 12:29:56,882] INFO in system_logger: IP: 127.0.0.1 | GET /product/21 | Status: 200 | Time: 1.0ms
+[2026-03-02 12:47:25,790] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-02 12:50:09,092] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 23.0ms
+[2026-03-02 12:50:17,196] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 3545.06ms
+[2026-03-02 12:50:40,007] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 5051.46ms
+[2026-03-02 12:50:54,314] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 5501.77ms
+[2026-03-02 12:51:37,780] INFO in system_logger: IP: 127.0.0.1 | GET /product/1 | Status: 200 | Time: 58.19ms
+[2026-03-02 13:01:15,239] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-02 13:01:15,560] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 21.43ms
+[2026-03-02 13:01:25,537] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 4896.29ms
+[2026-03-02 13:01:42,421] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 4882.38ms
+[2026-03-02 13:01:56,753] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 6627.86ms
+[2026-03-02 13:04:01,407] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-02 13:04:01,738] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 35.0ms
+[2026-03-02 13:04:37,838] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 30054.52ms
+[2026-03-02 13:04:46,997] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 33.28ms
+[2026-03-02 13:09:31,075] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-02 13:10:08,325] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 20.27ms
+[2026-03-02 13:10:22,977] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 4646.92ms
+[2026-03-02 13:10:44,063] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 6529.36ms
+[2026-03-02 13:11:04,227] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 6197.63ms
+[2026-03-02 13:16:25,077] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-02 13:16:52,340] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 21.03ms
+[2026-03-02 13:16:59,517] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4991.55ms
+[2026-03-02 13:18:03,136] INFO in system_logger: IP: 127.0.0.1 | GET /product/28 | Status: 200 | Time: 55.31ms
+[2026-03-02 13:18:06,392] INFO in system_logger: IP: 127.0.0.1 | GET /login | Status: 200 | Time: 2.15ms
+[2026-03-02 13:18:08,927] INFO in system_logger: IP: 127.0.0.1 | GET /login | Status: 200 | Time: 1.0ms
+[2026-03-02 13:18:12,316] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 120.49ms
+[2026-03-02 13:18:12,394] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 63.58ms
+[2026-03-02 13:18:21,149] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 7.99ms
+[2026-03-02 13:18:22,205] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 7.11ms
+[2026-03-02 13:18:23,579] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 236.72ms
+[2026-03-02 13:18:35,567] INFO in system_logger: IP: 127.0.0.1 | GET /dashboard | Status: 200 | Time: 37.7ms
+[2026-03-02 13:18:55,384] INFO in system_logger: IP: 127.0.0.1 | POST /profile/update | Status: 302 | Time: 3.0ms
+[2026-03-02 13:18:55,401] INFO in system_logger: IP: 127.0.0.1 | GET /dashboard | Status: 200 | Time: 4.39ms
+[2026-03-02 13:19:01,414] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.0ms
+[2026-03-02 13:19:02,147] INFO in system_logger: IP: 127.0.0.1 | GET /trade-in | Status: 200 | Time: 3.0ms
+[2026-03-02 13:19:02,189] INFO in system_logger: IP: 127.0.0.1 | GET /trade-in | Status: 200 | Time: 1.0ms
+[2026-03-02 13:19:02,564] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 14.45ms
+[2026-03-02 13:19:03,480] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.0ms
+[2026-03-02 13:20:10,590] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5990.64ms
+[2026-03-02 13:20:25,981] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4511.95ms
+[2026-03-02 13:20:37,571] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 20.41ms
+[2026-03-02 13:20:56,646] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4163.42ms
+[2026-03-02 13:22:25,975] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-02 13:22:28,365] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 97.13ms
+[2026-03-02 13:22:30,772] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 28.72ms
+[2026-03-02 13:23:30,605] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4221.43ms
+[2026-03-02 13:24:45,355] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.0ms
+[2026-03-02 13:25:00,809] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4363.63ms
+[2026-03-02 13:25:25,480] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.0ms
+[2026-03-02 13:25:31,326] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 6.0ms
+[2026-03-02 13:33:41,621] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-02 13:33:41,741] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 24.78ms
+[2026-03-02 13:34:17,131] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 221.95ms
+[2026-03-02 13:34:42,304] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4925.09ms
+[2026-03-02 13:34:51,765] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 22.25ms
+[2026-03-02 13:35:02,952] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4511.93ms
+[2026-03-02 13:35:15,908] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5007.91ms
+[2026-03-02 13:35:17,969] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.69ms
+[2026-03-02 13:45:14,964] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-02 13:45:18,913] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 29.02ms
+[2026-03-02 13:45:27,151] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 5272.02ms
+[2026-03-02 13:45:48,255] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 10343.24ms
+[2026-03-02 13:46:16,372] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 16382.08ms
+[2026-03-02 13:46:30,605] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 3195.06ms
+[2026-03-02 14:00:55,239] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-02 14:01:08,433] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 23.74ms
+[2026-03-02 14:01:15,736] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 3829.28ms
+[2026-03-02 14:32:57,645] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-02 14:33:03,103] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 25.05ms
+[2026-03-02 14:33:06,803] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 0.0ms
+[2026-03-02 14:33:21,125] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 3.04ms
+[2026-03-02 14:33:45,848] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 0.0ms
+[2026-03-02 20:09:03,965] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-02 20:09:07,007] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 23.62ms
+[2026-03-02 20:09:14,164] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 2728.11ms
+[2026-03-02 20:09:24,298] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 3281.73ms
+[2026-03-02 20:09:34,605] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 3702.36ms
+[2026-03-02 20:09:55,130] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 7333.38ms
+[2026-03-02 20:10:20,669] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 2847.01ms
+[2026-03-02 20:10:37,615] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 4395.52ms
+[2026-03-02 20:10:48,309] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2470.97ms
+[2026-03-02 20:10:57,665] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2038.0ms
+[2026-03-02 20:11:07,579] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2319.04ms
+[2026-03-02 20:11:19,174] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2443.72ms
+[2026-03-02 20:11:36,344] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2313.68ms
+[2026-03-02 20:11:49,557] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 1975.16ms
+[2026-03-02 20:12:01,033] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2357.73ms
+[2026-03-02 20:12:02,032] INFO in system_logger: IP: 127.0.0.1 | GET /dashboard | Status: 200 | Time: 44.18ms
+[2026-03-02 20:12:04,750] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.51ms
+[2026-03-02 20:12:06,092] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 52.7ms
+[2026-03-02 20:12:13,151] INFO in system_logger: IP: 127.0.0.1 | POST /product/2/comment | Status: 302 | Time: 10.51ms
+[2026-03-02 20:12:13,173] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 9.52ms
+[2026-03-02 20:12:20,518] INFO in system_logger: IP: 127.0.0.1 | POST /product/2/comment | Status: 302 | Time: 4.01ms
+[2026-03-02 20:12:20,533] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 8.21ms
+[2026-03-02 20:12:32,142] CRITICAL in security_firewall: 🚨 FIREWALL: Ngăn chặn XSS/SQLi Payload trong Form từ IP 127.0.0.1
+[2026-03-02 20:12:32,152] WARNING in system_logger: IP: 127.0.0.1 | POST /compare | Status: 403 | Time: 10.58ms
+[2026-03-02 20:12:53,519] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.52ms
+[2026-03-02 20:12:55,793] INFO in system_logger: IP: 127.0.0.1 | GET /logout | Status: 302 | Time: 1.03ms
+[2026-03-02 20:12:55,815] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 6.56ms
+[2026-03-02 20:12:57,349] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 209.1ms
+[2026-03-02 20:12:59,807] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.0ms
+[2026-03-02 20:13:00,602] INFO in system_logger: IP: 127.0.0.1 | GET /product/5 | Status: 200 | Time: 6.51ms
+[2026-03-02 20:13:34,909] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 28584.74ms
+[2026-03-02 20:20:25,636] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-02 20:20:28,370] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 24.07ms
+[2026-03-02 20:20:29,924] INFO in system_logger: IP: 127.0.0.1 | GET /login | Status: 200 | Time: 2.51ms
+[2026-03-02 20:20:34,094] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 200 | Time: 117.93ms
+[2026-03-02 20:20:39,966] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 117.19ms
+[2026-03-02 20:20:40,224] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 234.78ms
+[2026-03-02 20:20:44,411] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 12.51ms
+[2026-03-02 20:21:15,024] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 26237.79ms

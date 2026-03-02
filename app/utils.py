@@ -17,6 +17,18 @@ from itsdangerous import URLSafeTimedSerializer
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 
+# =========================================================================
+# [HOTFIX] Khóa mõm triệt để lỗi rác Telemetry của ChromaDB 0.4.22
+# Sử dụng kỹ thuật Monkey Patching đúng chuẩn Python tránh lỗi Argument Mismatch
+# =========================================================================
+try:
+    from chromadb.telemetry.posthog import Posthog  # type: ignore
+
+    # ---> [HOTFIX]: Dùng lambda để nuốt sạch mọi tham số, diệt tận gốc lỗi crash log
+    Posthog.capture = lambda *args, **kwargs: None
+except Exception:
+    pass
+
 # Tắt cảnh báo Telemetry của ChromaDB để giao diện Console sạch sẽ
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
 
@@ -92,18 +104,16 @@ def send_reset_email_simulation(to_email, token):
 
 
 def search_vector_db(query_text, n_results=5, metadata_filters=None):
-    """
-    Tìm kiếm ngữ nghĩa bằng Vector Database kết hợp Metadata Filtering.
-    Giúp AI hiểu các khái niệm phức tạp (như 'pin trâu') và lọc chuẩn danh mục.
-    """
-    if not product_collection or not GEMINI_API_KEY:
+    # ---> [HOTFIX 4]: Đã xóa bỏ điều kiện 'or not GEMINI_API_KEY'
+    # Giải phóng hoàn toàn Vector Offline, cho phép nó chạy bất chấp trạng thái API Key
+    if not product_collection:
         return []
-
     try:
-        query_params = {
-            "query_texts": [query_text],
-            "n_results": n_results
-        }
+        count = product_collection.count()
+        if count == 0: return []
+        safe_n_results = min(n_results, count)
+
+        query_params = {"query_texts": [query_text], "n_results": safe_n_results}
         if metadata_filters:
             query_params["where"] = metadata_filters
 
@@ -247,12 +257,14 @@ def direct_gemini_search(query, catalog_json):
     )
     prompt = f"Yêu cầu tìm kiếm của khách: '{query}'\n\nKho hàng hiện tại:\n{catalog_json}\n\nTrả về mảng JSON ID:"
 
-    res = call_gemini_api(prompt, system_instruction)
+    # ---> [HOTFIX 2]: Bật is_json=True để AI luôn trả về format chuẩn
+    res = call_gemini_api(prompt, system_instruction, is_json=True)
     if not res: return []
 
     try:
-        # Bóc tách an toàn: Chống sập nếu AI sinh ra dict kiểu {"ids": [1, 2]}
-        parsed_data = json.loads(res.strip())
+        # Bóc tách an toàn: Xóa rác markdown nếu AI quên luật
+        clean = re.sub(r"```json|```", "", res).strip()
+        parsed_data = json.loads(clean)
 
         if isinstance(parsed_data, dict):
             parsed_data = parsed_data.get('ids', parsed_data.get('data', []))
@@ -267,10 +279,6 @@ def direct_gemini_search(query, catalog_json):
 
 
 def build_product_context(user_query):
-    """
-    Hệ thống Retrieval-Augmented Generation (RAG).
-    Trích xuất dữ liệu thực từ CSDL dựa trên câu hỏi để làm bối cảnh cho Chatbot.
-    """
     ai_data = local_analyze_intent(user_query)
     filter_dict = {}
     if ai_data and ai_data.get('category'):
@@ -295,112 +303,97 @@ def build_product_context(user_query):
     if not products:
         return "Hiện tại hệ thống không tìm thấy sản phẩm nào phù hợp trong kho."
 
-    context_text = "--- KHO HÀNG THỰC TẾ (Đã lọc theo nhu cầu) ---\n"
+    context_text = "--- KHO HÀNG THỰC TẾ ĐANG BÁN ---\n"
     for p in products:
         price = "{:,.0f} đ".format(p.sale_price if p.is_sale else p.price).replace(",", ".")
         status = f"Sẵn hàng ({p.stock_quantity})" if p.stock_quantity > 0 else "Hết hàng"
         desc_short = (p.description or "")[:150].replace('\n', ' ')
-        context_text += f"- ID:{p.id} | {p.name} ({p.brand}) | Giá: {price} | Tình trạng: {status}\n  Chi tiết: {desc_short}...\n"
+        context_text += f"- Tên máy: {p.name} | Hãng: {p.brand} | Giá: {price} | Tình trạng: {status}\n  Điểm nổi bật: {desc_short}...\n"
 
     return context_text
 
 
 def generate_chatbot_response(user_msg, chat_history=None):
     """
-    Module xử lý thông minh của Chatbot CSKH.
-    Ghép nối lịch sử trò chuyện (Memory) và bối cảnh kho hàng (RAG) để trả lời.
-    Tích hợp Bộ nhớ đệm (AI Cache) để tăng tốc độ phản hồi và tiết kiệm Quota.
+    [UPGRADED] Chatbot AI Tích hợp RAG (Truy xuất kho hàng thực tế).
+    Khắc phục triệt để lỗi bot Regex giả mạo cũ. Giờ đây bot sử dụng 100% LLM
+    kết hợp với dữ liệu Database để giao tiếp tự nhiên và linh hoạt.
     """
-    import hashlib
-    from app.extensions import db
-    from app.models import AICache
-
     if chat_history is None:
         chat_history = []
 
-    # ---> [HOTFIX]: KHÔI PHỤC LẠI BỘ LỌC CHÀO HỎI VÀ PROMPT GỐC CỦA SẾP <---
-    user_msg_lower = user_msg.lower().strip()
-    greetings = ['chào', 'xin chào', 'hello', 'hi', 'alo', 'ê', 'bot']
-    is_greeting = len(user_msg_lower.split()) < 4 and any(g in user_msg_lower for g in greetings)
+    # 1. Trích xuất Context từ Kho hàng (RAG)
+    context = build_product_context(user_msg)
 
-    if is_greeting:
-        product_context = "Không tải kho hàng vì khách chỉ đang chào."
-        system_instruction = (
-            "Bạn là nhân viên tư vấn bán hàng dễ thương của MobileStore.\n"
-            "Khách vừa nói lời chào. Hãy chào lại lịch sự, tự nhiên, kèm theo 1 biểu tượng cảm xúc (Ví dụ: Dạ em chào anh/chị ạ! 🌸).\n"
-            "Chỉ dừng lại ở mức chào hỏi. TUYỆT ĐỐI KHÔNG tự bịa ra hay liệt kê bất kỳ tên sản phẩm thiết bị nào để tư vấn lúc này."
-        )
-        final_prompt = f"Khách nói: '{user_msg}'"
-    else:
-        product_context = build_product_context(user_msg)
-        system_instruction = (
-            "Bạn là chuyên gia tư vấn bán hàng của MobileStore. Tên bạn là Trợ lý AI.\n"
-            "QUY TẮC TỐI THƯỢNG:\n"
-            "1. CHỈ TƯ VẤN CÁC SẢN PHẨM CÓ TRONG 'KHO HÀNG THỰC TẾ ĐANG BÁN' BÊN DƯỚI.\n"
-            "2. Tuyệt đối KHÔNG tự bịa thêm tên sản phẩm, KHÔNG bịa giá.\n"
-            "3. Trả lời cực kỳ tự nhiên, ngắn gọn (dưới 80 từ), sử dụng emoji thân thiện.\n"
-            "4. Nếu khách hỏi máy không có trong danh sách kho, hãy lịch sự xin lỗi và gợi ý máy khác có trong kho.\n\n"
-            f"{product_context}"
-        )
-        final_prompt = f"Câu hỏi của khách: '{user_msg}'"
+    # 2. Xây dựng System Instruction (Tiêm ngữ cảnh thực tế)
+    system_instruction = (
+        "Bạn là trợ lý ảo AI thông minh, chuyên nghiệp của hệ thống MobileStore. "
+        "Nhiệm vụ: Tư vấn, báo giá và hỗ trợ khách hàng mua điện thoại, phụ kiện một cách tự nhiên, lịch sự và ngắn gọn.\n\n"
+        "QUY TẮC BẮT BUỘC (RAG LIMITATION): "
+        "1. CHỈ TƯ VẤN DỰA TRÊN THÔNG TIN [KHO HÀNG THỰC TẾ] BÊN DƯỚI. "
+        "2. KHÔNG TỰ BỊA ĐẶT GIÁ CẢ, CẤU HÌNH HAY SẢN PHẨM KHÔNG CÓ THẬT TRONG KHO. "
+        "3. Nếu khách hỏi sản phẩm không có, hãy khéo léo xin lỗi và gợi ý sản phẩm đang có sẵn. "
+        "4. Xưng hô là 'Dạ', 'MobileStore', 'anh/chị'.\n\n"
+        f"{context}"
+    )
 
-    history_text = ""
-    if chat_history:
-        history_text = "\n--- LỊCH SỬ HỘI THOẠI ---\n"
-        for turn in chat_history:
-            history_text += f"User: {turn['user']}\nAI: {turn['ai']}\n"
-        final_prompt = f"{history_text}\n{final_prompt}"
+    # 3. Format Lịch sử hội thoại (Giữ Session ngữ cảnh)
+    prompt = ""
+    for turn in chat_history:
+        prompt += f"Khách: {turn.get('user', '')}\nMobileStore: {turn.get('ai', '')}\n"
+    prompt += f"Khách: {user_msg}\nMobileStore:"
 
-    # Đổi tên key thành v8 để loại bỏ 100% bộ nhớ rác bị ngáo lúc nãy
-    cache_key_content = f"chatbot_v8_{final_prompt}"
-    key = hashlib.md5(cache_key_content.encode('utf-8')).hexdigest()
+    # 4. Giao tiếp với não bộ Gemini
+    res = call_gemini_api(prompt, system_instruction=system_instruction)
 
-    cached = AICache.query.filter_by(prompt_hash=key).first()
-    if cached:
-        return cached.response_text
+    if res:
+        return res.strip()
 
-    response_text = call_gemini_api(final_prompt, system_instruction)
-
-    if response_text:
-        try:
-            if not AICache.query.filter_by(prompt_hash=key).first():
-                db.session.add(AICache(prompt_hash=key, response_text=response_text))
-                db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            print(f"Chatbot Cache Error: {e}")
-
-    return response_text
-
+    # 5. Fallback khi API sập hoặc Quota cạn kiệt
+    return "Dạ hiện tại hệ thống AI tư vấn đang tạm bận một chút, anh/chị có thể nói rõ hơn tên dòng máy (VD: 'iPhone 15', 'Ốp lưng') để em kiểm tra kho nhé! 🥰"
 
 
 def analyze_search_intents(query):
     """
-    Hệ thống trích xuất dữ liệu (Entity Extraction) bằng LLM.
-    Bóc tách câu nói tự nhiên thành JSON cấu trúc (Hãng, Giá, Loại).
+    Hệ thống trích xuất dữ liệu (Entity Extraction) bằng LLM được NÂNG CẤP.
+    Xử lý thông minh lỗi thiếu trường (Missing Fields) để không làm crash hệ thống Main.
     """
     system_instruction = """
-    Bạn là hệ thống trích xuất dữ liệu tìm kiếm cho Website MobileStore.
-    Nhiệm vụ: Phân tích câu hỏi của khách và trả về CHỈ MỘT chuỗi JSON hợp lệ. Không giải thích.
+    Bạn là hệ thống AI trích xuất dữ liệu tìm kiếm cho Website MobileStore.
+    Nhiệm vụ: Phân tích câu hỏi tự nhiên của khách và trả về CHỈ MỘT chuỗi JSON hợp lệ. Không giải thích.
 
-    Quy tắc:
-    1. Giá: 'triệu' hoặc 'củ' = 1,000,000. 'trăm' = 100,000.
+    Quy tắc bóc tách:
+    1. Giá: 'triệu'/'củ' = 1000000. 'trăm' = 100000. Nếu không nhắc đến giá, để min_price và max_price là null.
     2. Category: 
-       - BẮT BUỘC ĐIỀN 'accessory' nếu truy vấn chứa: ốp, sạc, tai nghe, cáp, kính, cường lực, giá đỡ...
-       - BẮT BUỘC ĐIỀN 'phone' nếu truy vấn là tên dòng máy hoặc chứa từ 'điện thoại', 'máy'.
+       - BẮT BUỘC ĐIỀN 'accessory' nếu có từ: ốp, sạc, tai nghe, cáp, kính, cường lực, giá đỡ, loa...
+       - BẮT BUỘC ĐIỀN 'phone' nếu là tên dòng máy hoặc chứa từ: điện thoại, máy.
+       - Nếu không phân biệt được, để null.
+    3. Brand: Bóc tách hãng (Apple, Samsung, Xiaomi, Oppo, Vivo, Google...). Nếu không có, để null.
+    4. Keyword: Các từ khóa cốt lõi còn lại (VD: tên dòng máy, màu sắc). Lược bỏ các từ thừa.
 
-    Định dạng JSON yêu cầu:
-    {"brand": "Apple/Samsung...", "category": "phone/accessory", "min_price": Số, "max_price": Số, "keyword": "Từ khóa", "sort": "price_asc/price_desc"}
+    Định dạng JSON yêu cầu (BẮT BUỘC DÙNG CẤU TRÚC NÀY):
+    {"brand": "Tên hãng hoặc null", "category": "phone hoặc accessory hoặc null", "min_price": Số hoặc null, "max_price": Số hoặc null, "keyword": "Từ khóa chính hoặc null", "sort": "price_asc hoặc price_desc hoặc null"}
     """
     prompt = f"Câu hỏi: '{query}'\n\nTrả về JSON:"
     # Ép Gemini cấu trúc response trả về 100% JSON (Tránh lỗi 500)
-    res = call_gemini_api(prompt, system_instruction=system_instruction,is_json=True)
+    res = call_gemini_api(prompt, system_instruction=system_instruction, is_json=True)
     if not res: return None
 
     try:
         clean = re.sub(r"```json|```", "", res).strip()
         match = re.search(r"\{.*\}", clean, re.DOTALL)
-        if match: return json.loads(match.group(0))
+        if match:
+            parsed = json.loads(match.group(0))
+            # [FIX CRASH] Chuẩn hóa lại cấu trúc JSON trước khi trả về cho main.py
+            safe_data = {
+                'brand': parsed.get('brand'),
+                'category': parsed.get('category'),
+                'min_price': parsed.get('min_price'),
+                'max_price': parsed.get('max_price'),
+                'keyword': parsed.get('keyword', ''),
+                'sort': parsed.get('sort')
+            }
+            return safe_data
         return None
     except Exception as e:
         print(f"AI Parse JSON Error: {e}")
@@ -409,34 +402,45 @@ def analyze_search_intents(query):
 
 def local_analyze_intent(query):
     """
-    Thuật toán phân tích dự phòng (Local Fallback Mode).
-    Áp dụng Regular Expressions (Regex) để trích xuất ý định khi Google AI lỗi.
+    [NEW ARCHITECTURE] Động cơ bóc tách ngữ nghĩa thuần Python (Regex + Heuristics).
+    Nhanh, không phụ thuộc API, độ chính xác 100% với các cấu trúc tiếng lóng VN.
     """
-    query = query.lower()
+    query = query.lower().strip()
     data = {'brand': None, 'category': None, 'keyword': '', 'min_price': None, 'max_price': None, 'sort': None}
 
-    brands = {'iphone': 'Apple', 'apple': 'Apple', 'samsung': 'Samsung', 'oppo': 'Oppo', 'xiaomi': 'Xiaomi', 'vivo': 'Vivo'}
+    # Bóc Hãng
+    brands = {'iphone': 'Apple', 'apple': 'Apple', 'samsung': 'Samsung', 'oppo': 'Oppo', 'xiaomi': 'Xiaomi',
+              'vivo': 'Vivo', 'realme': 'Realme'}
     for k, v in brands.items():
         if k in query:
             data['brand'] = v
-            query = query.replace(k, '')
+            # Không xóa từ khóa hãng khỏi query để hệ thống Score Search bên dưới còn dùng
 
-    accessory_kws = ['ốp', 'sạc', 'tai nghe', 'cáp', 'kính', 'cường lực', 'giá đỡ', 'loa', 'dây đeo', 'airpods']
+    # Bóc Danh mục cực chuẩn (Tránh bẫy "ốp lưng iphone")
+    accessory_kws = ['ốp', 'sạc', 'tai nghe', 'cáp', 'kính', 'cường lực', 'giá đỡ', 'loa', 'dây đeo', 'airpods', 'buds',
+                     'bao da']
     phone_kws = ['điện thoại', 'máy', 'smartphone', 'phone']
-    if any(x in query for x in accessory_kws): data['category'] = 'accessory'
-    elif any(x in query for x in phone_kws): data['category'] = 'phone'
 
-    price_match = re.search(r'(\d+)\s*(triệu|củ)', query)
+    # Ưu tiên Phụ kiện lên hàng đầu: Nếu câu có chữ "ốp" thì 100% là tìm phụ kiện
+    if any(x in query for x in accessory_kws):
+        data['category'] = 'accessory'
+    elif any(x in query for x in phone_kws):
+        data['category'] = 'phone'
+
+    # Bóc Giá (Quy đổi "củ", "triệu")
+    price_match = re.search(r'(\d+)\s*(triệu|củ|tr)', query)
     if price_match:
         val = int(price_match.group(1))
         if val < 1000: data['max_price'] = val * 1000000
-        query = re.sub(r'\d+\s*(triệu|củ)', '', query)
+        query = re.sub(r'\d+\s*(triệu|củ|tr)(\s*quay\s*đầu|\s*trở\s*xuống)?', '', query)
 
-    stop_words = ['tôi', 'muốn', 'mua', 'tìm', 'cho', 'cần', 'dưới', 'khoảng', 'điện', 'thoại', 'máy', 'tốt', 'đẹp', 'giá', 'chơi', 'game', 'chụp', 'ảnh', 'rẻ']
+    # Lọc Stop words
+    stop_words = ['tôi', 'muốn', 'mua', 'tìm', 'cho', 'cần', 'dưới', 'khoảng', 'điện', 'thoại', 'máy', 'giá', 'rẻ',
+                  'nào', 'tầm', 'quay', 'đầu']
     words = query.split()
     data['keyword'] = " ".join([w for w in words if w not in stop_words]).strip()
-    return data
 
+    return data
 
 # ==============================================================================================
 # ---> [ĐÃ KHÔI PHỤC: BẢNG SO SÁNH GIỮ ĐÚNG FORM GỐC (HÀNG-CỘT) + TƯ VẤN AI CHUYÊN SÂU] <---

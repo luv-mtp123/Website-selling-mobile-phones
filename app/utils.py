@@ -322,23 +322,35 @@ def generate_chatbot_response(user_msg, chat_history=None):
     if chat_history is None:
         chat_history = []
 
-    # 1. Trích xuất Context từ Kho hàng (RAG)
-    context = build_product_context(user_msg)
+    # BỘ LỌC CHÀO HỎI (GREETING FILTER) - Tiết kiệm Token, không gọi RAG vô ích
+    user_msg_lower = user_msg.lower().strip()
+    greetings = ['hi', 'hello', 'chào', 'xin chào', 'có ai không', 'cho hỏi']
+    is_greeting = len(user_msg_lower.split()) <= 4 and any(g in user_msg_lower for g in greetings)
 
-    # 2. Xây dựng System Instruction (Tiêm ngữ cảnh thực tế)
-    system_instruction = (
-        "Bạn là trợ lý ảo AI thông minh, chuyên nghiệp của hệ thống MobileStore. "
-        "Nhiệm vụ: Tư vấn, báo giá và hỗ trợ khách hàng mua điện thoại, phụ kiện một cách tự nhiên, lịch sự và ngắn gọn.\n\n"
-        "QUY TẮC BẮT BUỘC (RAG LIMITATION): "
-        "1. CHỈ TƯ VẤN DỰA TRÊN THÔNG TIN [KHO HÀNG THỰC TẾ] BÊN DƯỚI. "
-        "2. KHÔNG TỰ BỊA ĐẶT GIÁ CẢ, CẤU HÌNH HAY SẢN PHẨM KHÔNG CÓ THẬT TRONG KHO. "
-        "3. Nếu khách hỏi sản phẩm không có, hãy khéo léo xin lỗi và gợi ý sản phẩm đang có sẵn. "
-        "4. Xưng hô là 'Dạ', 'MobileStore', 'anh/chị'.\n\n"
-        f"{context}"
-    )
+    if is_greeting:
+        system_instruction = (
+            "Bạn là trợ lý ảo AI thông minh của MobileStore. "
+            "Khách vừa nói lời chào. Hãy đáp lại một cách nhiệt tình, lịch sự, xưng hô 'Dạ', 'MobileStore', 'anh/chị'. "
+            "Chỉ dừng lại ở mức chào hỏi và hỏi xem khách cần hỗ trợ tư vấn sản phẩm gì."
+        )
+    else:
+        # 1. Trích xuất Context từ Kho hàng (RAG)
+        context = build_product_context(user_msg)
+
+        # 2. Xây dựng System Instruction (Tiêm ngữ cảnh thực tế)
+        system_instruction = (
+            "Bạn là trợ lý ảo AI thông minh, chuyên nghiệp của hệ thống MobileStore. "
+            "Nhiệm vụ: Tư vấn, báo giá và hỗ trợ khách hàng mua điện thoại, phụ kiện một cách tự nhiên, lịch sự và ngắn gọn.\n\n"
+            "QUY TẮC BẮT BUỘC (RAG LIMITATION): "
+            "1. CHỈ TƯ VẤN DỰA TRÊN THÔNG TIN [KHO HÀNG THỰC TẾ] BÊN DƯỚI. "
+            "2. KHÔNG TỰ BỊA ĐẶT GIÁ CẢ, CẤU HÌNH HAY SẢN PHẨM KHÔNG CÓ THẬT TRONG KHO. "
+            "3. Nếu khách hỏi sản phẩm không có, hãy khéo léo xin lỗi và gợi ý sản phẩm đang có sẵn. "
+            "4. Xưng hô là 'Dạ', 'MobileStore', 'anh/chị'.\n\n"
+            f"{context}"
+        )
 
     # 3. Format Lịch sử hội thoại (Giữ Session ngữ cảnh)
-    prompt = ""
+    prompt = "--- LỊCH SỬ HỘI THOẠI ---\n" if chat_history else ""
     for turn in chat_history:
         prompt += f"Khách: {turn.get('user', '')}\nMobileStore: {turn.get('ai', '')}\n"
     prompt += f"Khách: {user_msg}\nMobileStore:"
@@ -419,12 +431,11 @@ def local_analyze_intent(query):
     # Bóc Danh mục cực chuẩn (Tránh bẫy "ốp lưng iphone")
     accessory_kws = ['ốp', 'sạc', 'tai nghe', 'cáp', 'kính', 'cường lực', 'giá đỡ', 'loa', 'dây đeo', 'airpods', 'buds',
                      'bao da']
-    phone_kws = ['điện thoại', 'máy', 'smartphone', 'phone']
 
     # Ưu tiên Phụ kiện lên hàng đầu: Nếu câu có chữ "ốp" thì 100% là tìm phụ kiện
     if any(x in query for x in accessory_kws):
         data['category'] = 'accessory'
-    elif any(x in query for x in phone_kws):
+    elif re.search(r'\b(điện thoại|máy|smartphone|phone)\b', query):
         data['category'] = 'phone'
 
     # Bóc Giá (Quy đổi "củ", "triệu")

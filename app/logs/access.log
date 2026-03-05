@@ -1535,3 +1535,20 @@ TypeError: get_comparison_result() missing 4 required positional arguments: 'p2_
 [2026-03-05 19:16:56,713] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 12734.88ms
 [2026-03-05 19:17:45,173] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 10170.68ms
 [2026-03-05 19:18:45,764] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 3580.48ms
+[2026-03-05 20:59:59,562] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-05 21:00:38,465] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 21.53ms
+[2026-03-05 21:01:13,725] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 2717.65ms
+[2026-03-05 21:01:19,394] INFO in system_logger: IP: 127.0.0.1 | GET /product/5 | Status: 200 | Time: 53.27ms
+[2026-03-05 21:01:40,935] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4037.12ms
+[2026-03-05 21:01:41,013] WARNING in system_logger: IP: 127.0.0.1 | GET /favicon.ico | Status: 404 | Time: 2.0ms
+[2026-03-05 21:01:45,429] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.03ms
+[2026-03-05 21:02:02,390] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3833.05ms
+[2026-03-05 21:02:35,219] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5408.91ms
+[2026-03-05 21:02:41,487] INFO in system_logger: IP: 127.0.0.1 | GET /product/6 | Status: 200 | Time: 8.56ms
+[2026-03-05 21:03:18,437] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 6.55ms
+[2026-03-05 21:04:10,206] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3913.26ms
+[2026-03-05 21:04:43,591] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3544.65ms
+[2026-03-05 21:05:03,532] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3736.02ms
+[2026-03-05 21:05:25,002] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4168.88ms
+[2026-03-05 21:05:55,260] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3846.86ms
+[2026-03-05 21:06:06,489] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.99ms

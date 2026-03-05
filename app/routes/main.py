@@ -155,14 +155,12 @@ def home():
     ai_data = None  # Cần lưu lại ai_data để dùng cho lớp Fallback phía dưới
 
     if q and len(q.split()) >= 1:
-        # ---> [FIX]: Nâng cấp lên Hybrid AI Search.
-        # Gọi Gemini phân tích NLP để đảm bảo tính linh hoạt, sau đó fallback về Thuật toán Rule-based nếu cần
+        # ---> [NÂNG CẤP]: TRUE HYBRID AI SEARCH (Kết hợp Keyword + Vector Semantic)
         ai_data = analyze_search_intents(q)
 
-        if ai_data and (ai_data.get('keyword') or ai_data.get('brand') or ai_data.get('category')):
-            ai_msg = "🧠 AI Semantic Search (Gemini)"
+        if ai_data and (ai_data.get('keyword') or ai_data.get('brand') or ai_data.get('category') or ai_data.get('semantic_query')):
+            ai_msg = "🧠 Hybrid AI Search (Gemini + Vector)"
         else:
-            # Fallback về Local NLP (Chế độ truyền thống) nếu AI sập/hết Quota
             ai_data = local_analyze_intent(q)
             ai_msg = "⚡ Smart Search (Tốc độ cao)"
 
@@ -188,31 +186,48 @@ def home():
 
         products_pool = query.all()
 
-        # 2. ĐỘNG CƠ CHẤM ĐIỂM TỪ KHÓA (KEYWORD SCORING ENGINE)
-        # Thay thế hoàn toàn VectorDB: Chính xác 100%, không bị ảo giác "ốp" ra "sạc"
-        if ai_data.get('keyword'):
-            search_kws = set(ai_data['keyword'].lower().split())
+        # 2. ĐỘNG CƠ TÌM KIẾM LAI ĐA TRỌNG SỐ (HYBRID SCORING ENGINE)
+        # Kết hợp chấm điểm Từ khóa (Chính xác) + Điểm Ngữ nghĩa VectorDB (Linh hoạt)
+        if ai_data.get('keyword') or ai_data.get('semantic_query'):
+            search_kws = set((ai_data.get('keyword') or q).lower().split())
             scored_products = []
+
+            # --- Gọi Vector DB để lấy Danh sách ID phù hợp ngữ nghĩa nhất ---
+            semantic_query = ai_data.get('semantic_query') or ai_data.get('keyword') or q
+            # Chú ý: Vector Search rất mạnh trong việc hiểu "nhu cầu" (chụp ảnh đẹp, pin trâu)
+            semantic_ids = search_vector_db(semantic_query, n_results=10)
 
             for p in products_pool:
                 score = 0
                 name_lower = p.name.lower()
                 desc_lower = (p.description or "").lower()
 
-                # Tính điểm: Khớp Tên -> Điểm cực cao (Tuyệt đối không nhầm Phụ kiện)
+                # TÍNH ĐIỂM 1: Keyword Match (Đảm bảo gõ đúng tên máy thì phải lên Top 1)
+                match_count = 0
                 for kw in search_kws:
                     if kw in name_lower:
-                        score += 100
+                        score += 150  # Khớp tên máy -> Điểm tuyệt đối
+                        match_count += 1
                     elif kw in desc_lower:
-                        score += 10
+                        score += 20   # Khớp mô tả -> Điểm phụ
 
-                # Vớt các sản phẩm có điểm > 0
+                # Thưởng thêm nếu khớp nguyên cụm từ khóa liên tiếp trong tên
+                if ai_data.get('keyword') and ai_data['keyword'].lower() in name_lower:
+                    score += 300
+
+                # TÍNH ĐIỂM 2: Vector Semantic Boost (Sức mạnh AI thực sự)
+                # Dù không khớp chữ nào, nhưng VectorDB bảo giống -> Vẫn được cộng điểm
+                if str(p.id) in semantic_ids:
+                    rank = semantic_ids.index(str(p.id))
+                    # Top 1 Vector được +100đ, Top 10 được +10đ
+                    score += (10 - rank) * 10
+
+                # Đưa vào list nếu có bất kỳ điểm số nào (Từ khóa hoặc Ngữ nghĩa)
                 if score > 0:
-                    # Gắn tạm thuộc tính score để sort
                     p.match_score = score
                     scored_products.append(p)
 
-            # Sắp xếp theo điểm giảm dần (Độ phù hợp cao nhất lên đầu)
+            # Sắp xếp theo tổng điểm giảm dần
             scored_products.sort(key=lambda x: x.match_score, reverse=True)
             products = scored_products
         else:

@@ -371,24 +371,25 @@ def generate_chatbot_response(user_msg, chat_history=None):
 
 def analyze_search_intents(query):
     """
-    Hệ thống trích xuất dữ liệu (Entity Extraction) bằng LLM được NÂNG CẤP.
-    Xử lý thông minh lỗi thiếu trường (Missing Fields) để không làm crash hệ thống Main.
+    [NÂNG CẤP LÕI]: Trích xuất Dữ liệu (Entity) + Suy luận Ngữ nghĩa (Reasoning) bằng LLM.
+    Bổ sung "semantic_query" để dịch các nhu cầu "lóng" thành truy vấn Vector chuẩn.
     """
     system_instruction = """
-    Bạn là hệ thống AI trích xuất dữ liệu tìm kiếm cho Website MobileStore.
-    Nhiệm vụ: Phân tích câu hỏi tự nhiên của khách và trả về CHỈ MỘT chuỗi JSON hợp lệ. Không giải thích.
+    Bạn là hệ thống AI phân tích ý định tìm kiếm cao cấp cho MobileStore.
+    Nhiệm vụ: Phân tích câu hỏi tự nhiên và trả về CHỈ MỘT chuỗi JSON hợp lệ. Không giải thích.
 
     Quy tắc bóc tách:
-    1. Giá: 'triệu'/'củ' = 1000000. 'trăm' = 100000. Nếu không nhắc đến giá, để min_price và max_price là null.
-    2. Category: 
-       - BẮT BUỘC ĐIỀN 'accessory' nếu có từ: ốp, sạc, tai nghe, cáp, kính, cường lực, giá đỡ, loa...
-       - BẮT BUỘC ĐIỀN 'phone' nếu là tên dòng máy hoặc chứa từ: điện thoại, máy.
-       - Nếu không phân biệt được, để null.
-    3. Brand: Bóc tách hãng (Apple, Samsung, Xiaomi, Oppo, Vivo, Google...). Nếu không có, để null.
-    4. Keyword: Các từ khóa cốt lõi còn lại (VD: tên dòng máy, màu sắc). Lược bỏ các từ thừa.
+    1. Giá: 'triệu'/'củ' = 1000000. 'trăm' = 100000. Nếu không nhắc đến, để min_price và max_price là null.
+    2. Category: 'accessory' (ốp, sạc, tai nghe, cáp...) hoặc 'phone' (điện thoại, máy, tên dòng máy...). Không rõ để null.
+    3. Brand: Hãng (Apple, Samsung, Xiaomi, Oppo...). Không có để null.
+    4. keyword: Tên dòng máy chính xác hoặc màu sắc (VD: "iphone 15 pro max", "đen"). Lược bỏ các từ thừa.
+    5. semantic_query (QUAN TRỌNG): Hãy dịch "nhu cầu" của khách thành 1 câu mô tả tính năng lý tưởng để tìm kiếm Vector. 
+       - VD: Khách hỏi "máy cho người già" -> semantic_query: "điện thoại màn hình lớn, loa to, pin trâu, dễ sử dụng".
+       - VD: Khách hỏi "điện thoại chiến game" -> semantic_query: "điện thoại cấu hình mạnh, chip chơi game mượt, tần số quét cao".
+       - Nếu khách chỉ gõ tên máy (VD: "iphone 14"), giữ nguyên: "iphone 14".
 
     Định dạng JSON yêu cầu (BẮT BUỘC DÙNG CẤU TRÚC NÀY):
-    {"brand": "Tên hãng hoặc null", "category": "phone hoặc accessory hoặc null", "min_price": Số hoặc null, "max_price": Số hoặc null, "keyword": "Từ khóa chính hoặc null", "sort": "price_asc hoặc price_desc hoặc null"}
+    {"brand": "Tên hãng hoặc null", "category": "phone hoặc accessory hoặc null", "min_price": Số hoặc null, "max_price": Số hoặc null, "keyword": "Từ khóa thô hoặc null", "semantic_query": "Câu dịch ngữ nghĩa hoặc null", "sort": "price_asc hoặc price_desc hoặc null"}
     """
     prompt = f"Câu hỏi: '{query}'\n\nTrả về JSON:"
     # Ép Gemini cấu trúc response trả về 100% JSON (Tránh lỗi 500)
@@ -407,6 +408,7 @@ def analyze_search_intents(query):
                 'min_price': parsed.get('min_price'),
                 'max_price': parsed.get('max_price'),
                 'keyword': parsed.get('keyword', ''),
+                'semantic_query': parsed.get('semantic_query', ''),
                 'sort': parsed.get('sort')
             }
             return safe_data
@@ -422,7 +424,7 @@ def local_analyze_intent(query):
     Nhanh, không phụ thuộc API, độ chính xác 100% với các cấu trúc tiếng lóng VN.
     """
     query = query.lower().strip()
-    data = {'brand': None, 'category': None, 'keyword': '', 'min_price': None, 'max_price': None, 'sort': None}
+    data = {'brand': None, 'category': None, 'keyword': '', 'semantic_query': '', 'min_price': None, 'max_price': None, 'sort': None}
 
     # Bóc Hãng
     brands = {'iphone': 'Apple', 'apple': 'Apple', 'samsung': 'Samsung', 'oppo': 'Oppo', 'xiaomi': 'Xiaomi',
@@ -453,7 +455,10 @@ def local_analyze_intent(query):
     stop_words = ['tôi', 'muốn', 'mua', 'tìm', 'cho', 'cần', 'dưới', 'khoảng', 'điện', 'thoại', 'máy', 'giá', 'rẻ',
                   'nào', 'tầm', 'quay', 'đầu']
     words = query.split()
-    data['keyword'] = " ".join([w for w in words if w not in stop_words]).strip()
+    clean_kw = " ".join([w for w in words if w not in stop_words]).strip()
+
+    data['keyword'] = clean_kw
+    data['semantic_query'] = clean_kw # Gán tạm cho fallback vector
 
     return data
 

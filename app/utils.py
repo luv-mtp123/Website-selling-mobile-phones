@@ -16,6 +16,18 @@ from flask import url_for
 from itsdangerous import URLSafeTimedSerializer
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
+import requests
+from PIL import Image
+import io
+
+# [NEW] Khởi tạo thư viện PyTorch cho Visual Search
+try:
+    import torch
+    import torchvision.models as models
+    import torchvision.transforms as transforms
+except ImportError:
+    torch = None
+    print("⚠️ PyTorch chưa được cài đặt. Tính năng tìm kiếm bằng hình ảnh sẽ không hoạt động. Chạy: pip install torch torchvision")
 
 # =========================================================================
 # [HOTFIX] Khóa mõm triệt để lỗi rác Telemetry của ChromaDB 0.4.22
@@ -43,6 +55,28 @@ except Exception as e:
     print(f"⚠️ ChromaDB Init Warning: {e}")
     chroma_client = None
 
+# [NEW] Khởi tạo Model MobileNetV2 siêu nhẹ cho tính năng Visual Search
+visual_model = None
+visual_transforms = None
+
+if torch is not None:
+    try:
+        # Sử dụng trọng số (weights) đã được huấn luyện sẵn trên tập ImageNet
+        weights = models.MobileNet_V2_Weights.DEFAULT
+        visual_model = models.mobilenet_v2(weights=weights)
+        visual_model.eval()  # Chuyển sang chế độ dự đoán (không train)
+
+        # Tiền xử lý ảnh theo chuẩn của PyTorch
+        visual_transforms = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+    except Exception as e:
+        print(f"⚠️ Không thể tải mô hình MobileNetV2: {e}")
+
+
 
 class LocalEmbeddingFunction(embedding_functions.EmbeddingFunction):
     """Sử dụng Vector Model Offline để miễn phí 100% API Quota"""
@@ -63,11 +97,19 @@ try:
             name="mobile_store_products",
             embedding_function=LocalEmbeddingFunction()
         )
+        # ---> [NEW] Khởi tạo Collection riêng chứa Vector Hình ảnh
+        # [FIX QUAN TRỌNG 1]: Thêm metadata cosine. Vector Model Hình ảnh bắt buộc phải dùng Cosine Similarity thay vì L2 để so sánh độ tương đồng chính xác.
+        product_image_collection = chroma_client.get_or_create_collection(
+            name="product_images",
+            metadata={"hnsw:space": "cosine"}
+        )
     else:
         product_collection = None
+        product_image_collection = None
 except Exception as e:
     print(f"⚠️ ChromaDB Collection Error: {e}")
     product_collection = None
+    product_image_collection = None
 
 def validate_image_file(file):
     """
@@ -83,6 +125,83 @@ def validate_image_file(file):
     if size > 2 * 1024 * 1024: return False, "File > 2MB."
     return True, None
 
+
+# =========================================================================
+# ---> [NEW] HỆ THỐNG XỬ LÝ ẢNH (VISUAL SEARCH ENGINE)
+# =========================================================================
+def get_image_embedding(image_source, is_url=True):
+    """
+    Biến đổi hình ảnh thành mảng Vector 1000 chiều bằng MobileNetV2.
+    """
+    if not visual_model or not visual_transforms:
+        return None
+
+    try:
+        if is_url:
+            # Nếu là link ảnh trên mạng (Tự động tải về trên RAM)
+            # [FIX QUAN TRỌNG 2]: Thêm Header User-Agent giả lập trình duyệt để tải ảnh từ Amazon/Unsplash không bị lỗi 403 Forbidden.
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+            response = requests.get(image_source, stream=True, timeout=5, headers=headers)
+            response.raise_for_status()
+            img = Image.open(response.raw).convert('RGB')
+        else:
+            # Nếu là file do người dùng upload trực tiếp
+            img = Image.open(image_source).convert('RGB')
+
+        # Chạy ảnh qua mạng CNN
+        input_tensor = visual_transforms(img)
+        input_batch = input_tensor.unsqueeze(0)  # Tạo mini-batch (batch_size=1)
+
+        with torch.no_grad():
+            output = visual_model(input_batch)
+
+        # Chuyển tensor thành list Python chuẩn để nhét vào ChromaDB
+        return output[0].numpy().tolist()
+    except Exception as e:
+        print(f"⚠️ Lỗi trích xuất Vector Ảnh: {e}")
+        return None
+
+
+def sync_product_image_to_vector_db(product):
+    """
+    Đồng bộ ảnh của sản phẩm vào ChromaDB khi Admin thêm/sửa sản phẩm.
+    """
+    if not product_image_collection or not product.image_url:
+        return
+
+    embedding = get_image_embedding(product.image_url, is_url=True)
+    if embedding:
+        try:
+            product_image_collection.upsert(
+                embeddings=[embedding],
+                metadatas=[{"name": product.name, "brand": product.brand}],
+                ids=[str(product.id)]
+            )
+            print(f"📸 Indexed Image Vector: {product.name}")
+        except Exception as e:
+            print(f"⚠️ Lỗi lưu Vector Ảnh vào ChromaDB: {e}")
+
+
+def search_image_vector_db(image_file, n_results=4):
+    """
+    Tìm kiếm các sản phẩm có hình dáng giống nhất với ảnh tải lên.
+    """
+    if not product_image_collection: return []
+
+    embedding = get_image_embedding(image_file, is_url=False)
+    if not embedding: return []
+
+    try:
+        results = product_image_collection.query(
+            query_embeddings=[embedding],
+            n_results=n_results
+        )
+        if results['ids'] and len(results['ids']) > 0:
+            return results['ids'][0]
+        return []
+    except Exception as e:
+        print(f"⚠️ Lỗi tìm kiếm Vector Ảnh: {e}")
+        return []
 
 def get_serializer(secret_key):
     """

@@ -13,3 +13,6 @@ pandas
 openpyxl
 beautifulsoup4
 waitress
+torch
+torchvision
+pillow

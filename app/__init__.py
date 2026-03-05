@@ -164,8 +164,8 @@ def initialize_database():
         db.session.add_all([admin, guest])
 
     # 2. Tạo Sản phẩm mẫu (nếu chưa có)
+    # [LƯU Ý]: Giữ nguyên dữ liệu mẫu để tránh làm hỏng cấu trúc cũ của bạn
     if not Product.query.first():
-        # Dữ liệu mẫu từ app.py cũ của bạn
         products_data = [
             # --- CÁC SẢN PHẨM CŨ ---
             {"name": "iPhone 15 Pro Max", "brand": "Apple", "price": 34990000, "category": "phone", "is_sale": False,
@@ -302,6 +302,7 @@ def initialize_database():
              "img": "https://images.unsplash.com/photo-1586775490184-b79134164193?w=800"},
         ]
 
+        new_products = []
         for p_data in products_data:
             # Kiểm tra tránh trùng lặp nếu chạy lại
             existing = Product.query.filter_by(name=p_data["name"]).first()
@@ -341,6 +342,31 @@ def initialize_database():
                     ])
 
                 db.session.add(new_p)
+                new_products.append(new_p)
 
-    db.session.commit()
+        db.session.commit() # Commit lưu vào DB để sinh ra ID cho sản phẩm
+
+        # [ĐỒNG BỘ TRƯỜNG HỢP 2] - Quét những dữ liệu mới được thêm vào DB ở vòng lặp trên
+        from .utils import sync_product_to_vector_db, sync_product_image_to_vector_db
+        for p in new_products:
+            sync_product_to_vector_db(p)
+            sync_product_image_to_vector_db(p)
+
+
+    # ---> [ĐỒNG BỘ TRƯỜNG HỢP 1]: Quét và đồng bộ Ảnh cho những sản phẩm ĐÃ TỒN TẠI TỪ TRƯỚC
+    # Luôn chạy đoạn này ở cuối hàm initialize_database() để đảm bảo nếu ChromaDB bị trống thì tự phục hồi lại.
+    try:
+        from .utils import product_image_collection, sync_product_image_to_vector_db
+        if product_image_collection and product_image_collection.count() == 0:
+            print("🔄 Kho AI Visual Search đang trống. Bắt đầu nạp Vector Ảnh từ kho hàng cũ...")
+            all_prods = Product.query.all()
+            count = 0
+            for p in all_prods:
+                if p.image_url:
+                    sync_product_image_to_vector_db(p)
+                    count += 1
+            print(f"✅ Đã phân tích & đồng bộ thành công {count} ảnh vào hệ thống tìm kiếm AI!")
+    except Exception as e:
+        print(f"⚠️ Lỗi nạp Vector Ảnh hàng loạt: {e}")
+
     print("Database & Data initialized successfully!")

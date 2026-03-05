@@ -48,7 +48,8 @@ from app.utils import (
     direct_gemini_search,
     get_similar_products,
     generate_local_comparison_html,
-    VoucherValidatorEngine
+    VoucherValidatorEngine,
+    search_image_vector_db  # ---> [NEW] Import hàm tìm kiếm ảnh
 )
 
 main_bp = Blueprint('main', __name__)
@@ -287,6 +288,49 @@ def home():
         ai_message=ai_msg,
         hot_products=hot_products
     )
+
+
+# =========================================================================
+# ---> [NEW] ROUTE: TÌM KIẾM BẰNG HÌNH ẢNH (VISUAL SEARCH)
+# =========================================================================
+@main_bp.route('/search/image', methods=['POST'])
+def search_by_image():
+    if 'visual_image' not in request.files:
+        flash("Chưa có ảnh được chọn.", "warning")
+        return redirect(url_for('main.home'))
+
+    file = request.files['visual_image']
+    is_valid, msg = validate_image_file(file)
+    if not is_valid:
+        flash(msg, "danger")
+        return redirect(url_for('main.home'))
+
+    # Chạy thuật toán so khớp Vector Hình ảnh
+    matched_ids = search_image_vector_db(file, n_results=6)
+
+    if not matched_ids:
+        flash("Không tìm thấy sản phẩm nào có ngoại hình tương đồng.", "info")
+        return redirect(url_for('main.home'))
+
+    # Lấy dữ liệu sản phẩm thực tế từ Database dựa trên ID tìm được
+    ids = [int(i) for i in matched_ids if i.isdigit()]
+    products = Product.query.filter(Product.id.in_(ids), Product.is_active == True).all()
+
+    # Sắp xếp lại list products theo đúng thứ tự mảng IDs (Độ giống giảm dần)
+    products.sort(key=lambda p: ids.index(p.id))
+
+    brands = [b[0] for b in db.session.query(Product.brand).distinct().all()]
+    hot_products = Product.query.filter_by(is_active=True, is_sale=True).limit(4).all()
+
+    return render_template(
+        'home.html',
+        products=products,
+        brands=brands,
+        search_query="",
+        ai_message="📷 Visual AI: Đã tìm thấy các sản phẩm có kiểu dáng tương đồng với ảnh bạn tải lên!",
+        hot_products=hot_products
+    )
+
 
 
 @main_bp.route('/product/<int:id>')
@@ -931,9 +975,6 @@ def chatbot_api():
     if not msg:
         return jsonify({'response': "Mời bạn hỏi ạ!"})
 
-    # [ĐÃ GỠ BỎ ĐOẠN KHÓA MÕM AI BẰNG KỊCH BẢN CHATBOT_QUICK_REPLIES]
-    # Toàn bộ tin nhắn sẽ đi thẳng tới AI Gemini để AI tự xử lý linh hoạt
-
     try:
         chat_history = session.get('chat_history', [])
 
@@ -941,12 +982,15 @@ def chatbot_api():
         response = generate_chatbot_response(msg, chat_history)
         final_response = response or SystemMessages.AI_BUSY
 
-        # Lưu cuộc hội thoại mới vào lịch sử
-        chat_history.append({'user': msg, 'ai': final_response})
+        # ---> [ĐÃ SỬA LỖI TẠI ĐÂY] <---
+        # Lưu cuộc hội thoại mới vào lịch sử (Chỉ trích xuất 150 ký tự đầu để làm ngữ cảnh)
+        # Giúp tiết kiệm cực kỳ nhiều dung lượng bộ nhớ Session Cookie
+        short_ai_response = final_response[:150] + "..." if len(final_response) > 150 else final_response
+        chat_history.append({'user': msg, 'ai': short_ai_response})
 
-        # MỞ RỘNG BỘ NHỚ: Cho phép bot nhớ 8 câu hội thoại gần nhất thay vì 4
-        if len(chat_history) > 8:
-            chat_history = chat_history[-8:]
+        # GIẢM BỘ NHỚ: Chỉ cho phép bot nhớ 3 câu thay vì 8 câu
+        if len(chat_history) > 3:
+            chat_history = chat_history[-3:]
 
         session['chat_history'] = chat_history
 

@@ -18,7 +18,7 @@ from app.extensions import db
 from app.models import Product, User, Order, TradeInRequest, OrderDetail, Comment, Voucher
 
 # Import Lõi tiện ích
-from app.utils import sync_product_to_vector_db
+from app.utils import sync_product_to_vector_db, sync_product_image_to_vector_db # ---> [NEW]
 
 # Import Hằng số hệ thống
 from app.constants import (
@@ -226,6 +226,7 @@ def add_product():
         db.session.add(new_p)
         db.session.commit()
         sync_product_to_vector_db(new_p)
+        sync_product_image_to_vector_db(new_p)  # ---> [NEW] Cập nhật Vector Ảnh
         flash(SystemMessages.PRODUCT_ADD_SUCCESS, 'success')
     except Exception as e:
         db.session.rollback()
@@ -263,6 +264,7 @@ def edit_product(id):
 
             db.session.commit()
             sync_product_to_vector_db(product)
+            sync_product_image_to_vector_db(product)  # ---> [NEW] Cập nhật Vector Ảnh
 
             flash(SystemMessages.PRODUCT_UPDATE_SUCCESS, 'success')
             return redirect(url_for('admin.dashboard'))

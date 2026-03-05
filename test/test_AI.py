@@ -16,7 +16,8 @@ from app.models import User, Product, Order, OrderDetail
 ### ---> [ĐÃ SỬA CHỖ NÀY: Import thêm các hàm mới cho Chiến dịch 1] <--- ###
 from app.utils import (
     get_comparison_result, local_analyze_intent, build_product_context,
-    analyze_sentiment, direct_gemini_search, generate_local_comparison_html
+    analyze_sentiment, direct_gemini_search, generate_local_comparison_html,
+    search_image_vector_db, get_image_embedding  # ---> [NEW] Import thêm hàm Visual Search
 )
 from flask import session
 
@@ -209,6 +210,39 @@ class AIFeaturesTestCase(unittest.TestCase):
             # ---> [ĐÃ SỬA LỖI MOCK]: Cập nhật Assert khớp với Prompt Memory mới nhất trong utils.py <---
             self.assertIn("LỊCH SỬ HỘI THOẠI", prompt_text)
             self.assertIn("iPhone 15 giá bao nhiêu?", prompt_text)
+
+    # ==============================================================================
+    # ---> [NEW] TEST CƠ CHẾ GIỚI HẠN BỘ NHỚ (COOKIE OPTIMIZATION) <---
+    # ==============================================================================
+    @patch('app.utils.call_gemini_api')
+    def test_chatbot_memory_limit_and_truncation(self, mock_gemini):
+        """
+        Kiểm tra cơ chế chống tràn Session Cookie:
+        1. Chỉ lưu tối đa 3 cuộc hội thoại.
+        2. Cắt ngắn câu trả lời của AI xuống 150 ký tự.
+        """
+        print("\n[AI Test 3.2] Testing Chatbot Memory Limit (Max 3 turns, 150 chars)...")
+
+        # Giả lập AI trả lời một câu rất dài (> 150 ký tự)
+        long_response = "A" * 200
+        mock_gemini.return_value = long_response
+
+        with self.client:
+            # Bắn 4 request liên tục để vượt quá giới hạn 3
+            for i in range(4):
+                self.client.post('/api/chatbot', json={'message': f'Câu hỏi {i}'})
+
+            # Lấy Session từ Flask
+            history = session.get('chat_history', [])
+
+            # 1. Đảm bảo độ dài lịch sử bị khóa ở mức 3 (vứt bỏ 'Câu hỏi 0')
+            self.assertEqual(len(history), 3)
+            self.assertEqual(history[0]['user'], 'Câu hỏi 1')
+            self.assertEqual(history[-1]['user'], 'Câu hỏi 3')
+
+            # 2. Đảm bảo câu trả lời của AI đã bị cắt ngắn (150 ký tự + "...")
+            self.assertTrue(len(history[-1]['ai']) <= 153)
+            self.assertTrue(history[-1]['ai'].endswith("..."))
 
     # ==============================================================================
     # ---> [NEW] BỔ SUNG TEST LUỒNG CHÀO HỎI (GREETING BYPASS) <---
@@ -420,7 +454,41 @@ class AIFeaturesTestCase(unittest.TestCase):
         # Kịch bản 4: Gõ sai khoảng cách (không có dấu cách giữa số và chữ "triệu")
         res_no_space = local_analyze_intent("điện thoại 12triệu")
         self.assertEqual(res_no_space['max_price'], 12000000)
+        
+    # ==============================================================================
+    # ---> [NEW] TEST TÍNH NĂNG TÌM KIẾM BẰNG HÌNH ẢNH (VISUAL SEARCH) <---
+    # ==============================================================================
+    @patch('app.utils.product_image_collection')
+    @patch('app.utils.get_image_embedding')
+    def test_visual_search_logic(self, mock_get_embedding, mock_collection):
+        """
+        Kiểm tra luồng Tìm kiếm bằng hình ảnh (Visual AI).
+        Mục tiêu: Đảm bảo thuật toán gọi đúng hàm nhúng (Embedding MobileNetV2)
+        và xử lý an toàn khi ChromaDB không tìm thấy kết quả hoặc file ảnh lỗi.
+        """
+        print("\n[AI Test 11] Testing Visual AI Search Flow...")
 
+        # Kịch bản 1: AI nhúng ảnh thành Vector thành công, ChromaDB tìm được ảnh giống
+        mock_get_embedding.return_value = [0.1, 0.2, 0.3] # Giả lập vector đặc trưng
+        mock_collection.query.return_value = {'ids': [[str(self.p1_id), str(self.p3_id)]]}
+
+        # Giả lập tham số image_file
+        fake_image = "dummy_image.jpg"
+        matched_ids = search_image_vector_db(fake_image, n_results=2)
+
+        self.assertEqual(len(matched_ids), 2)
+        self.assertEqual(matched_ids[0], str(self.p1_id))
+
+        # Kịch bản 2: AI không nhận diện được ảnh (Vector = None) -> Trả về mảng rỗng
+        mock_get_embedding.return_value = None
+        empty_ids = search_image_vector_db("bad_image.jpg")
+        self.assertEqual(len(empty_ids), 0)
+
+        # Kịch bản 3: Bộ sưu tập chưa được khởi tạo (Database sập) -> Bắt lỗi Try/Catch an toàn
+        with patch('app.utils.product_image_collection', None):
+            mock_get_embedding.return_value = [0.1]
+            safe_empty = search_image_vector_db("test.jpg")
+            self.assertEqual(len(safe_empty), 0)
 
 if __name__ == '__main__':
     print("🚀 Đang chạy bộ kiểm thử chuyên sâu cho AI...")

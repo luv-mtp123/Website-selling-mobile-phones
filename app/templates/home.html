@@ -201,6 +201,10 @@
                 <input type="text" name="q" class="form-control border-0 shadow-none"
                        placeholder="Nhập nhu cầu của bạn..."
                        value="{{ search_query }}">
+                <!-- [NEW] Nút Camera kích hoạt file input ẩn -->
+                <button type="button" class="btn btn-white border-0 text-danger px-3" onclick="document.getElementById('visualSearchInput').click()" title="Tìm kiếm bằng hình ảnh">
+                    <i class="fas fa-camera fs-5"></i>
+                </button>
             </div>
         </div>
         <div class="col-lg-2 col-6">
@@ -221,6 +225,11 @@
         <div class="col-lg-2">
             <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold rounded-pill shadow">Tìm Lộc</button>
         </div>
+    </form>
+    <!-- [NEW] Form ẩn chuyên dùng để gửi file ảnh lên Server -->
+    <form id="visualSearchForm" action="/search/image" method="POST" enctype="multipart/form-data" class="d-none">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <input type="file" id="visualSearchInput" name="visual_image" accept="image/png, image/jpeg, image/webp" onchange="document.getElementById('visualSearchForm').submit();">
     </form>
 </div>
 

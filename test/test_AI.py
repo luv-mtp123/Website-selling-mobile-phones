@@ -214,18 +214,19 @@ class AIFeaturesTestCase(unittest.TestCase):
     # ---> [NEW] BỔ SUNG TEST LUỒNG CHÀO HỎI (GREETING BYPASS) <---
     # ==============================================================================
     @patch('app.utils.call_gemini_api')
-    def test_chatbot_greeting_filter(self, mock_gemini):
+    def test_chatbot_super_memory_context(self, mock_gemini):
         """
-        Kiểm tra Bộ lọc Chào hỏi Thông minh (Greeting Bypass).
-        Mục tiêu: Đảm bảo khi khách chỉ 'say hi', AI không tải RAG Database (Tiết kiệm Token).
+        Kiểm tra tính năng Super Memory và Mở rộng truy vấn (Query Expansion).
+        Mục tiêu: Đảm bảo AI luôn được nạp KHO HÀNG THỰC TẾ và tự động nối ngữ cảnh
+        từ các câu hội thoại trước đó để không bị ảo giác báo sai hết hàng.
         """
-        print("\n[AI Test 3.1] Testing Chatbot Greeting Filter (Bypass RAG)...")
-        mock_gemini.return_value = "Dạ em chào anh/chị ạ! 🌸"
+        print("\n[AI Test 3.1] Testing Chatbot Super Memory & Query Expansion...")
+        mock_gemini.return_value = "Dạ sản phẩm đó đang sẵn hàng ạ! 🌸"
 
         with self.client:
-            self.client.post('/api/chatbot', json={'message': 'xin chào shop'})
+            # Giả lập khách hàng đang hỏi tiếp nối bằng đại từ nhân xưng
+            self.client.post('/api/chatbot', json={'message': 'tư vấn cho mình máy đó đi'})
 
-            # ---> [FIX LỖI LẤY PARAM]: Hàm call_gemini_api hiện dùng tham số vị trí (args) cho system_instruction
             args, kwargs = mock_gemini.call_args
             system_instruction = kwargs.get('system_instruction')
             if not system_instruction and len(args) > 1:
@@ -234,11 +235,10 @@ class AIFeaturesTestCase(unittest.TestCase):
             if system_instruction is None:
                 system_instruction = ""
 
-            # Đảm bảo KHÔNG CÓ chuỗi KHO HÀNG (Vì không được gọi RAG)
-            self.assertNotIn("KHO HÀNG THỰC TẾ", system_instruction)
-            # Đảm bảo hệ thống dùng đúng chỉ thị chào hỏi
-            self.assertIn("Khách vừa nói lời chào", system_instruction)
-            self.assertIn("Chỉ dừng lại ở mức chào hỏi", system_instruction)
+            # Đảm bảo RAG luôn được kích hoạt (KHO HÀNG THỰC TẾ) kể cả câu hỏi ngắn
+            self.assertIn("KHO HÀNG THỰC TẾ", system_instruction)
+            # Đảm bảo luật RAG chống báo sai kho hàng được đưa vào Prompt
+            self.assertIn("TUYỆT ĐỐI KHÔNG BÁO LÀ 'TẠM HẾT HÀNG' NẾU TRƯỚC ĐÓ VỪA BÁO CÒN HÀNG", system_instruction)
 
     # --- TEST 4: COMPARISON LOGIC (So sánh) ---
     @patch('app.utils.call_gemini_api')

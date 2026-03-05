@@ -597,7 +597,7 @@ def payment_qr(order_id):
     account_name = urllib.parse.quote("MOBILE STORE")
     content = urllib.parse.quote(f"THANHTOAN DONHANG {order.id}")
 
-    qr_url = f"https://img.vietqr.io/image/{bank_id}-{account_no}-compact2.png?amount={order.total_price}&addInfo={content}&accountName={account_name}"
+    qr_url = f"[https://img.vietqr.io/image/](https://img.vietqr.io/image/){bank_id}-{account_no}-compact2.png?amount={order.total_price}&addInfo={content}&accountName={account_name}"
 
     return render_template('payment_qr.html', order=order, qr_url=qr_url, remaining_seconds=int(remaining_seconds))
 
@@ -693,7 +693,7 @@ def cancel_order_user(id):
 
 
 # =========================================================================
-# ---> [NEW: BẢO VỆ ROUTE & ÁP DỤNG HẠN MỨC SỬ DỤNG AI THEO RANK] <---
+# ---> [NEW: BẢO VỆ ROUTE & ÁP DỤNG HẠN MỨC SỬ DỤNG AI Theo Rank] <---
 # =========================================================================
 @main_bp.route('/compare', methods=['GET', 'POST'])
 @login_required  # <-- Khách phải đăng nhập mới được vào
@@ -916,20 +916,22 @@ def chatbot_api():
     if not msg:
         return jsonify({'response': "Mời bạn hỏi ạ!"})
 
-    keywords = CHATBOT_QUICK_REPLIES
-    for k, v in keywords.items():
-        if k in msg.lower():
-            return jsonify({'response': v})
+    # [ĐÃ GỠ BỎ ĐOẠN KHÓA MÕM AI BẰNG KỊCH BẢN CHATBOT_QUICK_REPLIES]
+    # Toàn bộ tin nhắn sẽ đi thẳng tới AI Gemini để AI tự xử lý linh hoạt
 
     try:
         chat_history = session.get('chat_history', [])
+
+        # Giao phó toàn bộ tin nhắn cho hàm generate_chatbot_response
         response = generate_chatbot_response(msg, chat_history)
         final_response = response or SystemMessages.AI_BUSY
 
+        # Lưu cuộc hội thoại mới vào lịch sử
         chat_history.append({'user': msg, 'ai': final_response})
 
-        if len(chat_history) > 4:
-            chat_history = chat_history[-4:]
+        # MỞ RỘNG BỘ NHỚ: Cho phép bot nhớ 8 câu hội thoại gần nhất thay vì 4
+        if len(chat_history) > 8:
+            chat_history = chat_history[-8:]
 
         session['chat_history'] = chat_history
 

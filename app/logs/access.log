@@ -1513,3 +1513,25 @@ TypeError: get_comparison_result() missing 4 required positional arguments: 'p2_
 [2026-03-05 17:34:59,455] INFO in system_logger: IP: 127.0.0.1 | GET /product/5 | Status: 200 | Time: 10.89ms
 [2026-03-05 17:35:37,626] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 8.52ms
 [2026-03-05 17:35:42,993] INFO in system_logger: IP: 127.0.0.1 | GET /product/3 | Status: 200 | Time: 10.51ms
+[2026-03-05 18:53:26,367] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-05 18:53:31,287] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 21.51ms
+[2026-03-05 18:53:37,542] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 2331.14ms
+[2026-03-05 18:54:49,449] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 3362.38ms
+[2026-03-05 18:55:02,698] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 4538.26ms
+[2026-03-05 18:55:42,645] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 8494.4ms
+[2026-03-05 19:02:51,162] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-05 19:03:50,242] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 23.53ms
+[2026-03-05 19:03:56,235] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 2797.26ms
+[2026-03-05 19:04:26,335] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 7948.02ms
+[2026-03-05 19:09:44,298] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-05 19:09:44,560] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 18.0ms
+[2026-03-05 19:09:51,048] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 2773.34ms
+[2026-03-05 19:10:09,367] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 5805.59ms
+[2026-03-05 19:11:40,434] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-05 19:12:08,043] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 20.0ms
+[2026-03-05 19:12:16,815] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 3488.62ms
+[2026-03-05 19:15:02,538] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 5066.14ms
+[2026-03-05 19:15:51,444] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 6400.83ms
+[2026-03-05 19:16:56,713] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 12734.88ms
+[2026-03-05 19:17:45,173] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 10170.68ms
+[2026-03-05 19:18:45,764] INFO in system_logger: IP: 127.0.0.1 | POST /api/chatbot | Status: 200 | Time: 3580.48ms

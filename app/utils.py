@@ -315,45 +315,49 @@ def build_product_context(user_query):
 
 def generate_chatbot_response(user_msg, chat_history=None):
     """
-    [UPGRADED] Chatbot AI Tích hợp RAG (Truy xuất kho hàng thực tế).
-    Khắc phục triệt để lỗi bot Regex giả mạo cũ. Giờ đây bot sử dụng 100% LLM
-    kết hợp với dữ liệu Database để giao tiếp tự nhiên và linh hoạt.
+    [UPGRADED] Chatbot AI Không Kịch Bản - Xử lý thông minh mọi tình huống thực tế.
+    Kết hợp RAG động và khả năng phân tích Context đa tầng.
     """
     if chat_history is None:
         chat_history = []
 
-    # BỘ LỌC CHÀO HỎI (GREETING FILTER) - Tiết kiệm Token, không gọi RAG vô ích
-    user_msg_lower = user_msg.lower().strip()
-    greetings = ['hi', 'hello', 'chào', 'xin chào', 'có ai không', 'cho hỏi']
-    is_greeting = len(user_msg_lower.split()) <= 4 and any(g in user_msg_lower for g in greetings)
+    # ---> [FIX LỖI QUÊN NGỮ CẢNH (AMNESIA & FALSE OUT-OF-STOCK)] <---
+    # Nối câu hỏi gần nhất của User và 1 phần câu trả lời của AI vào truy vấn RAG
+    # Giúp hệ thống tìm kiếm luôn giữ được Tên Sản Phẩm dù khách chỉ nói "tư vấn máy đó"
+    rag_query = user_msg
+    if len(chat_history) > 0:
+        last_user = chat_history[-1].get('user', '')
+        # Trích xuất 100 ký tự đầu tiên từ câu trả lời trước đó của AI để giữ lại tên dòng máy
+        last_ai = chat_history[-1].get('ai', '')[:100]
+        rag_query = f"{last_user} {last_ai} {user_msg}"
 
-    if is_greeting:
-        system_instruction = (
-            "Bạn là trợ lý ảo AI thông minh của MobileStore. "
-            "Khách vừa nói lời chào. Hãy đáp lại một cách nhiệt tình, lịch sự, xưng hô 'Dạ', 'MobileStore', 'anh/chị'. "
-            "Chỉ dừng lại ở mức chào hỏi và hỏi xem khách cần hỗ trợ tư vấn sản phẩm gì."
-        )
-    else:
-        # 1. Trích xuất Context từ Kho hàng (RAG)
-        context = build_product_context(user_msg)
+    # 1. Luôn Trích xuất Context từ Kho hàng (RAG) với truy vấn đã được mở rộng
+    context = build_product_context(rag_query)
 
-        # 2. Xây dựng System Instruction (Tiêm ngữ cảnh thực tế)
-        system_instruction = (
-            "Bạn là trợ lý ảo AI thông minh, chuyên nghiệp của hệ thống MobileStore. "
-            "Nhiệm vụ: Tư vấn, báo giá và hỗ trợ khách hàng mua điện thoại, phụ kiện một cách tự nhiên, lịch sự và ngắn gọn.\n\n"
-            "QUY TẮC BẮT BUỘC (RAG LIMITATION): "
-            "1. CHỈ TƯ VẤN DỰA TRÊN THÔNG TIN [KHO HÀNG THỰC TẾ] BÊN DƯỚI. "
-            "2. KHÔNG TỰ BỊA ĐẶT GIÁ CẢ, CẤU HÌNH HAY SẢN PHẨM KHÔNG CÓ THẬT TRONG KHO. "
-            "3. Nếu khách hỏi sản phẩm không có, hãy khéo léo xin lỗi và gợi ý sản phẩm đang có sẵn. "
-            "4. Xưng hô là 'Dạ', 'MobileStore', 'anh/chị'.\n\n"
-            f"{context}"
-        )
+    # 2. Xây dựng System Instruction linh hoạt tuyệt đối (Cập nhật luật chống mất hàng)
+    system_instruction = (
+        "Bạn là nhân viên tư vấn ảo AI xuất sắc, nhiệt tình và chuyên nghiệp của hệ thống bán lẻ MobileStore.\n\n"
+        "MỤC TIÊU VÀ NHIỆM VỤ CỦA BẠN:\n"
+        "- Xử lý LINH HOẠT mọi tình huống: Khách chào hỏi, hỏi giá, nhờ tư vấn, so sánh, thắc mắc chính sách, "
+        "thậm chí là tán gẫu hoặc bắt bẻ.\n"
+        "- Đọc hiểu ngữ cảnh từ [LỊCH SỬ HỘI THOẠI] để phản hồi liền mạch, không hỏi lại những gì khách đã nói.\n"
+        "- Xưng hô là 'Dạ', tự xưng là 'em' hoặc 'MobileStore', gọi khách hàng là 'anh/chị'. Thái độ luôn ân cần, vui vẻ.\n\n"
+        "QUY TẮC BÁN HÀNG NGHIÊM NGẶT (RAG RULES - CHỐNG BÁO SAI KHO HÀNG):\n"
+        "1. Dữ liệu [KHO HÀNG THỰC TẾ] bên dưới thay đổi theo từng câu hỏi. NẾU KHÁCH HỎI TIẾP VỀ SẢN PHẨM Ở CÂU TRƯỚC (vd: 'máy đó', 'chiếc này'), HÃY DỰA VÀO LỊCH SỬ ĐỂ TƯ VẤN TIẾP. TUYỆT ĐỐI KHÔNG BÁO LÀ 'TẠM HẾT HÀNG' NẾU TRƯỚC ĐÓ VỪA BÁO CÒN HÀNG.\n"
+        "2. CHỈ TƯ VẤN CÁC SẢN PHẨM CÓ TRONG KHO HOẶC ĐÃ XUẤT HIỆN TRONG LỊCH SỬ. KHÔNG tự sáng tác, bịa đặt giá.\n"
+        "3. Khi khách tìm một dòng máy MỚI HOÀN TOÀN mà không có trong kho, lúc đó mới xin lỗi và gợi ý sang các mã máy tương tự đang có sẵn.\n"
+        "4. Cách trình bày phải súc tích, dễ đọc, xuống dòng hợp lý, có thể dùng emoji để tạo thiện cảm.\n\n"
+        f"{context}"
+    )
 
-    # 3. Format Lịch sử hội thoại (Giữ Session ngữ cảnh)
-    prompt = "--- LỊCH SỬ HỘI THOẠI ---\n" if chat_history else ""
-    for turn in chat_history:
-        prompt += f"Khách: {turn.get('user', '')}\nMobileStore: {turn.get('ai', '')}\n"
-    prompt += f"Khách: {user_msg}\nMobileStore:"
+    # 3. Format Lịch sử hội thoại rõ ràng cho AI đọc hiểu mạch truyện
+    prompt = ""
+    if chat_history:
+        prompt += "--- LỊCH SỬ HỘI THOẠI GẦN NHẤT ---\n"
+        for turn in chat_history:
+            prompt += f"Khách hàng: {turn.get('user', '')}\nMobileStore: {turn.get('ai', '')}\n"
+
+    prompt += f"\n--- CÂU HỎI MỚI CỦA KHÁCH ---\nKhách hàng: {user_msg}\nMobileStore:"
 
     # 4. Giao tiếp với não bộ Gemini
     res = call_gemini_api(prompt, system_instruction=system_instruction)
@@ -361,8 +365,8 @@ def generate_chatbot_response(user_msg, chat_history=None):
     if res:
         return res.strip()
 
-    # 5. Fallback khi API sập hoặc Quota cạn kiệt
-    return "Dạ hiện tại hệ thống AI tư vấn đang tạm bận một chút, anh/chị có thể nói rõ hơn tên dòng máy (VD: 'iPhone 15', 'Ốp lưng') để em kiểm tra kho nhé! 🥰"
+    # 5. Fallback tinh tế khi API sập hoặc Quota cạn kiệt
+    return "Dạ hiện tại hệ thống AI tư vấn đang tải hơi nhiều dữ liệu một chút, anh/chị có thể đợi em vài giây hoặc nói rõ tên dòng máy (VD: 'iPhone 15') để em tra cứu kho nhanh nhất nhé! 🥰"
 
 
 def analyze_search_intents(query):

@@ -9,6 +9,7 @@ import time
 import json
 import hashlib
 import re
+import urllib.parse  # ---> [NEW: Thêm thư viện để encode URL an toàn]
 from datetime import datetime, timedelta, timezone
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
@@ -590,9 +591,13 @@ def payment_qr(order_id):
 
     bank_id = "MB"
     account_no = "9999999999"
-    account_name = "MOBILE STORE"
-    content = f"THANHTOAN DONHANG {order.id}"
-    qr_url = f"[https://img.vietqr.io/image/](https://img.vietqr.io/image/){bank_id}-{account_no}-compact2.png?amount={order.total_price}&addInfo={content}&accountName={account_name}"
+    # ---> [FIX LỖI URL CỦA VIETQR]:
+    # 1. Mã hóa khoảng trắng để đảm bảo đường dẫn hợp lệ
+    # 2. Xóa bỏ cú pháp Markdown rác trong chuỗi f-string bị dính trước đó
+    account_name = urllib.parse.quote("MOBILE STORE")
+    content = urllib.parse.quote(f"THANHTOAN DONHANG {order.id}")
+
+    qr_url = f"https://img.vietqr.io/image/{bank_id}-{account_no}-compact2.png?amount={order.total_price}&addInfo={content}&accountName={account_name}"
 
     return render_template('payment_qr.html', order=order, qr_url=qr_url, remaining_seconds=int(remaining_seconds))
 
@@ -687,7 +692,11 @@ def cancel_order_user(id):
     return redirect(url_for('main.dashboard'))
 
 
+# =========================================================================
+# ---> [NEW: BẢO VỆ ROUTE & ÁP DỤNG HẠN MỨC SỬ DỤNG AI THEO RANK] <---
+# =========================================================================
 @main_bp.route('/compare', methods=['GET', 'POST'])
+@login_required  # <-- Khách phải đăng nhập mới được vào
 @csrf.exempt
 def compare_page():
     """
@@ -701,6 +710,20 @@ def compare_page():
 
     if request.method == 'POST':
         try:
+            # ---> BƯỚC 1: KIỂM TRA VÀ RESET QUOTA THEO NGÀY
+            today_date = datetime.now(timezone.utc).date()
+            if current_user.last_compare_date != today_date:
+                current_user.daily_compare_count = 0
+                current_user.last_compare_date = today_date
+                db.session.commit()
+
+            # Lấy hạng thẻ (1: M-New, 2: M-Gold, 3: M-Platinum, 4: M-Diamond)
+            rank_tier, _, _ = _calculate_user_rank(current_user.id)
+
+            # Cấu hình Quota bảo vệ 4 API Key
+            limit_map = {1: 2, 2: 5, 3: 10, 4: 30}
+            max_attempts = limit_map.get(rank_tier, 2)
+
             id1 = request.form.get('product1')
             id2 = request.form.get('product2')
             id3 = request.form.get('product3')
@@ -717,32 +740,41 @@ def compare_page():
                 if p1 and p2:
                     selected_prods = [p for p in [p1, p2, p3, p4] if p is not None]
 
-                    p1_price_str = "{:,.0f} đ".format(p1.sale_price if p1.is_sale else p1.price).replace(",", ".")
-                    p2_price_str = "{:,.0f} đ".format(p2.sale_price if p2.is_sale else p2.price).replace(",", ".")
-
-                    p3_id = p3.id if p3 else None
-                    p3_name = p3.name if p3 else None
-                    p3_price_str = "{:,.0f} đ".format(p3.sale_price if p3.is_sale else p3.price).replace(",", ".") if p3 else None
-                    p3_desc = p3.description or "" if p3 else None
-                    p3_img = p3.image_url if p3 else None
-
-                    p4_id = p4.id if p4 else None
-                    p4_name = p4.name if p4 else None
-                    p4_price_str = "{:,.0f} đ".format(p4.sale_price if p4.is_sale else p4.price).replace(",", ".") if p4 else None
-                    p4_desc = p4.description or "" if p4 else None
-                    p4_img = p4.image_url if p4 else None
-
-                    res = cached_ai_call(
-                        get_comparison_result,
-                        p1.id, p1.name, p1_price_str, p1.description or "", p1.image_url,
-                        p2.id, p2.name, p2_price_str, p2.description or "", p2.image_url,
-                        p3_id, p3_name, p3_price_str, p3_desc, p3_img,
-                        p4_id, p4_name, p4_price_str, p4_desc, p4_img
-                    )
-
-                    # Kích hoạt Local Fallback Mode nếu AI hết Quota
-                    if not res:
+                    # ---> BƯỚC 2: QUYẾT ĐỊNH CHO GỌI API HAY ÉP DÙNG LOCAL
+                    if current_user.daily_compare_count >= max_attempts:
+                        flash(f'Bạn đã dùng hết {max_attempts}/{max_attempts} lượt AI phân tích hôm nay. Hệ thống tự động chuyển sang Bảng Tiêu chuẩn.', 'warning')
                         res = generate_local_comparison_html(p1, p2, p3, p4)
+                    else:
+                        p1_price_str = "{:,.0f} đ".format(p1.sale_price if p1.is_sale else p1.price).replace(",", ".")
+                        p2_price_str = "{:,.0f} đ".format(p2.sale_price if p2.is_sale else p2.price).replace(",", ".")
+
+                        p3_id = p3.id if p3 else None
+                        p3_name = p3.name if p3 else None
+                        p3_price_str = "{:,.0f} đ".format(p3.sale_price if p3.is_sale else p3.price).replace(",", ".") if p3 else None
+                        p3_desc = p3.description or "" if p3 else None
+                        p3_img = p3.image_url if p3 else None
+
+                        p4_id = p4.id if p4 else None
+                        p4_name = p4.name if p4 else None
+                        p4_price_str = "{:,.0f} đ".format(p4.sale_price if p4.is_sale else p4.price).replace(",", ".") if p4 else None
+                        p4_desc = p4.description or "" if p4 else None
+                        p4_img = p4.image_url if p4 else None
+
+                        res = cached_ai_call(
+                            get_comparison_result,
+                            p1.id, p1.name, p1_price_str, p1.description or "", p1.image_url,
+                            p2.id, p2.name, p2_price_str, p2.description or "", p2.image_url,
+                            p3_id, p3_name, p3_price_str, p3_desc, p3_img,
+                            p4_id, p4_name, p4_price_str, p4_desc, p4_img
+                        )
+
+                        if not res:
+                            res = generate_local_comparison_html(p1, p2, p3, p4)
+                        else:
+                            # Chỉ trừ lượt Quota nếu hệ thống gọi AI thành công!
+                            current_user.daily_compare_count += 1
+                            db.session.commit()
+
         except ValueError:
             flash('Dữ liệu sản phẩm không hợp lệ', 'danger')
 

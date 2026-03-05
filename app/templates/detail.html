@@ -563,56 +563,70 @@
                     <h5 class="modal-title fw-bold"><i class="fas fa-balance-scale me-2"></i>Đấu Trường So Sánh AI (Tối đa 4 thiết bị)</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
+
                 <div class="modal-body p-4">
-                    <p class="text-muted mb-4">Hệ thống đã tự động giới hạn hiển thị các sản phẩm <b>cùng danh mục ({{ 'Điện thoại' if product.category == 'phone' else 'Phụ kiện' }})</b> để AI phân tích chuẩn xác nhất.</p>
 
-                    <div class="row g-3">
-                        <!-- Máy 1 (Đang xem) -> Chỉ hiển thị, không cho chọn lại -->
-                        <div class="col-md-3">
-                            <label class="fw-bold small mb-2 text-primary">Máy 1 (Đang xem)</label>
-                            <div class="form-control bg-light border-primary shadow-sm text-truncate fw-bold" style="cursor: not-allowed;" title="{{ product.name }}">
-                                <i class="fas fa-check-circle text-primary me-1"></i> {{ product.name }}
+                    {% if not current_user.is_authenticated %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-lock fa-4x text-muted mb-3 opacity-50"></i>
+                            <h4 class="fw-bold text-dark mb-2">Tính Năng Đặc Quyền Cho Hội Viên</h4>
+                            <p class="text-muted mb-4">Bạn cần đăng nhập để sử dụng tính năng So sánh chuyên sâu bằng Trí tuệ Nhân tạo.<br>Lưu ý: Hạn mức sử dụng hàng ngày sẽ phụ thuộc vào Cấp bậc hạng thẻ của bạn.</p>
+                            <a href="/login" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold shadow-sm">ĐĂNG NHẬP ĐỂ SỬ DỤNG</a>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-4">Hệ thống đã tự động giới hạn hiển thị các sản phẩm <b>cùng danh mục ({{ 'Điện thoại' if product.category == 'phone' else 'Phụ kiện' }})</b> để AI phân tích chuẩn xác nhất. Quota sử dụng của bạn được tính toán tự động dựa trên Hạng thẻ (Rank).</p>
+
+                        <div class="row g-3">
+                            <!-- Máy 1 (Đang xem) -> Chỉ hiển thị, không cho chọn lại -->
+                            <div class="col-md-3">
+                                <label class="fw-bold small mb-2 text-primary">Máy 1 (Đang xem)</label>
+                                <div class="form-control bg-light border-primary shadow-sm text-truncate fw-bold" style="cursor: not-allowed;" title="{{ product.name }}">
+                                    <i class="fas fa-check-circle text-primary me-1"></i> {{ product.name }}
+                                </div>
+                                <input type="hidden" name="product1" value="{{ product.id }}"/>
                             </div>
-                            <input type="hidden" name="product1" value="{{ product.id }}"/>
-                        </div>
 
-                        <!-- Máy 2 -->
-                        <div class="col-md-3">
-                            <label class="fw-bold small mb-2 text-danger">Máy 2 (Bắt buộc) *</label>
-                            <select name="product2" class="form-select border-danger shadow-sm rounded-3 bg-white fw-bold" required>
-                                <option value="" disabled selected>-- Chọn đối thủ 1 --</option>
-                                {% for p in all_products %}
-                                <option value="{{ p.id }}">{{ p.name }} - {{ p.price | vnd }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                            <!-- Máy 2 -->
+                            <div class="col-md-3">
+                                <label class="fw-bold small mb-2 text-danger">Máy 2 (Bắt buộc) *</label>
+                                <select name="product2" class="form-select border-danger shadow-sm rounded-3 bg-white fw-bold" required>
+                                    <option value="" disabled selected>-- Chọn đối thủ 1 --</option>
+                                    {% for p in all_products %}
+                                    <option value="{{ p.id }}">{{ p.name }} - {{ p.price | vnd }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
 
-                        <!-- Máy 3 -->
-                        <div class="col-md-3">
-                            <label class="fw-bold small mb-2 text-muted">Máy 3 (Tùy chọn)</label>
-                            <select name="product3" class="form-select border-0 shadow-sm rounded-3 bg-light">
-                                <option value="" selected>-- Để trống --</option>
-                                {% for p in all_products %}
-                                <option value="{{ p.id }}">{{ p.name }} - {{ p.price | vnd }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                            <!-- Máy 3 -->
+                            <div class="col-md-3">
+                                <label class="fw-bold small mb-2 text-muted">Máy 3 (Tùy chọn)</label>
+                                <select name="product3" class="form-select border-0 shadow-sm rounded-3 bg-light">
+                                    <option value="" selected>-- Để trống --</option>
+                                    {% for p in all_products %}
+                                    <option value="{{ p.id }}">{{ p.name }} - {{ p.price | vnd }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
 
-                        <!-- Máy 4 -->
-                        <div class="col-md-3">
-                            <label class="fw-bold small mb-2 text-muted">Máy 4 (Tùy chọn)</label>
-                            <select name="product4" class="form-select border-0 shadow-sm rounded-3 bg-light">
-                                <option value="" selected>-- Để trống --</option>
-                                {% for p in all_products %}
-                                <option value="{{ p.id }}">{{ p.name }} - {{ p.price | vnd }}</option>
-                                {% endfor %}
-                            </select>
+                            <!-- Máy 4 -->
+                            <div class="col-md-3">
+                                <label class="fw-bold small mb-2 text-muted">Máy 4 (Tùy chọn)</label>
+                                <select name="product4" class="form-select border-0 shadow-sm rounded-3 bg-light">
+                                    <option value="" selected>-- Để trống --</option>
+                                    {% for p in all_products %}
+                                    <option value="{{ p.id }}">{{ p.name }} - {{ p.price | vnd }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
-                    </div>
+                    {% endif %}
                 </div>
+
+                {% if current_user.is_authenticated %}
                 <div class="modal-footer bg-light rounded-bottom-4 justify-content-center">
                     <button type="submit" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold shadow"><i class="fas fa-magic me-2"></i>AI PHÂN TÍCH SO SÁNH</button>
                 </div>
+                {% endif %}
             </form>
         </div>
     </div>

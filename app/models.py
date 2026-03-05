@@ -32,6 +32,10 @@ class User(UserMixin, db.Model):
 
     avatar_url = db.Column(db.String(500), default='https://cdn-icons-png.flaticon.com/512/3135/3135715.png')
 
+    # ---> [NEW: BIẾN THEO DÕI GIỚI HẠN SỬ DỤNG AI THEO NGÀY] <---
+    daily_compare_count = db.Column(db.Integer, default=0)
+    last_compare_date = db.Column(db.Date, nullable=True)
+
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)

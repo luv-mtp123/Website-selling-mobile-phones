@@ -20,6 +20,7 @@ import requests
 from PIL import Image
 import io
 
+
 # [NEW] Khởi tạo thư viện PyTorch cho Visual Search
 try:
     import torch
@@ -202,6 +203,61 @@ def search_image_vector_db(image_file, n_results=4):
     except Exception as e:
         print(f"⚠️ Lỗi tìm kiếm Vector Ảnh: {e}")
         return []
+
+def identify_phone_by_gemini(image_file):
+    """
+    Dùng AI Gemini Vision (Đa phương thức) để nhận diện chính xác TÊN dòng điện thoại từ ảnh.
+    Đáp ứng chuẩn xác yêu cầu: "Đưa ảnh vào và show ra tên điện thoại là gì".
+    """
+    raw_keys = os.environ.get("GEMINI_API_KEY", "")
+    api_keys = [k.strip() for k in raw_keys.split(",") if k.strip()]
+
+    if not api_keys:
+        return None
+
+    try:
+        # Đọc dữ liệu ảnh gốc
+        image_bytes = image_file.read()
+        # Quan trọng: Reset con trỏ file về 0 để các hàm vector phía sau (nếu gọi) không bị lỗi đọc file rỗng
+        image_file.seek(0)
+
+        mime_type = image_file.mimetype if hasattr(image_file, 'mimetype') else 'image/jpeg'
+
+        system_instruction = (
+            "Bạn là chuyên gia nhận diện hình ảnh các thiết bị di động. "
+            "Nhiệm vụ của bạn là: Nhìn vào bức ảnh và xác định ĐÚNG TÊN HÃNG VÀ TÊN DÒNG MÁY điện thoại hiển thị trong ảnh. "
+            "CHỈ TRẢ VỀ CHUỖI JSON DUY NHẤT, tuyệt đối không giải thích thêm. "
+            "LUÔN KÈM THEO TÊN HÃNG. Ví dụ: {\"phone_model\": \"Apple iPhone 15 Pro Max\"} hoặc {\"phone_model\": \"Xiaomi Redmi Note 13 Pro\"}. "
+            "Nếu ảnh không chứa điện thoại hoặc quá mờ không thể nhận diện được, hãy trả về {\"phone_model\": null}."
+        )
+
+        for key in api_keys:
+            try:
+                temp_client = genai.Client(api_key=key)
+                response = temp_client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=[
+                        "Hãy nhận diện tên của dòng điện thoại xuất hiện trong bức ảnh này:",
+                        types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
+                    ],
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_instruction,
+                        response_mime_type="application/json"
+                    )
+                )
+
+                # Bóc tách JSON an toàn
+                clean = re.sub(r"```json|```", "", response.text).strip()
+                parsed = json.loads(clean)
+                return parsed.get("phone_model")
+            except Exception as e:
+                # Nếu Key này lỗi/hết quota thì xoay vòng sang key khác
+                continue
+        return None
+    except Exception as e:
+        print(f"Lỗi AI Vision Nhận diện: {e}")
+        return None
+
 
 def get_serializer(secret_key):
     """
@@ -433,6 +489,7 @@ def build_product_context(user_query):
 
 
 def generate_chatbot_response(user_msg, chat_history=None):
+
     """
     [UPGRADED] Chatbot AI Không Kịch Bản - Xử lý thông minh mọi tình huống thực tế.
     Kết hợp RAG động và khả năng phân tích Context đa tầng.
@@ -456,7 +513,7 @@ def generate_chatbot_response(user_msg, chat_history=None):
     # 2. Xây dựng System Instruction linh hoạt tuyệt đối (Cập nhật luật chống mất hàng)
     system_instruction = (
         "Bạn là nhân viên tư vấn ảo AI xuất sắc, nhiệt tình và chuyên nghiệp của hệ thống bán lẻ MobileStore.\n\n"
-        "MỤC TIÊU VÀ NHIỆM VỤ CỦA BẠN:\n"
+        "MỤC TIÊU VÀ NhiỆM VỤ CỦA BẠN:\n"
         "- Xử lý LINH HOẠT mọi tình huống: Khách chào hỏi, hỏi giá, nhờ tư vấn, so sánh, thắc mắc chính sách, "
         "thậm chí là tán gẫu hoặc bắt bẻ.\n"
         "- Đọc hiểu ngữ cảnh từ [LỊCH SỬ HỘI THOẠI] để phản hồi liền mạch, không hỏi lại những gì khách đã nói.\n"

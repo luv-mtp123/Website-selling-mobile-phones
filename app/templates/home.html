@@ -201,7 +201,7 @@
                 <input type="text" name="q" class="form-control border-0 shadow-none"
                        placeholder="Nhập nhu cầu của bạn..."
                        value="{{ search_query }}">
-                <!-- [NEW] Nút Camera kích hoạt file input ẩn -->
+                <!-- [ĐÃ CẬP NHẬT] Nút Camera kích hoạt file input ẩn -->
                 <button type="button" class="btn btn-white border-0 text-danger px-3" onclick="document.getElementById('visualSearchInput').click()" title="Tìm kiếm bằng hình ảnh">
                     <i class="fas fa-camera fs-5"></i>
                 </button>
@@ -226,18 +226,20 @@
             <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold rounded-pill shadow">Tìm Lộc</button>
         </div>
     </form>
-    <!-- [NEW] Form ẩn chuyên dùng để gửi file ảnh lên Server -->
+
+    <!-- [NEW] Form ẩn chuyên dùng để gửi file ảnh lên Server với Event onchange mới -->
     <form id="visualSearchForm" action="/search/image" method="POST" enctype="multipart/form-data" class="d-none">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        <input type="file" id="visualSearchInput" name="visual_image" accept="image/png, image/jpeg, image/webp" onchange="document.getElementById('visualSearchForm').submit();">
+        <input type="file" id="visualSearchInput" name="visual_image" accept="image/png, image/jpeg, image/webp" onchange="submitVisualSearch()">
     </form>
 </div>
 
 {% if ai_message %}
+<!-- Chỉnh sửa để HTML từ Flask render đúng định dạng thẻ <br>, <b> -->
 <div class="alert alert-warning border-0 shadow d-flex align-items-center mb-5 rounded-4 p-4" role="alert">
     <i class="fas fa-robot fa-2x me-3 text-danger animate__animated animate__tada animate__infinite"></i>
-    <div class="text-dark fw-bold fs-5">
-        {{ ai_message }}
+    <div class="text-dark fw-bold fs-5" style="line-height: 1.6;">
+        {{ ai_message | safe }}
     </div>
 </div>
 {% endif %}
@@ -353,14 +355,13 @@
     </div>
     {% else %}
     <div class="col-12 text-center py-5">
-        </div>
         <h5 class="text-muted fw-bold">Trống trơn... Không tìm thấy sản phẩm nào!</h5>
         <a href="/" class="btn btn-danger rounded-pill px-4 mt-3 fw-bold">Quay Lại Trang Chủ</a>
     </div>
     {% endfor %}
 </div>
 
-<!-- Countdown Script -->
+<!-- Countdown & Visual Search Script -->
 <script>
     function startTimer(duration) {
         var timer = duration, hours, minutes, seconds;
@@ -387,5 +388,21 @@
         var fiveHours = 60 * 60 * 5;
         startTimer(fiveHours);
     });
+
+    // ---> [NEW] Hàm xử lý UI khi khách tải ảnh lên <---
+    function submitVisualSearch() {
+        const fileInput = document.getElementById('visualSearchInput');
+        if(fileInput.files.length > 0) {
+            // Thay đổi text của màn hình Loading toàn cục (bên base.html)
+            document.getElementById('loadingText').innerHTML = '<i class="fas fa-camera me-2"></i>AI Đang Phân Tích Ảnh...';
+            document.getElementById('loadingSubText').innerText = 'Quá trình nhận diện có thể mất 3-5 giây...';
+
+            // Hiện màn hình Loading
+            document.getElementById('loadingOverlay').style.display = 'flex';
+
+            // Gửi form
+            document.getElementById('visualSearchForm').submit();
+        }
+    }
 </script>
 {% endblock %}

@@ -454,7 +454,7 @@ class AIFeaturesTestCase(unittest.TestCase):
         # Kịch bản 4: Gõ sai khoảng cách (không có dấu cách giữa số và chữ "triệu")
         res_no_space = local_analyze_intent("điện thoại 12triệu")
         self.assertEqual(res_no_space['max_price'], 12000000)
-        
+
     # ==============================================================================
     # ---> [NEW] TEST TÍNH NĂNG TÌM KIẾM BẰNG HÌNH ẢNH (VISUAL SEARCH) <---
     # ==============================================================================

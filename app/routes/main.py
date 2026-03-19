@@ -49,7 +49,8 @@ from app.utils import (
     get_similar_products,
     generate_local_comparison_html,
     VoucherValidatorEngine,
-    search_image_vector_db  # ---> [NEW] Import hàm tìm kiếm ảnh
+    search_image_vector_db,
+    identify_phone_by_gemini  # ---> [HOTFIX] Bổ sung Import AI đọc tên máy
 )
 
 main_bp = Blueprint('main', __name__)
@@ -305,19 +306,82 @@ def search_by_image():
         flash(msg, "danger")
         return redirect(url_for('main.home'))
 
-    # Chạy thuật toán so khớp Vector Hình ảnh
-    matched_ids = search_image_vector_db(file, n_results=6)
+    # ---> [FIX LỖI VISUAL SEARCH]: BƯỚC 1 - Dùng AI Đọc Tên Máy Chính Xác Trước <---
+    identified_model = identify_phone_by_gemini(file)
+    products = []
+    ai_message = ""
+    brand = None  # Khởi tạo biến brand để tránh lỗi UnboundLocalError nếu identified_model là None
 
-    if not matched_ids:
-        flash("Không tìm thấy sản phẩm nào có ngoại hình tương đồng.", "info")
-        return redirect(url_for('main.home'))
+    if identified_model:
+        # Lấy được tên máy (VD: "Xiaomi Redmi Note 13 Pro")
+        # Trích xuất thông tin Hãng (Brand) bằng thuật toán có sẵn
+        ai_data = local_analyze_intent(identified_model)
+        brand = ai_data.get('brand')
 
-    # Lấy dữ liệu sản phẩm thực tế từ Database dựa trên ID tìm được
-    ids = [int(i) for i in matched_ids if i.isdigit()]
-    products = Product.query.filter(Product.id.in_(ids), Product.is_active == True).all()
+        base_query = Product.query.filter_by(is_active=True)
 
-    # Sắp xếp lại list products theo đúng thứ tự mảng IDs (Độ giống giảm dần)
-    products.sort(key=lambda p: ids.index(p.id))
+        # Tìm kiếm độ chính xác cao dựa trên các từ khóa của tên máy
+        search_words = identified_model.lower().split()
+        clean_words = [w for w in search_words if w not in ['điện', 'thoại', 'máy', 'smartphone', 'apple', 'samsung', 'xiaomi', 'oppo', 'vivo']]
+
+        if clean_words:
+            # Ép buộc phải khớp ít nhất một phần tên máy
+            conditions = [Product.name.ilike(f"%{word}%") for word in clean_words]
+            products = base_query.filter(and_(*conditions)).all()
+
+        if products:
+            # Lọc lại phát nữa: Bỏ các sản phẩm bị sai Hãng (Đảm bảo yêu cầu: iPhone ko ra Samsung)
+            if brand:
+                products = [p for p in products if p.brand and p.brand.lower() == brand.lower()]
+
+            if products:
+                # ---> TINH CHỈNH THÔNG BÁO THEO YÊU CẦU
+                ai_message = f"📷 Đã nhận diện: {identified_model}. Sản phẩm ĐANG CÓ SẴN tại MobileStore!"
+
+    # ---> [FIX LỖI KIỂU DÁNG]: KẾT HỢP VECTOR HÌNH DÁNG VÀ HÃNG <---
+    # Nếu không tìm thấy máy đích danh, KHÔNG ĐƯỢC lấy bừa máy cùng hãng nữa.
+    # Mà phải lấy danh sách máy GIỐNG HÌNH DÁNG, sau đó lọc ra máy CÙNG HÃNG trong list đó.
+    if not products:
+        file.seek(0) # Trả con trỏ file về 0 để đọc lại ảnh
+        # Tăng n_results lên 12 để có không gian lọc (vì có thể Top 1-3 khác hãng)
+        matched_ids = search_image_vector_db(file, n_results=12)
+
+        if matched_ids:
+            ids = [int(i) for i in matched_ids if i.isdigit()]
+            shape_similar_products = Product.query.filter(Product.id.in_(ids), Product.is_active == True, Product.category == 'phone').all()
+            # Sắp xếp theo độ giống hình dáng giảm dần
+            shape_similar_products.sort(key=lambda p: ids.index(p.id) if p.id in ids else 999)
+
+            if brand:
+                # Ưu tiên 1: Vừa giống hình dáng, vừa cùng hãng
+                same_brand_similar_shape = [p for p in shape_similar_products if p.brand and p.brand.lower() == brand.lower()]
+
+                if same_brand_similar_shape:
+                    products = same_brand_similar_shape[:4] # Lấy top 4
+                    # ---> TINH CHỈNH THÔNG BÁO THEO YÊU CẦU
+                    ai_message = f"📷 Đã nhận diện: {identified_model}. Kho tạm hết dòng này, gợi ý các máy {brand} có THIẾT KẾ TƯƠNG ĐỒNG."
+                else:
+                    # Ưu tiên 2: Giống hình dáng (khác hãng cũng được vì kho hết máy cùng hãng giống vậy)
+                    products = shape_similar_products[:4]
+                    # ---> TINH CHỈNH THÔNG BÁO THEO YÊU CẦU
+                    ai_message = f"📷 Đã nhận diện: {identified_model}. Kho tạm hết dòng này, gợi ý các máy có KIỂU DÁNG TƯƠNG TỰ."
+            else:
+                products = shape_similar_products[:4]
+                if identified_model:
+                    ai_message = f"📷 Đã nhận diện: {identified_model} nhưng kho tạm hết. Gợi ý các sản phẩm có kiểu dáng tương đồng."
+                else:
+                    ai_message = "📷 AI không thể đọc được chữ trên ảnh. Gợi ý các sản phẩm có hình dáng vỏ ngoài tương đồng."
+        else:
+            # Fallback cuối cùng nếu Vector sập
+            if brand:
+                products = Product.query.filter(Product.is_active == True, Product.brand.ilike(f"%{brand}%"), Product.category == 'phone').limit(4).all()
+                ai_message = f"📷 Đã nhận diện: {identified_model}. Kho hết mã cụ thể, mời tham khảo các sản phẩm cùng hãng {brand}."
+            else:
+                if identified_model:
+                    flash(f"Đã nhận diện là {identified_model} nhưng không tìm thấy sản phẩm tương đồng trong kho.", "info")
+                else:
+                    flash("Không tìm thấy sản phẩm nào có ngoại hình tương đồng.", "info")
+                return redirect(url_for('main.home'))
 
     brands = [b[0] for b in db.session.query(Product.brand).distinct().all()]
     hot_products = Product.query.filter_by(is_active=True, is_sale=True).limit(4).all()
@@ -327,7 +391,7 @@ def search_by_image():
         products=products,
         brands=brands,
         search_query="",
-        ai_message="📷 Visual AI: Đã tìm thấy các sản phẩm có kiểu dáng tương đồng với ảnh bạn tải lên!",
+        ai_message=ai_message,
         hot_products=hot_products
     )
 

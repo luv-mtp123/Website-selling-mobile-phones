@@ -60,9 +60,30 @@
         /* Hiệu ứng vật thể rơi (Hoa đào/Lì xì) */
         .petal { position: fixed; top: -50px; z-index: 9999; pointer-events: none; user-select: none; animation: fall linear forwards; opacity: 0.9; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
         @keyframes fall { 0% { transform: translateY(0) rotate(0deg) translateX(0); opacity: 1; } 100% { transform: translateY(105vh) rotate(720deg) translateX(100px); opacity: 0; } }
+
+        /* ========================================================================= */
+        /* ---> [NEW: CSS Màn hình chờ AI Loading Overlay Toàn Cục] <--- */
+        /* ========================================================================= */
+        #loadingOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.85); z-index: 9999; display: none;
+            flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px);
+        }
+        .ai-spinner { width: 4rem; height: 4rem; }
+        .loading-text { margin-top: 20px; font-weight: 900; font-size: 1.5rem; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
+    <!-- [NEW] Màn hình Loading Toàn Cục (Dùng chung cho Visual Search, Compare AI, Comment) -->
+    <div id="loadingOverlay">
+        <div class="spinner-border ai-spinner text-danger" id="loadingSpinner" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="loading-text text-danger" id="loadingText"><i class="fas fa-spinner fa-spin me-2"></i>Đang Xử Lý...</div>
+        <p class="text-muted mt-2 fw-bold" id="loadingSubText">Vui lòng chờ trong giây lát...</p>
+    </div>
+
     <!-- Decor Tết -->
     <div class="tet-couplet left">🌸<br>TÂN<br>NIÊN<br>PHÚ<br>QUÝ</div>
     <div class="tet-couplet right">💰<br>TẤN<br>TÀI<br>TẤN<br>LỘC</div>

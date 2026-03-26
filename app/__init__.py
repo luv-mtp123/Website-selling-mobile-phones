@@ -30,7 +30,6 @@ def create_app(test_config=None):
     app = Flask(__name__)
     # 1. Import file lỗi và file task
     from .errors import errors_bp
-    from .tasks import start_background_tasks
 
     # 1. Cấu hình App & Load .env
     # (Load thủ công vì file này nằm trong thư mục con app/)
@@ -107,10 +106,7 @@ def create_app(test_config=None):
 
     # 5. Kích hoạt các hệ thống chạy ngầm (Chỉ khi không chạy Test)
     if not app.config.get('TESTING'):
-        start_background_tasks(app)
 
-        from .system_logger import SystemAuditLogger
-        SystemAuditLogger(app).init_app_middlewares()
 
         # ---> [HOTFIX BẢO MẬT WINDOWS] <---
         # Ép tất cả các file stream ghi log phải dùng chuẩn UTF-8
@@ -122,13 +118,6 @@ def create_app(test_config=None):
                 except Exception:
                     pass
 
-        # ---> [NEW: KÍCH HOẠT FIREWALL VÀ BACKGROUND WORKER Ở ĐÂY] <---
-        from .security_firewall import MobileStoreFirewall
-        MobileStoreFirewall(app)
-
-        from .notification_worker import BackgroundJobWorker
-        worker = BackgroundJobWorker()
-        worker.start_worker(app)
         # --------------------------------------------------------------
 
     return app

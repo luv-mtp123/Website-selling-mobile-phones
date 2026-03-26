@@ -106,7 +106,7 @@ def dashboard():
 
     if completed_orders:
         df = pd.DataFrame(completed_orders, columns=['order_id', 'date_created', 'product_name', 'quantity'])
-        df['date_created'] = pd.to_datetime(df['date_created'])
+        df['date_created'] = pd.to_datetime(df['date_created']) + pd.Timedelta(hours=7)
         df['hour'] = df['date_created'].dt.hour
 
         if not df['hour'].empty:

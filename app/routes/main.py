@@ -62,7 +62,7 @@ def cached_ai_call(func, *args):
     Giảm tải API Quota và tăng tốc độ xử lý câu trả lời lên gấp 10 lần nhờ mã băm (MD5).
     """
     try:
-        cache_key_content = f"{func.__name__}_{str(args)}_v238_final"
+        cache_key_content = f"{func.__name__}_{str(args)}_v239_final"
         key = hashlib.md5(cache_key_content.encode()).hexdigest()
 
         cached = AICache.query.filter_by(prompt_hash=key).first()
@@ -292,7 +292,7 @@ def home():
 
 
 # =========================================================================
-# ---> [NEW] ROUTE: TÌM KIẾM BẰNG HÌNH ẢNH (VISUAL SEARCH)
+# ---> [UPGRADED] ROUTE: TÌM KIẾM BẰNG HÌNH ẢNH (VISUAL SEARCH) TỐI ƯU 3 TẦNG
 # =========================================================================
 @main_bp.route('/search/image', methods=['POST'])
 def search_by_image():
@@ -306,82 +306,142 @@ def search_by_image():
         flash(msg, "danger")
         return redirect(url_for('main.home'))
 
-    # ---> [FIX LỖI VISUAL SEARCH]: BƯỚC 1 - Dùng AI Đọc Tên Máy Chính Xác Trước <---
-    identified_model = identify_phone_by_gemini(file)
+    # BƯỚC 1: Dùng AI Gemini Đọc và Tách Bạch Cấu Trúc Ảnh
+    ai_data = identify_phone_by_gemini(file)
     products = []
     ai_message = ""
-    brand = None  # Khởi tạo biến brand để tránh lỗi UnboundLocalError nếu identified_model là None
 
-    if identified_model:
-        # Lấy được tên máy (VD: "Xiaomi Redmi Note 13 Pro")
-        # Trích xuất thông tin Hãng (Brand) bằng thuật toán có sẵn
-        ai_data = local_analyze_intent(identified_model)
+    brand = None
+    model = None
+
+    # [FIX LỖI CRASH 500]: Ép kiểu an toàn nếu AI trả về List [{...}] thay vì Dict {...}
+    if isinstance(ai_data, list):
+        ai_data = ai_data[0] if len(ai_data) > 0 else {}
+
+    if ai_data and isinstance(ai_data, dict) and ai_data.get('model'):
         brand = ai_data.get('brand')
+        model = str(ai_data.get('model')).strip()
+        confidence = int(ai_data.get('confidence', 0))
+        # [NEW]: Lấy mảng từ khóa để search linh hoạt
+        search_keywords = ai_data.get('search_keywords', [])
 
-        base_query = Product.query.filter_by(is_active=True)
+        if confidence < 40:
+             flash("Ảnh khá mờ hoặc thiếu góc độ, AI không chắc chắn 100%. Gợi ý kết quả gần giống nhất.", "warning")
 
-        # Tìm kiếm độ chính xác cao dựa trên các từ khóa của tên máy
-        search_words = identified_model.lower().split()
-        clean_words = [w for w in search_words if w not in ['điện', 'thoại', 'máy', 'smartphone', 'apple', 'samsung', 'xiaomi', 'oppo', 'vivo']]
+        base_query = Product.query.filter_by(is_active=True, category='phone')
 
-        if clean_words:
-            # Ép buộc phải khớp ít nhất một phần tên máy
-            conditions = [Product.name.ilike(f"%{word}%") for word in clean_words]
-            products = base_query.filter(and_(*conditions)).all()
+        # --- [TẦNG 1 MỚI]: TÌM KIẾM LINH HOẠT VỚI LOGIC (AND) ---
+        if brand:
+            base_query = base_query.filter(Product.brand.ilike(f"%{brand}%"))
 
-        if products:
-            # Lọc lại phát nữa: Bỏ các sản phẩm bị sai Hãng (Đảm bảo yêu cầu: iPhone ko ra Samsung)
-            if brand:
-                products = [p for p in products if p.brand and p.brand.lower() == brand.lower()]
+        # Khắc phục lỗi SQL cứng nhắc: Chuyển từ tìm nguyên cụm "%Redmi Note 13 Pro%"
+        # Sang tìm đồng thời: Chứa "Redmi" VÀ chứa "Note" VÀ chứa "13" VÀ chứa "Pro"
+        if not search_keywords and model:
+            search_keywords = model.split()
 
-            if products:
-                # ---> TINH CHỈNH THÔNG BÁO THEO YÊU CẦU
-                ai_message = f"📷 Đã nhận diện: {identified_model}. Sản phẩm ĐANG CÓ SẴN tại MobileStore!"
+        conditions = []
+        for kw in search_keywords:
+            if brand and kw.lower() == brand.lower(): continue  # Bỏ qua chữ hãng vì đã lọc trên
+            # ---> [SỬA LỖI 1]: Xóa bỏ việc chặn từ khóa < 2 ký tự.
+            # Chữ số "8" hay chữ "X", "V" chỉ có 1 ký tự nhưng CỰC KỲ quan trọng để phân biệt dòng máy!
+            if len(kw) == 1 and not kw.isalnum(): continue
+            conditions.append(Product.name.ilike(f"%{kw}%"))
 
-    # ---> [FIX LỖI KIỂU DÁNG]: KẾT HỢP VECTOR HÌNH DÁNG VÀ HÃNG <---
-    # Nếu không tìm thấy máy đích danh, KHÔNG ĐƯỢC lấy bừa máy cùng hãng nữa.
-    # Mà phải lấy danh sách máy GIỐNG HÌNH DÁNG, sau đó lọc ra máy CÙNG HÃNG trong list đó.
-    if not products:
-        file.seek(0) # Trả con trỏ file về 0 để đọc lại ảnh
-        # Tăng n_results lên 12 để có không gian lọc (vì có thể Top 1-3 khác hãng)
-        matched_ids = search_image_vector_db(file, n_results=12)
+        if conditions:
+            exact_products_raw = base_query.filter(and_(*conditions)).all()
+        else:
+            exact_products_raw = []
+
+        strict_products = []
+        if exact_products_raw:
+            # ---> [SỬA LỖI 2]: THUẬT TOÁN LỌC NGHIÊM NGẶT (V2) - ÉP KHỚP THẾ HỆ MÁY <---
+            model_lower = model.lower() if model else " ".join([k.lower() for k in search_keywords])
+
+            # [FIX LỖI MẢNG SUFFIX]: Bổ sung hậu tố của Samsung (Fold, Flip, Edge, Lite, Classic)
+            suffixes = ['pro', 'max', 'plus', 'ultra', 'ti', 'fe', 'se', 'mini', 'fold', 'flip', 'edge', 'lite', 'classic']
+
+            for p in exact_products_raw:
+                p_name_lower = p.name.lower()
+                is_valid = True
+
+                # Kiểm tra A: Hậu tố (Plus, Pro, Ultra, Mini...) phải khớp
+                for suf in suffixes:
+                    # [FIX LỖI DÍNH CHỮ]: Người nhập DB có thể gõ "promax", cần tách ra để regex chuẩn
+                    p_name_check = p_name_lower.replace('promax', 'pro max')
+                    model_check = model_lower.replace('promax', 'pro max')
+
+                    if re.search(rf'\b{suf}\b', p_name_check) and not re.search(rf'\b{suf}\b', model_check):
+                        is_valid = False
+                        break
+
+                # Kiểm tra B (QUAN TRỌNG NHẤT): Số thế hệ máy & Dòng Samsung/iPhone PHẢI KHỚP
+                # Loại bỏ chữ '5g', '4g' trước để hàm Regex không bóc nhầm số 5 và số 4
+                db_clean = p_name_lower.replace('5g', '').replace('4g', '')
+                ai_clean = model_lower.replace('5g', '').replace('4g', '')
+
+                # Tách chữ và số bằng khoảng trắng để tránh lỗi (VD: "S24" và "S 24" sẽ đều bị regex bóc chuẩn xác)
+                db_clean = re.sub(r'([a-z])(\d)', r'\1 \2', db_clean)
+                ai_clean = re.sub(r'([a-z])(\d)', r'\1 \2', ai_clean)
+
+                # [BẢN VÁ LỖI CỰC MẠNH CHO SAMSUNG VÀ APPLE]:
+                # Biểu thức Regex mới bóc chuẩn xác: (1) Mọi số (2) Tên đặc trưng dòng máy (note, fold, flip, z, s, a, m) (3) Tên của Apple
+                regex_pattern = r'\b\d+\b|\bnote\b|\bfold\b|\bflip\b|\bz\b|\bs\b|\ba\b|\bm\b|\bxr\b|\bxs\b|\bx\b'
+                db_gen_tokens = re.findall(regex_pattern, db_clean)
+                ai_gen_tokens = re.findall(regex_pattern, ai_clean)
+
+                for token in db_gen_tokens:
+                    # Ràng buộc chéo: Nếu máy ở DB là "S23" (có 's', '23'), mà ảnh khách là "A23" (có 'a', '23') -> Đánh trượt
+                    if token not in ai_gen_tokens:
+                        is_valid = False
+                        break
+
+                if is_valid:
+                    strict_products.append(p)
+
+        if strict_products:
+            # Nếu tìm thấy chính xác bản máy đó trong shop -> Chỉ hiển thị nó!
+            products = strict_products
+            ai_message = f"🎯 Đã nhận diện: {brand or ''} {model} (Độ tin cậy: {confidence}%). Chỉ hiển thị dòng máy chính xác!"
+        else:
+            # ---> [UPDATE: XÓA BỎ VECTOR FALLBACK - LÀM THEO LỜI THẦY GÓP Ý] <---
+            # AI đọc được tên máy, nhưng shop không bán -> Trả về KHÔNG CÓ.
+            # Đồng thời hiển thị phân khúc giá do AI gán nhãn.
+            products = []  # Trả về rỗng để giao diện hiển thị "Không tìm thấy"
+            price_segment = ai_data.get('price_segment', 'Không xác định')
+
+            ai_message = (
+                f"🎯 Đã nhận diện thiết bị: <b>{brand or ''} {model}</b><br>"
+                f"🏷️ Phân loại AI: <b>{price_segment}</b><br>"
+                f"❌ <b>Kết quả:</b> Rất tiếc, sản phẩm này hiện <b>KHÔNG CÓ</b> sẵn trong cửa hàng của chúng tôi."
+            )
+
+    # --- [TẦNG 3]: VISUAL VECTOR FALLBACK CHỈ CHẠY KHI AI MÙ CHỮ, KHÔNG NHẬN DIỆN ĐƯỢC TÊN MÁY ---
+    # THÊM ĐIỀU KIỆN "and not model": Tức là nếu AI đã biết tên máy rồi thì KHÔNG ĐƯỢC chạy tầng 3 nữa
+    if not products and not model:
+        file.seek(0) # Trả con trỏ file về 0
+        matched_ids = search_image_vector_db(file, n_results=5)
 
         if matched_ids:
             ids = [int(i) for i in matched_ids if i.isdigit()]
-            shape_similar_products = Product.query.filter(Product.id.in_(ids), Product.is_active == True, Product.category == 'phone').all()
-            # Sắp xếp theo độ giống hình dáng giảm dần
+            shape_similar_products = Product.query.filter(Product.id.in_(ids), Product.is_active == True).all()
+
             shape_similar_products.sort(key=lambda p: ids.index(p.id) if p.id in ids else 999)
 
             if brand:
-                # Ưu tiên 1: Vừa giống hình dáng, vừa cùng hãng
-                same_brand_similar_shape = [p for p in shape_similar_products if p.brand and p.brand.lower() == brand.lower()]
+                same_brand_shape = [p for p in shape_similar_products if p.brand and p.brand.lower() == brand.lower()]
 
-                if same_brand_similar_shape:
-                    products = same_brand_similar_shape[:4] # Lấy top 4
-                    # ---> TINH CHỈNH THÔNG BÁO THEO YÊU CẦU
-                    ai_message = f"📷 Đã nhận diện: {identified_model}. Kho tạm hết dòng này, gợi ý các máy {brand} có THIẾT KẾ TƯƠNG ĐỒNG."
+                if same_brand_shape:
+                    products = same_brand_shape[:4]
+                    ai_message = f"📷 AI không đọc được tên máy. Đã quét theo BỐ CỤC CAMERA để gợi ý {len(products)} thiết bị {brand}."
                 else:
-                    # Ưu tiên 2: Giống hình dáng (khác hãng cũng được vì kho hết máy cùng hãng giống vậy)
                     products = shape_similar_products[:4]
-                    # ---> TINH CHỈNH THÔNG BÁO THEO YÊU CẦU
-                    ai_message = f"📷 Đã nhận diện: {identified_model}. Kho tạm hết dòng này, gợi ý các máy có KIỂU DÁNG TƯƠNG TỰ."
+                    ai_message = f"📷 AI không tìm thấy máy chính xác. Gợi ý các máy có CỤM CAMERA / HÌNH DÁNG tương đồng."
             else:
                 products = shape_similar_products[:4]
-                if identified_model:
-                    ai_message = f"📷 Đã nhận diện: {identified_model} nhưng kho tạm hết. Gợi ý các sản phẩm có kiểu dáng tương đồng."
-                else:
-                    ai_message = "📷 AI không thể đọc được chữ trên ảnh. Gợi ý các sản phẩm có hình dáng vỏ ngoài tương đồng."
+                ai_message = "📷 Không thể nhận diện tên. Đã tự động lọc các máy có cụm camera hoặc mặt lưng giống với ảnh nhất."
         else:
-            # Fallback cuối cùng nếu Vector sập
-            if brand:
-                products = Product.query.filter(Product.is_active == True, Product.brand.ilike(f"%{brand}%"), Product.category == 'phone').limit(4).all()
-                ai_message = f"📷 Đã nhận diện: {identified_model}. Kho hết mã cụ thể, mời tham khảo các sản phẩm cùng hãng {brand}."
-            else:
-                if identified_model:
-                    flash(f"Đã nhận diện là {identified_model} nhưng không tìm thấy sản phẩm tương đồng trong kho.", "info")
-                else:
-                    flash("Không tìm thấy sản phẩm nào có ngoại hình tương đồng.", "info")
-                return redirect(url_for('main.home'))
+            flash("Ảnh quá mờ hoặc không có thiết bị di động, không thể nhận diện được.", "warning")
+            return redirect(url_for('main.home'))
 
     brands = [b[0] for b in db.session.query(Product.brand).distinct().all()]
     hot_products = Product.query.filter_by(is_active=True, is_sale=True).limit(4).all()
@@ -720,7 +780,7 @@ def payment_qr(order_id):
     account_name = urllib.parse.quote("MOBILE STORE")
     content = urllib.parse.quote(f"THANHTOAN DONHANG {order.id}")
 
-    qr_url = f"[https://img.vietqr.io/image/](https://img.vietqr.io/image/){bank_id}-{account_no}-compact2.png?amount={order.total_price}&addInfo={content}&accountName={account_name}"
+    qr_url = f"https://img.vietqr.io/image/{bank_id}-{account_no}-compact2.png?amount={order.total_price}&addInfo={content}&accountName={account_name}"
 
     return render_template('payment_qr.html', order=order, qr_url=qr_url, remaining_seconds=int(remaining_seconds))
 
@@ -863,7 +923,7 @@ def compare_page():
                 if p1 and p2:
                     selected_prods = [p for p in [p1, p2, p3, p4] if p is not None]
 
-                    # ---> BƯỚC 2: QUYẾT ĐỊNH CHO GỌI API HAY ÉP DÙNG LOCAL
+                    # ---> BƯỚC 2: QUYẾT ĐỊNH CHO GỌI API TAT ÉP DÙNG LOCAL
                     if current_user.daily_compare_count >= max_attempts:
                         flash(f'Bạn đã dùng hết {max_attempts}/{max_attempts} lượt AI phân tích hôm nay. Hệ thống tự động chuyển sang Bảng Tiêu chuẩn.', 'warning')
                         res = generate_local_comparison_html(p1, p2, p3, p4)

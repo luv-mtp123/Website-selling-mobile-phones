@@ -206,8 +206,9 @@ def search_image_vector_db(image_file, n_results=4):
 
 def identify_phone_by_gemini(image_file):
     """
-    Dùng AI Gemini Vision (Đa phương thức) để nhận diện chính xác TÊN dòng điện thoại từ ảnh.
-    Đáp ứng chuẩn xác yêu cầu: "Đưa ảnh vào và show ra tên điện thoại là gì".
+    [TỐI ƯU CẤP ĐỘ 3] Ép buộc AI dùng Chain-of-Thought để phân tích các tiểu tiết siêu nhỏ
+    giữa các máy gần giống nhau (như S23 vs S24, Note 12 vs Note 13).
+    Bổ sung mảng `search_keywords` để fix cứng lỗi tìm kiếm SQL Database.
     """
     raw_keys = os.environ.get("GEMINI_API_KEY", "")
     api_keys = [k.strip() for k in raw_keys.split(",") if k.strip()]
@@ -216,19 +217,27 @@ def identify_phone_by_gemini(image_file):
         return None
 
     try:
-        # Đọc dữ liệu ảnh gốc
         image_bytes = image_file.read()
-        # Quan trọng: Reset con trỏ file về 0 để các hàm vector phía sau (nếu gọi) không bị lỗi đọc file rỗng
         image_file.seek(0)
-
         mime_type = image_file.mimetype if hasattr(image_file, 'mimetype') else 'image/jpeg'
 
         system_instruction = (
-            "Bạn là chuyên gia nhận diện hình ảnh các thiết bị di động. "
-            "Nhiệm vụ của bạn là: Nhìn vào bức ảnh và xác định ĐÚNG TÊN HÃNG VÀ TÊN DÒNG MÁY điện thoại hiển thị trong ảnh. "
-            "CHỈ TRẢ VỀ CHUỖI JSON DUY NHẤT, tuyệt đối không giải thích thêm. "
-            "LUÔN KÈM THEO TÊN HÃNG. Ví dụ: {\"phone_model\": \"Apple iPhone 15 Pro Max\"} hoặc {\"phone_model\": \"Xiaomi Redmi Note 13 Pro\"}. "
-            "Nếu ảnh không chứa điện thoại hoặc quá mờ không thể nhận diện được, hãy trả về {\"phone_model\": null}."
+            "Bạn là chuyên gia nhận diện hình ảnh các thiết bị di động hàng đầu thế giới, ĐẶC BIỆT LÀ SAMSUNG VÀ IPHONE. "
+            "Các dòng máy cùng Series thường có mặt lưng giống nhau tới 95%. "
+            "ĐỂ KHÔNG NHẬN DIỆN SAI, BẠN BẮT BUỘC PHẢI PHÂN TÍCH NHỮNG ĐIỂM SAU:\n"
+            "- Với iPhone: Màn hình tai thỏ to/nhỏ hay Dynamic Island. Cụm camera 2 mắt dọc/chéo, 3 mắt to/nhỏ. Viền thép bóng hay nhôm nhám.\n"
+            "- Với Samsung: Cụm camera sau (liền khối Contour Cut như S21, tách rời từng mắt như S23/S24, hay cụm chữ nhật to như S20 Ultra/Note 20). Kiểu dáng (Vuông vức có khe cắm bút S-Pen như dòng Note/S Ultra, gập ngang màn hình lớn như Z Fold, gập dọc vỏ sò như Z Flip). Các dòng A/M thường có cụm camera đơn giản hơn, mặt lưng nhựa hoặc kính phẳng.\n"
+            "- NẾU THẤY CHỮ TRÊN NẮP LƯNG (như logo Samsung, Z, iPhone): Bắt buộc phải đọc kỹ để chốt chính xác là thế hệ nào.\n\n"
+            "Nhiệm vụ: Xuất ra thông tin thiết bị dưới dạng cấu trúc JSON nguyên ngặt.\n"
+            "LUẬT LỆ JSON:\n"
+            "1. 'brand': Tên hãng (Apple, Samsung, Xiaomi...). Nếu mờ/không nhận ra, ghi null.\n"
+            "2. 'model': Tên dòng máy ĐẦY ĐỦ VÀ CHI TIẾT NHẤT (VD: 'Galaxy Z Fold 5', 'Galaxy S23 Ultra', 'Redmi Note 13 Pro', 'iPhone 15 Pro Max').\n"
+            "3. 'search_keywords': MỘT MẢNG TỪ KHÓA ĐỂ TÌM KIẾM SQL. Tách riêng biệt từng phần (hãng, dòng, số thế hệ, hậu tố). (VD: ['samsung', 'z', 'fold', '5'] hoặc ['iphone', '15', 'pro', 'max']). Cực kỳ quan trọng để hệ thống không bị lỗi database.\n"
+            "4. 'price_segment': Gắn nhãn phân khúc của máy này (VD: 'Máy đời cũ/Giá rẻ', 'Tầm trung', 'Cận cao cấp', 'Cao cấp').\n"
+            "5. 'confidence': 0 đến 100.\n"
+            "6. 'details': Trình bày quá trình suy luận của bạn. TẠI SAO bạn khẳng định đây là thế hệ này chứ không phải thế hệ trước nó? (VD: 'Tôi thấy viền vát phẳng và 2 camera chéo, lưng bóng nên đây là iPhone 13 chứ không phải 12').\n"
+            "7. NẾU ẢNH MỜ, THIẾU GÓC: Trả về brand: null, model: null, confidence: < 40.\n"
+            "TUYỆT ĐỐI CHỈ TRẢ VỀ 1 CHUỖI JSON DUY NHẤT."
         )
 
         for key in api_keys:
@@ -237,21 +246,20 @@ def identify_phone_by_gemini(image_file):
                 response = temp_client.models.generate_content(
                     model='gemini-2.5-flash',
                     contents=[
-                        "Hãy nhận diện tên của dòng điện thoại xuất hiện trong bức ảnh này:",
+                        "Hãy phân tích thật kỹ tiểu tiết và nhận diện thiết bị trong ảnh này:",
                         types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
                     ],
                     config=types.GenerateContentConfig(
                         system_instruction=system_instruction,
-                        response_mime_type="application/json"
+                        response_mime_type="application/json",
+                        temperature=0.1
                     )
                 )
 
-                # Bóc tách JSON an toàn
                 clean = re.sub(r"```json|```", "", response.text).strip()
                 parsed = json.loads(clean)
-                return parsed.get("phone_model")
+                return parsed
             except Exception as e:
-                # Nếu Key này lỗi/hết quota thì xoay vòng sang key khác
                 continue
         return None
     except Exception as e:

@@ -2339,3 +2339,298 @@ AttributeError: 'tuple' object has no attribute 'get'
 [2026-03-19 12:40:36,357] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 5158.59ms
 [2026-03-19 12:41:12,773] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 5852.24ms
 [2026-03-19 12:41:36,273] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 5458.49ms
+[2026-03-19 16:52:24,265] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-19 18:09:41,714] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-19 18:09:44,395] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 25.65ms
+[2026-03-19 18:10:01,620] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 8620.76ms
+[2026-03-19 18:10:23,910] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 8330.2ms
+[2026-03-19 18:10:23,969] WARNING in system_logger: IP: 127.0.0.1 | GET /favicon.ico | Status: 404 | Time: 3.68ms
+[2026-03-19 18:10:42,487] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 7232.24ms
+[2026-03-19 18:11:03,501] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 6839.53ms
+[2026-03-19 20:11:21,955] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-19 20:11:40,552] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 23.55ms
+[2026-03-19 20:11:55,366] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9322.04ms
+[2026-03-19 20:12:19,955] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 13616.61ms
+[2026-03-19 20:13:05,632] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 7609.25ms
+[2026-03-19 20:14:02,340] INFO in system_logger: IP: 127.0.0.1 | GET /product/6 | Status: 200 | Time: 58.51ms
+[2026-03-19 20:14:21,614] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.0ms
+[2026-03-19 20:31:22,284] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 8088.36ms
+[2026-03-19 20:33:57,909] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-19 20:34:22,739] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 25.0ms
+[2026-03-19 20:34:38,489] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 6392.52ms
+[2026-03-19 20:35:11,443] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 7860.31ms
+[2026-03-19 20:35:31,754] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9328.09ms
+[2026-03-19 20:35:38,485] INFO in system_logger: IP: 127.0.0.1 | GET /product/12 | Status: 200 | Time: 57.04ms
+[2026-03-19 20:36:18,670] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 7446.03ms
+[2026-03-19 20:37:52,650] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 7120.44ms
+[2026-03-19 20:41:00,341] INFO in system_logger: IP: 127.0.0.1 | GET /login | Status: 200 | Time: 3.03ms
+[2026-03-19 20:41:04,875] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 126.62ms
+[2026-03-19 20:41:04,953] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 66.62ms
+[2026-03-19 20:41:15,392] INFO in system_logger: IP: 127.0.0.1 | GET /admin/product/edit/1 | Status: 200 | Time: 12.0ms
+[2026-03-19 20:41:52,827] INFO in system_logger: IP: 127.0.0.1 | GET /admin/product/edit/2 | Status: 200 | Time: 1.0ms
+[2026-03-19 20:42:53,928] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.04ms
+[2026-03-19 20:43:10,569] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 7749.81ms
+[2026-03-19 20:43:39,126] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 6691.9ms
+[2026-03-19 20:43:59,813] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 7998.39ms
+[2026-03-19 20:44:23,977] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 8870.24ms
+[2026-03-19 20:44:52,628] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 10653.46ms
+[2026-03-19 20:45:15,944] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 8392.21ms
+[2026-03-19 21:01:58,472] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-19 21:02:02,866] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 24.0ms
+[2026-03-19 21:02:07,483] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 8096.73ms
+[2026-03-19 21:02:15,355] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 8398.96ms
+[2026-03-19 21:14:01,335] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-19 21:14:01,544] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 21.98ms
+[2026-03-19 21:14:06,478] INFO in system_logger: IP: 127.0.0.1 | POST /cart/add/5 | Status: 302 | Time: 2.0ms
+[2026-03-19 21:14:06,494] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.03ms
+[2026-03-19 21:14:07,334] INFO in system_logger: IP: 127.0.0.1 | GET /cart | Status: 200 | Time: 6.97ms
+[2026-03-19 21:14:08,442] INFO in system_logger: IP: 127.0.0.1 | GET /checkout | Status: 200 | Time: 6.01ms
+[2026-03-19 21:14:14,428] INFO in system_logger: IP: 127.0.0.1 | POST /checkout | Status: 302 | Time: 12.0ms
+[2026-03-19 21:14:14,444] INFO in system_logger: IP: 127.0.0.1 | GET /payment/qr/1 | Status: 200 | Time: 5.0ms
+[2026-03-19 21:14:17,479] INFO in system_logger: IP: 127.0.0.1 | GET /api/payment/check/1 | Status: 200 | Time: 1.03ms
+[2026-03-19 21:14:20,484] INFO in system_logger: IP: 127.0.0.1 | GET /api/payment/check/1 | Status: 200 | Time: 4.0ms
+[2026-03-19 21:14:23,487] INFO in system_logger: IP: 127.0.0.1 | GET /api/payment/check/1 | Status: 200 | Time: 2.04ms
+[2026-03-19 21:14:23,906] INFO in system_logger: IP: 127.0.0.1 | GET /test/simulate-bank-success/1 | Status: 200 | Time: 5.0ms
+[2026-03-19 21:14:26,487] INFO in system_logger: IP: 127.0.0.1 | GET /api/payment/check/1 | Status: 200 | Time: 2.04ms
+[2026-03-19 21:14:29,600] INFO in system_logger: IP: 127.0.0.1 | GET /dashboard | Status: 200 | Time: 45.0ms
+[2026-03-19 21:14:41,974] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.0ms
+[2026-03-19 21:15:03,708] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.0ms
+[2026-03-19 21:15:21,631] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 14378.78ms
+[2026-03-19 21:15:46,592] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 8462.37ms
+[2026-03-19 21:16:13,220] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 7374.36ms
+[2026-03-19 21:16:36,212] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 11526.13ms
+[2026-03-19 21:16:53,628] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 7827.12ms
+[2026-03-19 21:17:18,044] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 12504.83ms
+[2026-03-19 21:37:56,331] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-19 21:41:17,072] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 27.86ms
+[2026-03-19 21:41:33,828] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 8876.68ms
+[2026-03-19 21:41:33,895] WARNING in system_logger: IP: 127.0.0.1 | GET /favicon.ico | Status: 404 | Time: 3.45ms
+[2026-03-19 21:42:11,543] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9304.06ms
+[2026-03-19 21:42:42,034] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 21392.11ms
+[2026-03-19 21:43:27,993] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 8333.71ms
+[2026-03-19 21:44:10,708] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 14468.17ms
+[2026-03-19 21:44:41,022] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 13664.84ms
+[2026-03-19 21:46:12,310] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 11678.95ms
+[2026-03-19 21:46:52,524] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 14852.01ms
+[2026-03-19 21:47:43,451] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 12658.55ms
+[2026-03-19 21:48:24,109] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 23683.84ms
+[2026-03-19 21:49:19,054] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 15799.26ms
+[2026-03-19 21:49:46,112] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9321.17ms
+[2026-03-19 21:50:48,277] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 8484.93ms
+[2026-03-19 21:55:16,957] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 14827.73ms
+[2026-03-19 21:55:39,662] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 13797.95ms
+[2026-03-19 21:56:02,152] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 8601.56ms
+[2026-03-19 21:56:34,472] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 20604.84ms
+[2026-03-20 07:00:30,726] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-20 07:01:07,391] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 31.55ms
+[2026-03-20 07:03:48,090] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 302 | Time: 0.0ms
+[2026-03-20 07:03:48,107] INFO in system_logger: IP: 127.0.0.1 | GET /login | Status: 200 | Time: 4.89ms
+[2026-03-20 07:03:48,203] WARNING in system_logger: IP: 127.0.0.1 | GET /favicon.ico | Status: 404 | Time: 2.96ms
+[2026-03-20 07:03:54,420] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 145.71ms
+[2026-03-20 07:03:54,504] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 68.23ms
+[2026-03-20 07:03:57,087] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 10.63ms
+[2026-03-20 07:04:05,108] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 11.64ms
+[2026-03-20 07:04:08,985] INFO in system_logger: IP: 127.0.0.1 | GET /product/2 | Status: 200 | Time: 64.66ms
+[2026-03-20 07:04:57,458] INFO in system_logger: IP: 127.0.0.1 | POST /compare | Status: 200 | Time: 25749.07ms
+[2026-03-20 07:06:48,772] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 11.43ms
+[2026-03-20 07:06:49,162] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.24ms
+[2026-03-20 07:09:39,562] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 14298.46ms
+[2026-03-20 07:21:25,623] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 32502.18ms
+[2026-03-20 07:23:02,570] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9309.52ms
+[2026-03-20 07:23:50,235] INFO in system_logger: IP: 127.0.0.1 | GET /product/9 | Status: 200 | Time: 13.49ms
+[2026-03-21 09:57:31,954] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-21 09:58:27,993] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 35.65ms
+[2026-03-21 09:58:45,598] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 11098.33ms
+[2026-03-21 09:58:45,656] WARNING in system_logger: IP: 127.0.0.1 | GET /favicon.ico | Status: 404 | Time: 3.0ms
+[2026-03-21 10:22:13,450] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-21 10:22:50,930] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 21.22ms
+[2026-03-21 10:23:01,477] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 6966.99ms
+[2026-03-21 10:24:24,626] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 10597.01ms
+[2026-03-21 10:25:15,829] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 11577.58ms
+[2026-03-21 10:25:29,243] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 7043.17ms
+[2026-03-21 10:26:10,821] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9308.56ms
+[2026-03-21 10:29:03,664] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 13954.01ms
+[2026-03-21 10:29:22,613] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9761.69ms
+[2026-03-21 10:29:46,182] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 13327.93ms
+[2026-03-21 10:30:58,796] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-21 10:31:11,740] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 43.71ms
+[2026-03-21 10:31:11,748] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.4ms
+[2026-03-21 10:31:27,391] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9343.12ms
+[2026-03-21 10:31:51,417] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9499.37ms
+[2026-03-21 10:32:09,865] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 7772.02ms
+[2026-03-21 10:32:58,551] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-21 10:33:17,215] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 24.31ms
+[2026-03-21 10:33:30,006] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 6972.19ms
+[2026-03-21 10:34:36,283] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 7401.52ms
+[2026-03-21 10:36:20,542] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9220.16ms
+[2026-03-21 10:36:39,786] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9943.76ms
+[2026-03-21 10:36:56,712] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9661.0ms
+[2026-03-21 10:40:18,278] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 11494.94ms
+[2026-03-21 10:40:35,473] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 6739.24ms
+[2026-03-21 10:45:06,037] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 12020.11ms
+[2026-03-21 10:47:21,275] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 8.0ms
+[2026-03-21 10:49:30,447] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-21 10:49:51,418] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 23.24ms
+[2026-03-21 10:50:06,693] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 11016.36ms
+[2026-03-21 10:50:33,491] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 16698.09ms
+[2026-03-21 10:50:55,504] INFO in system_logger: IP: 127.0.0.1 | GET /product/5 | Status: 200 | Time: 52.63ms
+[2026-03-21 10:50:57,090] INFO in system_logger: IP: 127.0.0.1 | GET /login | Status: 200 | Time: 2.78ms
+[2026-03-21 10:51:00,862] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 127.9ms
+[2026-03-21 10:51:00,978] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 104.18ms
+[2026-03-21 10:51:04,858] INFO in system_logger: IP: 127.0.0.1 | GET /admin/product/edit/5 | Status: 200 | Time: 13.61ms
+[2026-03-21 10:51:09,662] INFO in system_logger: IP: 127.0.0.1 | POST /admin/product/edit/5 | Status: 302 | Time: 695.84ms
+[2026-03-21 10:51:09,682] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 9.02ms
+[2026-03-21 10:51:11,811] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 15.55ms
+[2026-03-21 10:51:33,304] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 17118.09ms
+[2026-03-21 10:51:55,833] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 11844.18ms
+[2026-03-21 10:52:23,678] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 17656.86ms
+[2026-03-21 10:52:47,440] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 11744.95ms
+[2026-03-21 10:53:08,011] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9756.57ms
+[2026-03-21 10:53:13,060] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.01ms
+[2026-03-21 10:54:19,688] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 13034.74ms
+[2026-03-21 10:54:51,629] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 12857.16ms
+[2026-03-21 10:55:49,193] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 11982.27ms
+[2026-03-21 10:57:33,061] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 17698.58ms
+[2026-03-21 11:07:28,840] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-21 11:07:58,245] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 37.08ms
+[2026-03-21 11:09:51,330] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 10690.44ms
+[2026-03-21 11:11:01,776] ERROR in app: Exception on /search/image [POST]
+Traceback (most recent call last):
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 317, in search_by_image
+    if ai_data and ai_data.get('model'):
+                   ^^^^^^^^^^^
+AttributeError: 'list' object has no attribute 'get'
+[2026-03-21 11:11:01,821] ERROR in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 500 | Time: 12945.03ms
+[2026-03-21 11:11:47,056] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-21 11:11:54,808] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 40.36ms
+[2026-03-21 11:12:16,930] ERROR in app: Exception on /search/image [POST]
+Traceback (most recent call last):
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Windows 11 Dev\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Python\Website-selling-mobile-phones\app\routes\main.py", line 317, in search_by_image
+    if ai_data and ai_data.get('model'):
+                   ^^^^^^^^^^^
+AttributeError: 'list' object has no attribute 'get'
+[2026-03-21 11:12:16,936] ERROR in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 500 | Time: 18347.5ms
+[2026-03-21 11:13:03,334] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 10369.44ms
+[2026-03-21 11:14:22,201] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-21 11:14:30,844] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 29.0ms
+[2026-03-21 11:14:48,714] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 13254.86ms
+[2026-03-21 11:16:24,027] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 11654.45ms
+[2026-03-21 11:17:20,039] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 12605.36ms
+[2026-03-21 11:17:58,254] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9667.93ms
+[2026-03-21 11:18:42,986] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 13502.79ms
+[2026-03-21 11:19:40,129] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 15837.16ms
+[2026-03-21 11:20:46,135] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 15060.06ms
+[2026-03-21 11:22:26,860] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 16039.53ms
+[2026-03-21 11:22:49,463] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 13453.16ms
+[2026-03-21 11:23:14,956] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 16508.31ms
+[2026-03-21 11:23:31,451] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 10395.24ms
+[2026-03-21 11:23:59,779] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 22330.98ms
+[2026-03-21 11:29:01,947] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-21 11:29:14,428] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 30.8ms
+[2026-03-21 11:29:42,501] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 19997.03ms
+[2026-03-21 11:36:41,296] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-21 11:36:53,406] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 24.54ms
+[2026-03-21 11:38:06,183] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 11413.46ms
+[2026-03-21 11:39:14,761] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 12248.11ms
+[2026-03-21 11:40:09,652] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 13671.11ms
+[2026-03-21 11:40:22,002] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4711.28ms
+[2026-03-21 11:41:00,587] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 10800.03ms
+[2026-03-21 11:41:33,105] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9801.82ms
+[2026-03-21 11:43:03,552] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 12186.57ms
+[2026-03-21 11:45:08,339] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 23856.39ms
+[2026-03-21 11:46:56,376] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 16305.87ms
+[2026-03-21 11:49:04,709] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-21 11:49:06,660] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 23.65ms
+[2026-03-21 11:49:23,229] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 12720.8ms
+[2026-03-21 11:49:42,463] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 12452.5ms
+[2026-03-21 11:50:01,716] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 14093.99ms
+[2026-03-21 11:50:28,246] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 13645.14ms
+[2026-03-21 11:50:51,080] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 16533.76ms
+[2026-03-21 15:45:39,437] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-24 10:03:40,811] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-24 10:03:45,078] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 26.56ms
+[2026-03-24 10:04:04,078] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 10026.96ms
+[2026-03-24 10:04:04,149] WARNING in system_logger: IP: 127.0.0.1 | GET /favicon.ico | Status: 404 | Time: 4.0ms
+[2026-03-24 10:04:35,311] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 14718.44ms
+[2026-03-24 10:05:16,331] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 8299.81ms
+[2026-03-24 10:05:39,284] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9718.26ms
+[2026-03-24 10:05:57,699] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 8465.4ms
+[2026-03-24 10:06:17,103] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9920.4ms
+[2026-03-24 10:06:37,507] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 6289.46ms
+[2026-03-24 10:13:12,831] INFO in system_logger: IP: 127.0.0.1 | GET /login | Status: 200 | Time: 3.0ms
+[2026-03-24 10:13:17,722] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 200 | Time: 148.91ms
+[2026-03-24 10:13:21,541] INFO in system_logger: IP: 127.0.0.1 | POST /login | Status: 302 | Time: 118.61ms
+[2026-03-24 10:13:21,619] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 56.05ms
+[2026-03-24 10:13:30,533] INFO in system_logger: IP: 127.0.0.1 | GET /admin/order/update/1/Completed | Status: 302 | Time: 11.24ms
+[2026-03-24 10:13:30,561] INFO in system_logger: IP: 127.0.0.1 | GET /admin | Status: 200 | Time: 22.28ms
+[2026-03-24 10:13:39,244] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 5.52ms
+[2026-03-24 10:13:40,536] INFO in system_logger: IP: 127.0.0.1 | GET /product/5 | Status: 200 | Time: 52.69ms
+[2026-03-24 10:13:42,018] INFO in system_logger: IP: 127.0.0.1 | POST /cart/add/5 | Status: 302 | Time: 174.08ms
+[2026-03-24 10:13:42,152] INFO in system_logger: IP: 127.0.0.1 | GET /product/5 | Status: 200 | Time: 38.02ms
+[2026-03-24 10:13:43,106] INFO in system_logger: IP: 127.0.0.1 | GET /cart | Status: 200 | Time: 5.29ms
+[2026-03-24 10:13:44,070] INFO in system_logger: IP: 127.0.0.1 | GET /checkout | Status: 200 | Time: 6.51ms
+[2026-03-24 10:13:50,554] INFO in system_logger: IP: 127.0.0.1 | POST /checkout | Status: 302 | Time: 10.1ms
+[2026-03-24 10:13:50,571] INFO in system_logger: IP: 127.0.0.1 | GET /payment/qr/2 | Status: 200 | Time: 4.0ms
+[2026-03-24 10:13:53,613] INFO in system_logger: IP: 127.0.0.1 | GET /api/payment/check/2 | Status: 200 | Time: 1.5ms
+[2026-03-24 10:13:56,755] INFO in system_logger: IP: 127.0.0.1 | GET /api/payment/check/2 | Status: 200 | Time: 1.0ms
+[2026-03-24 10:13:57,854] INFO in system_logger: IP: 127.0.0.1 | GET /test/simulate-bank-success/2 | Status: 200 | Time: 4.51ms
+[2026-03-24 10:13:59,748] INFO in system_logger: IP: 127.0.0.1 | GET /api/payment/check/2 | Status: 200 | Time: 1.0ms
+[2026-03-24 10:14:02,835] INFO in system_logger: IP: 127.0.0.1 | GET /dashboard | Status: 200 | Time: 37.65ms
+[2026-03-24 10:14:10,395] INFO in system_logger: IP: 127.0.0.1 | GET /product/5 | Status: 200 | Time: 8.54ms
+[2026-03-24 10:14:18,765] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 3.51ms
+[2026-03-24 10:14:20,470] INFO in system_logger: IP: 127.0.0.1 | GET /compare | Status: 200 | Time: 14.09ms
+[2026-03-24 10:14:22,406] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 4.52ms
+[2026-03-24 10:19:05,216] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-24 10:20:18,122] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 23.55ms
+[2026-03-24 10:21:23,043] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9241.35ms
+[2026-03-24 10:22:34,665] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 18087.11ms
+[2026-03-24 10:23:38,472] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-24 10:24:11,058] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 25.76ms
+[2026-03-24 10:24:22,990] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 7838.89ms
+[2026-03-24 10:24:38,972] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 8584.73ms
+[2026-03-24 10:25:52,789] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 9132.55ms
+[2026-03-24 10:26:13,470] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 10032.38ms
+[2026-03-24 10:27:13,898] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 11423.38ms
+[2026-03-24 10:29:02,299] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-24 10:29:52,979] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-24 10:29:53,166] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 23.46ms
+[2026-03-24 10:30:04,602] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 5682.24ms
+[2026-03-24 10:30:21,665] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 4523.81ms
+[2026-03-24 10:56:29,986] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-24 11:24:03,016] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-24 11:28:02,183] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 25.52ms
+[2026-03-24 11:29:04,278] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-24 11:29:19,573] INFO in system_logger: IP: 127.0.0.1 | GET / | Status: 200 | Time: 23.21ms
+[2026-03-24 11:29:32,926] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 5606.43ms
+[2026-03-24 11:29:51,574] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 4499.38ms
+[2026-03-24 11:30:06,391] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 5582.64ms
+[2026-03-24 11:30:20,668] INFO in system_logger: IP: 127.0.0.1 | POST /search/image | Status: 200 | Time: 4568.86ms
+[2026-03-26 09:35:35,740] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-26 09:51:56,663] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-26 09:53:02,977] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-26 09:54:25,854] INFO in system_logger: MobileStore Audit Logging System Started.
+[2026-03-26 10:15:03,562] INFO in system_logger: MobileStore Audit Logging System Started.

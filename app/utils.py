@@ -225,9 +225,9 @@ def search_image_vector_db(image_file, n_results=4):
 
 def identify_phone_by_gemini(image_file):
     """
-    [TỐI ƯU CẤP ĐỘ 6 - ĐỈNH CAO NHẬN DIỆN VÀ BẢO MẬT]
-    Thêm nén ảnh tự động để tăng tốc API và Thêm khiên chống Ảo giác (Anti-Hallucination)
-    đối với các hình ảnh không phải điện thoại.
+    [TỐI ƯU CẤP ĐỘ 7 - GIẢI QUYẾT TRIỆT ĐỂ LỖI DESIGN LANGUAGE BLENDING]
+    Áp dụng kỹ thuật Cross-Examination (Đối chiếu chéo) vào logic nhận diện của AI.
+    Bổ sung toàn diện Prompts cho Xiaomi, OPPO, Realme, Vivo và ASUS.
     """
     raw_keys = os.environ.get("GEMINI_API_KEY", "")
     api_keys = [k.strip() for k in raw_keys.split(",") if k.strip()]
@@ -237,7 +237,6 @@ def identify_phone_by_gemini(image_file):
 
     try:
         # [TỐI ƯU 3]: Nén và Resize thông minh trước khi gửi đi.
-        # Giữ nguyên tỷ lệ, giới hạn tối đa 1024x1024. Tiết kiệm 80% băng thông API, chống Timeout.
         img = Image.open(image_file).convert('RGB')
         img.thumbnail((1024, 1024))
         img_byte_arr = io.BytesIO()
@@ -249,7 +248,7 @@ def identify_phone_by_gemini(image_file):
         image_file.seek(0)
 
         system_instruction = (
-            "Bạn là siêu chuyên gia giám định thiết kế phần cứng điện thoại, ĐẶC BIỆT LÀ CHUYÊN GIA VỀ MỌI DÒNG MÁY SAMSUNG (Z, S, Note, A, M, J) VÀ APPLE IPHONE. "
+            "Bạn là siêu chuyên gia giám định thiết kế phần cứng điện thoại, ĐẶC BIỆT LÀ CHUYÊN GIA VỀ MỌI DÒNG MÁY SAMSUNG, APPLE, XIAOMI, OPPO, REALME, VIVO VÀ ASUS. "
             "Nhiệm vụ của bạn là nhận diện chính xác dòng máy từ ảnh chụp. KHÔNG ĐƯỢC ĐOÁN BỪA. "
             "TRƯỚC KHI TRẢ VỀ KẾT QUẢ JSON, BẠN PHẢI SUY LUẬN NGHIÊM NGẶT THEO BỘ QUY TẮC SAU:\n\n"
             
@@ -268,66 +267,108 @@ def identify_phone_by_gemini(image_file):
             "   - Z Fold 4: Bản lề mỏng hơn Fold 3. Đèn flash vẫn NẰM TRONG cụm camera. Viền vẫn HƠI BO CONG nhẹ.\n"
             "   - Z Fold 5: ĐIỂM CHỐT: Đèn flash dời ra NẰM NGOÀI (bên phải) cụm camera. Bản lề gập khít (gapless).\n"
             "   - Z Fold 6: Thiết kế lột xác, CỰC KỲ VUÔNG VỨC ở 4 góc (giống S24 Ultra). Viền kim loại bao quanh từng ống kính camera rất dày, màu đen có viền rãnh. Cụm camera lồi to.\n"
-            "   - Z Fold 7: Vẫn giữ form VUÔNG VỨC nhưng tổng thể siêu mỏng, tỷ lệ màn hình ngoài rộng như điện thoại thường. Vòng camera được làm tinh tế, phẳng hơn và bớt hầm hố hơn Fold 6. TỪ CHỐI nhầm lẫn Fold 7 với Fold 4 vì Fold 4 có góc bo tròn, còn Fold 7 có góc vuông sắc cạnh.\n"
+            "   - Z Fold 7: Vẫn giữ form VUÔNG VỨC nhưng tổng thể siêu mỏng, tỷ lệ màn hình ngoài rộng như điện thoại thường. Vòng camera được làm tinh tế, phẳng hơn và bớt hầm hố hơn Fold 6.\n"
             "   - Z Flip 3 / Flip 4: Màn hình phụ bên ngoài siêu nhỏ, nằm ngang cạnh cụm camera.\n"
             "   - Z Flip 5: Màn hình phụ lớn hình 'thư mục' (tràn xuống dưới camera). Viền ống kính camera rất mỏng.\n"
             "   - Z Flip 6: Màn hình phụ hình 'thư mục' nhưng VÒNG CAMERA CỰC DÀY và có màu trùng với màu mặt lưng. Viền máy vuông vức vát phẳng.\n"
             "   - Z Flip 7: Màn hình phụ lớn có thể có bố cục camera mới. Khung viền siêu mỏng, tối giản.\n\n"
             
             "3. BẮT BUỘC PHÂN BIỆT DÒNG A, M VÀ J (Các đời máy Tầm trung & Giá rẻ cực kỳ đa dạng):\n"
-            "   - THỜI KỲ CỔ ĐIỂN (2015-2017 - Có nút Home vật lý): Dòng A (A3, A5, A7) dùng khung nhôm, mặt lưng kính phẳng hoặc bo cong, nhìn sang trọng. Dòng J (J1 đến J7) viền màn hình rất dày, J7 Prime lưng nhôm có 2 dải nhựa trên dưới, J7 Pro có dải ăng-ten chữ U lộn ngược CỰC KỲ ĐẶC TRƯNG.\n"
-            "   - THỜI KỲ QUÁ ĐỘ (2018 - Bỏ nút Home, vân tay sau lưng): A6, A7, A8, A9, J4, J6, J8. Màn hình kéo dài 18:9. A7(2018) có 3 camera dọc, A9 có 4 camera dọc.\n"
-            "   - THỜI KỲ MÀN HÌNH CHỮ U (Thế hệ 10-80): A10 đến A80, M10 đến M30. Camera xếp dọc đặt lệch góc trái. ĐẶC TRƯNG: A80 có cụm camera xoay trượt lên trên.\n"
-            "   - THỜI KỲ MODULE CHỮ NHẬT (Thế hệ 1x-7x): A11-A71, A12-A72, M31-M62. Các ống kính camera nằm GOM LẠI trong một khối chữ nhật lồi màu đen hoặc đồng màu lưng (A52/A72).\n"
-            "   - THỜI KỲ 'HỌC HỎI DÒNG S' (Thế hệ 13-16, 33-36, 53-56): Các đời A14, A34, A54, A15, M15, A55... BỎ MODULE, 3 ống kính đứng độc lập lồi trên mặt lưng giống hệt S23/S24. \n"
-            "     + Phân biệt nội bộ: Máy rẻ (A14, A15, M14) màn hình giọt nước chữ U/V, cằm dưới cực kỳ dày. Máy đắt hơn (A54, A55) dùng nốt ruồi. Từ đời A55/A35 trở đi có 'Key Island' (Khung viền máy nhô cao lên bao quanh cụm nút nguồn/âm lượng).\n"
-            "     + Dòng M (M51, M62, M14...) thường có lưng nhựa nhám, vân sọc hoặc thiết kế dày dặn hơn dòng A cùng đời vì chứa viên pin cực khủng.\n\n"
+            "   - THỜI KỲ CỔ ĐIỂN (2015-2017): Dòng A (A3, A5, A7) dùng khung nhôm, lưng kính. Dòng J (J1 đến J7) viền dày, J7 Pro có dải ăng-ten chữ U lộn ngược CỰC KỲ ĐẶC TRƯNG.\n"
+            "   - THỜI KỲ MÀN HÌNH CHỮ U (Thế hệ 10-80): A10 đến A80, M10 đến M30. Camera dọc đặt lệch trái. A80 có cụm camera xoay trượt lên trên.\n"
+            "   - THỜI KỲ MODULE CHỮ NHẬT (Thế hệ 1x-7x): A11-A71, A12-A72. Các ống kính nằm GOM LẠI trong một khối chữ nhật lồi màu đen hoặc đồng màu lưng.\n"
+            "   - THỜI KỲ 'HỌC HỎI DÒNG S' (Thế hệ 13-16, 33-36, 53-56): BỎ MODULE, 3 ống kính đứng độc lập lồi trên mặt lưng giống hệt S23/S24. Từ đời A55/A35 trở đi có 'Key Island' (Viền nhô cao ở nút nguồn/âm lượng).\n\n"
             
             "4. DÒNG NOTE (Đặc trưng hộp vuông, có bút S-Pen):\n"
             "   - Note 20 Ultra: Camera khối chữ nhật đứng cực to lồi, 3 mắt tròn lớn, vân tròn đồng tâm.\n"
-            "   - Note 10 / Note 10 Plus: Cụm camera dọc thon gọn lệch trái, màn hình nốt ruồi chính giữa, không có jack 3.5mm.\n"
-            "   - Note 8 / Note 9: Cụm camera và cảm biến vân tay xếp NGANG nằm ở nửa trên mặt lưng.\n"
-            "   - Note cũ hơn (Note 2, 3, 4, 5, 7): Viền màn hình dày trên dưới, có nút Home vật lý bầu dục.\n\n"
+            "   - Note 10 / Note 10 Plus: Cụm camera dọc thon gọn lệch trái, màn hình nốt ruồi chính giữa.\n"
+            "   - Note 8 / Note 9: Cụm camera và cảm biến vân tay xếp NGANG ở nửa trên mặt lưng.\n\n"
 
             "🔴 BỘ QUY TẮC NHẬN DIỆN IPHONE (PHÂN LOẠI SIÊU CHI TIẾT THEO TỪNG THẾ HỆ):\n"
-            "1. THỜI KỲ CLASSIC (Màn hình nhỏ, có nút Home vật lý, viền siêu dày):\n"
-            "   - iPhone 2G: Lưng nhôm, mảng dưới bằng nhựa đen.\n"
-            "   - iPhone 3G/3GS: Lưng nhựa bóng bầu bĩnh (Đen/Trắng).\n"
-            "   - iPhone 4/4s: Lưng kính phẳng, khung thép vát phẳng vuông vức.\n"
-            "   - iPhone 5/5s và SE (2016): Khung nhôm vát phẳng, lưng nhôm có 2 dải kính trên dưới. SE giống hệt 5s.\n"
-            "   - iPhone 5c: Lưng nhựa nguyên khối nhiều màu sặc sỡ.\n"
-            "   - iPhone 6/6s/7/8 và SE (2020/2022): Viền nhôm bo tròn. 6/6s có dải ăng-ten chạy vắt ngang qua lưng. 7 có dải ăng-ten bẻ cong ôm mép trên dưới. 8 mặt lưng bằng KÍNH. Dòng Plus (6/7/8 Plus) màn hình to, riêng 7 Plus/8 Plus có cụm camera kép lồi xếp NGANG.\n\n"
+            "1. THỜI KỲ CLASSIC: iPhone 4/4s/5/5s/SE (Khung vát phẳng). iPhone 6/7/8 (Viền bo tròn, 7/8 Plus camera kép ngang. 8 mặt lưng kính).\n"
+            "2. THỜI KỲ TAI THỎ BẢN THƯỜNG: X/XS (viên thuốc nhỏ dọc). 11 (2 camera dọc trong ô vuông). 12 (giống 11 nhưng viền PHẲNG). 13/14 (2 camera xếp CHÉO).\n"
+            "3. THỜI KỲ PRO/PRO MAX (3 MẮT VÀ LI-DAR): \n"
+            "   - 11 Pro/Max: Viền thép bo tròn, KHÔNG LiDAR.\n"
+            "   - 12 Pro/Max: Viền phẳng, CÓ LiDAR nhỏ dưới góc.\n"
+            "   - 13 Pro/Max: Cụm camera TO HƠN HẲN 12 Pro, tai thỏ nhỏ lại.\n"
+            "   - 14 Pro/Max: Thay tai thỏ bằng DYNAMIC ISLAND. Camera siêu to.\n"
+            "   - 15 Pro/Max: Viền TITANIUM xước mờ, nút bấm ACTION BUTTON, cổng USB-C.\n"
+            "4. THẾ HỆ 16 VÀ TƯƠNG LAI: 16/16 Plus (2 camera DỌC dạng viên thuốc), 16 Pro/Max (Viền siêu mỏng, có nút Camera Control bên phải). 17 Air/Slim (Thiết kế cực mỏng, 1 camera giữa lưng).\n\n"
 
-            "2. THỜI KỲ TAI THỎ (NOTCH) BẢN THƯỜNG:\n"
-            "   - iPhone X/XS: Camera kép xếp dọc trong module hình viên thuốc nhỏ.\n"
-            "   - iPhone XR: 1 camera đơn to lồi, viền màn hình khá dày, lưng kính nhiều màu sắc.\n"
-            "   - iPhone 11: 2 camera xếp DỌC trong module hình vuông, khung viền nhôm bo tròn.\n"
-            "   - iPhone 12: Giống 11 (2 camera dọc) nhưng khung viền VÁT PHẲNG.\n"
-            "   - iPhone 13 / 14: 2 camera xếp CHÉO nhau, khung viền vát phẳng. 14 cụm camera dày hơn 13 một chút và màu sắc khác nhau.\n\n"
+            "🟠 BỘ QUY TẮC NHẬN DIỆN XIAOMI (BAO GỒM REDMI, POCO):\n"
+            "1. Redmi & Redmi Note (Giá rẻ - Tầm trung):\n"
+            "   - Redmi (9, 10, 12, 13C): Viền dưới màn hình (cằm) khá dày, lưng nhựa. Cụm camera thiết kế cơ bản, lồi nhẹ.\n"
+            "   - Redmi Note (10, 11, 12, 13, 14 Series): Note 10/11 có cụm camera chữ nhật nhiều tầng. Note 12/13 cụm camera vuông vức, lồi rõ rệt, lưng kính nhám bóng bẩy. Note 14 Pro/Pro+ cụm camera hình bo cong mềm mại đặt chính giữa mặt lưng trên.\n"
+            "2. POCO (Dòng Gaming/Hiệu năng):\n"
+            "   - ĐẶC TRƯNG CHÍ MẠNG: Logo POCO in CỰC TO. Dòng M3, X3, X4, X5, X6 thường có một DẢI ĐEN VẮT NGANG nguyên cụm camera trên mặt lưng, hoặc module camera cực kỳ hầm hố, màu sắc sặc sỡ (Vàng POCO).\n"
+            "3. Xiaomi Mi / Xiaomi Number Series (Cận cao cấp & Flagship):\n"
+            "   - Mi 11: Cụm camera hình VUÔNG BO TRÒN chia bậc thang cực kỳ đặc trưng.\n"
+            "   - Xiaomi 12 / 13: Thiết kế gọn gàng, module camera chữ nhật bo góc chia các vạch kẻ vát chia ô rất tinh tế.\n"
+            "   - Xiaomi 13 Pro / 14 / 14 Pro: Module camera hình VUÔNG CỰC TO lồi lên, có chữ LEICA ở giữa. Bản 14 Pro có viền răng cưa quanh module.\n"
+            "4. Dòng ULTRA (13 Ultra, 14 Ultra, 15 Ultra) - SIÊU PHẨM CAMERA:\n"
+            "   - ĐẶC TRƯNG TUYỆT ĐỐI: Mặt lưng thường làm bằng da PU (Vegan Leather). Một cụm camera HÌNH TRÒN CỰC KỲ KHỔNG LỒ chiếm gần nửa mặt lưng, trông như ống kính máy ảnh cơ, logo LEICA nằm chễm chệ bên trong.\n"
+            "5. Dòng MIX (Màn gập & Concept):\n"
+            "   - Mix Fold 2/3/4: Máy gập giống Z Fold nhưng cụm camera thường trải dài theo chiều NGANG hoặc một khối hình chữ nhật to. Bản Mix Fold 4 làm module bo cong nhẹ ôm lấy các ống kính Leica.\n\n"
 
-            "3. THỜI KỲ PRO/PRO MAX (3 MẮT CAMERA VÀ LI-DAR):\n"
-            "   - iPhone 11 Pro/Max: Viền thép bo tròn. KHÔNG CÓ chấm đen cảm biến LiDAR. Mắt camera phẳng mờ.\n"
-            "   - iPhone 12 Pro/Max: Khung viền thép vát phẳng. CÓ chấm đen LiDAR dưới góc phải camera. Mắt camera tương đối nhỏ.\n"
-            "   - iPhone 13 Pro/Max: Viền phẳng, cụm camera TO HƠN HẲN 12 Pro (vượt qua một nửa trục dọc máy), tai thỏ làm nhỏ gọn lại.\n"
-            "   - iPhone 14 Pro/Max: Bỏ tai thỏ, thay bằng DYNAMIC ISLAND (viên thuốc đen nổi trên màn hình). Cụm camera sau cực kỳ to và lồi.\n"
-            "   - iPhone 15 Pro/Max: Dynamic Island. Khung viền xước mờ TITANIUM (viền hơi bo vát nhẹ chứ không cấn tay như thép), THAY nút gạt rung bằng nút bấm ACTION BUTTON. Chuyển sang dùng cổng sạc USB-C.\n\n"
+            "🟢 BỘ QUY TẮC NHẬN DIỆN OPPO:\n"
+            "1. Dòng A & K (Giá rẻ/Tầm trung): Thiết kế an toàn, nốt ruồi lệch hoặc giữa. A53, A58 cụm camera dọc. Thế hệ mới (A60, A3) có cụm camera hình viên thuốc kéo dài.\n"
+            "2. Reno Series (Chủ lực tầm trung/Cận cao cấp - Thiết kế màu sắc OPPO Glow):\n"
+            "   - Reno 2: Có camera 'vây cá mập' thò thụt trên đỉnh.\n"
+            "   - Reno 4/5/6: Camera lồi dọc, Reno 6 vát phẳng viền cực giống iPhone.\n"
+            "   - Reno 7/8: Reno 8 cực kỳ đặc trưng với cụm camera đúc liền khối nguyên mảng uốn lượn lồi lên, 2 mắt camera TRÒN RẤT TO.\n"
+            "   - Reno 10/11/12 Series: Cụm camera hình OVAL (VIÊN THUỐC) dài, bên trong chia 2 nửa (nửa kính, nửa kim loại xước) nhìn rất sang trọng.\n"
+            "3. Find X Series (Flagship đỉnh cao):\n"
+            "   - Find X3 / X5 Pro: Thiết kế 'Miệng núi lửa' - Cụm camera lồi lên nhưng kính vuốt cong tràn liền mạch nguyên khối từ mặt lưng. X5 có logo HASSELBLAD.\n"
+            "   - Find X6 / X7 / X8 Series: CHUYỂN TÔNG SANG MODULE TRÒN. Một khối hình tròn cực lớn nằm GIỮA mặt lưng, logo HASSELBLAD. X7 Ultra có mặt lưng chia đôi 2 tông màu (nửa da nửa kính).\n"
+            "4. Find N (Màn gập): Find N1/N2/N3 có dáng lùn, béo bè hơn Z Fold. N3 có cụm camera tròn siêu to. Find N2 Flip / N3 Flip có MÀN HÌNH PHỤ HÌNH CHỮ NHẬT DỌC trải dài cạnh cụm camera dọc.\n\n"
 
-            "4. THẾ HỆ MỚI NHẤT & TƯƠNG LAI (16, 17 Series, 16e):\n"
-            "   - iPhone 16 / 16 Plus: 2 camera quay lại xếp DỌC nằm trong một module dạng viên thuốc nổi lên, CÓ nút bấm Camera Control dạng cảm ứng bên phải máy.\n"
-            "   - iPhone 16 Pro/Max: Viền màn hình siêu mỏng nhất thế giới, kích thước máy to hơn (6.3 và 6.9 inch), viền Titan bóng hơn đời 15, CÓ nút bấm Camera Control bên phải.\n"
-            "   - iPhone 17 Air / Slim: Thiết kế cực kỳ siêu mỏng, có thể chỉ có 1 camera đơn lồi đặt chính giữa mặt lưng trên.\n"
-            "   - iPhone 17 Pro/Max: Cụm camera to hơn 16 Pro, có thể bằng nhôm nguyên khối, nâng cấp 3 camera.\n\n"
+            "🟡 BỘ QUY TẮC NHẬN DIỆN REALME:\n"
+            "1. C Series / Note / V Series (Giá rẻ): Lưng nhựa có vân sọc, module chữ nhật chứa các mắt camera. Các bản mới (C55, C65, C67) học hỏi thiết kế bỏ viền module, 2 mắt camera to xếp dọc lồi lên trên mặt lưng nhựa nhám xước/nhựa bóng.\n"
+            "2. Number Series & Q Series (Tầm trung):\n"
+            "   - Realme 8/9: Có dòng chữ slogan 'DARE TO LEAP' in CỰC TO dọc theo mặt lưng.\n"
+            "   - Realme 11 Pro / 11 Pro+: ĐẶC TRƯNG CHÍ MẠNG: Mặt lưng bọc da giả, có một ĐƯỜNG CHỈ MAY vắt dọc chính giữa chạy xuyên qua một cụm camera hình TRÒN to.\n"
+            "   - Realme 12 Pro / 13 Pro: Cụm camera hình tròn nằm giữa, nhưng viền xung quanh module được tạo rãnh cắt răng cưa mạ vàng/bạc giống mặt đồng hồ cơ cao cấp (Luxury Watch Design).\n"
+            "3. GT Series / Neo Series (Hiệu năng/Gaming):\n"
+            "   - Thường mang đậm chất thể thao. GT Neo 3 có 2 đường kẻ sọc xe đua (Racing stripes) chạy dọc.\n"
+            "   - GT5 có mặt lưng kính một phần trong suốt cạnh camera, lộ dải đèn LED RGB (Halo LED).\n"
+            "   - GT7 Pro / GT6: Module camera vuông hoặc chữ nhật lồi hẳn lên bằng kính/kim loại, trông rất công nghệ và cứng cáp.\n\n"
+
+            "🟣 BỘ QUY TẮC NHẬN DIỆN VIVO (BAO GỒM iQOO):\n"
+            "1. Y Series / V Series (Tầm trung - Đánh mạnh Selfie):\n"
+            "   - V20/V21/V23/V25: Cụm camera hình vuông/chữ nhật chia 'BẬC THANG' hai màu rất đặc trưng của Vivo.\n"
+            "   - V27/V29/V30/V40: ĐẶC TRƯNG CHÍ MẠNG: Dưới cụm camera (hoặc bên cạnh) CÓ MỘT VÒNG SÁNG ĐÈN FLASH TRÒN TO gọi là 'Aura Light'.\n"
+            "2. X Series (Flagship đỉnh cao chụp ảnh - ZEISS):\n"
+            "   - X60/X70/X80: Module chữ nhật lồi chứa các ống kính tròn bên trong, có logo chữ xanh ZEISS mờ.\n"
+            "   - X90 Series: ĐẶC TRƯNG RÕ RÀNG: Cụm camera tròn to nằm lệch trái, mặt lưng giả da có một DẢI KIM LOẠI vắt ngang chia cắt mặt lưng.\n"
+            "   - X100 Series (X100, Pro, Ultra): Cụm camera HÌNH TRÒN KHỔNG LỒ NẰM GIỮA, viền kim loại bao quanh được làm vát lệch tạo cảm giác vành trăng khuyết (Nhật thực/Nguyệt thực).\n"
+            "   - X200 Series: Kế thừa X100 nhưng viền máy vát phẳng (Square edges), vòng tròn camera thiết kế vát phẳng tinh tế và cân xứng hơn, họa tiết đồng tâm.\n"
+            "3. iQOO (Nhánh Gaming):\n"
+            "   - iQOO 11, 12, Neo: Thiết kế hầm hố. Các bản cao cấp thường có mặt lưng 'Legend Edition' với Dải 3 sọc màu của BMW M Motorsport (Đỏ, Đen, Xanh dương) chạy dọc.\n\n"
+
+            "⚫ BỘ QUY TẮC NHẬN DIỆN ASUS:\n"
+            "1. ROG Phone (Gaming Phone tối thượng):\n"
+            "   - ROG 5/6/7: Thiết kế cực kỳ hầm hố, viền máy dày, mặt lưng có nhiều đường cắt xẻ, MÀN HÌNH LED PHỤ (ROG Vision) hoặc LOGO ROG PHÁT SÁNG RGB đằng sau. Có cổng sạc phụ ở cạnh viền trái máy.\n"
+            "   - ROG 8 Series: Thiết kế lột xác, vuông vức, viền mỏng, ít hầm hố hơn. Cụm camera biến thành một khối hình chữ nhật lồi lên nhưng vát góc tạo thành hình NGŨ GIÁC.\n"
+            "2. Zenfone Series (Flagship nhỏ gọn):\n"
+            "   - Zenfone 8/9/10: Kích thước vô cùng NHỎ GỌN (Compact). Mặt lưng polymer nhám. ĐẶC TRƯNG: 2 MẮT CAMERA TRÒN LỚN, đen thui, lồi hẳn lên rời rạc xếp dọc trên mặt lưng.\n"
+            "   - Zenfone 11 Ultra: Form to bản, cụm camera vuông lệch trái, mặt lưng có những đường cắt chéo (giống ROG nhưng thanh lịch hơn).\n\n"
+
+            "🔥 [QUAN TRỌNG NHẤT] KỸ THUẬT CROSS-EXAMINATION (ĐỐI CHIẾU CHÉO - CHỐNG HÒA LẪN THIẾT KẾ):\n"
+            "Để giải quyết hiện tượng các hãng dùng chung 1 thiết kế cho nhiều phân khúc (VD: Samsung A55 cực giống S24, Xiaomi 13 giống hệt các máy tầm trung đời sau, iPhone 13 giống hệt 14). Trước khi chốt kết quả, bạn BẮT BUỘC phải làm bài kiểm tra sau:\n"
+            "- Hãy đặt câu hỏi ngược lại: 'Tại sao đây không phải là phiên bản giá rẻ (A/M, Redmi, OPPO A, Vivo Y) hay phiên bản đời cũ có thiết kế ăn theo?'.\n"
+            "- BẮT BUỘC phải tìm các ĐẶC ĐIỂM CHÍ MẠNG để loại trừ: Viền màn hình dày mỏng, nốt ruồi hay tai thỏ, logo hợp tác (Leica, Zeiss, Hasselblad), chất liệu lưng da hay nhựa sọc, đèn flash Aura Light hay flash thường, chữ Dare to leap hay POCO...\n"
+            "- TOÀN BỘ quá trình tư duy, loại trừ đối thủ này PHẢI ĐƯỢC VIẾT RÕ RÀNG VÀO TRƯỜNG 'details'.\n\n"
 
             "Nhiệm vụ: Xuất ra thông tin thiết bị dưới dạng cấu trúc JSON nguyên ngặt.\n"
             "LUẬT LỆ JSON:\n"
-            "1. 'brand': Apple, Samsung, Xiaomi, Oppo... Nếu mờ/không nhận ra, ghi null.\n"
-            "2. 'model': Tên dòng máy ĐẦY ĐỦ VÀ CHI TIẾT NHẤT (VD: 'Samsung Galaxy A54 5G', 'Samsung Galaxy J7 Pro', 'iPhone 15 Pro Max', 'iPhone SE 2022').\n"
+            "1. 'brand': Apple, Samsung, Xiaomi, Oppo, Realme, Vivo, Asus... Nếu mờ/không nhận ra, ghi null.\n"
+            "2. 'model': Tên dòng máy ĐẦY ĐỦ VÀ CHI TIẾT NHẤT (VD: 'Samsung Galaxy A54 5G', 'Xiaomi 14 Ultra', 'Vivo X100 Pro', 'OPPO Reno 11 Pro', 'Realme 11 Pro Plus', 'iPhone 15 Pro Max', 'ASUS ROG Phone 8').\n"
             "3. 'search_keywords': MẢNG TỪ KHÓA TÁCH RỜI ĐỂ TÌM KIẾM CƠ SỞ DỮ LIỆU. \n"
             "   - KHÔNG gộp chữ. Tách rõ: Hãng, Chữ cái dòng máy, Số đời máy, Hậu tố.\n"
-            "   - VÍ DỤ: ['samsung', 'a', '54', '5g'] hoặc ['samsung', 'j', '7', 'pro'] hoặc ['iphone', '11', 'pro', 'max'].\n"
-            "4. 'price_segment': Phân khúc (VD: 'Máy cỏ/Đời siêu cũ', 'Giá rẻ', 'Tầm trung', 'Cận cao cấp', 'Cao cấp').\n"
-            "5. 'confidence': 0 đến 100. Đừng cho 100 nếu không nhìn rõ các chi tiết nhạy cảm (như khe bản lề, dải ăng ten, viền titan).\n"
-            "6. 'details': Trình bày LOGIC SUY LUẬN của bạn. (VD: 'Thấy 3 camera rời giống dòng S, nhưng máy có cằm dày và màn hình giọt nước chữ U -> Chắc chắn đây là dòng A giá rẻ như A14/A15 chứ không phải dòng S cao cấp'). MỤC NÀY BẮT BUỘC PHẢI CHỨA CÂU SO SÁNH LOẠI TRỪ CHI TIẾT.\n"
+            "   - VÍ DỤ: ['samsung', 'a', '54', '5g'] hoặc ['xiaomi', '14', 'ultra'] hoặc ['vivo', 'x', '100', 'pro'] hoặc ['oppo', 'reno', '11'].\n"
+            "4. 'price_segment': Phân khúc (VD: 'Máy cỏ/Đời siêu cũ', 'Giá rẻ', 'Tầm trung', 'Cận cao cấp', 'Cao cấp', 'Flagship').\n"
+            "5. 'confidence': 0 đến 100. Đừng cho 100 nếu không nhìn rõ các chi tiết nhạy cảm (như khe bản lề, dải ăng ten, viền titan, logo camera).\n"
+            "6. 'details': (BẮT BUỘC LÀM CROSS-EXAMINATION) Ghi rõ quá trình biện luận: Bạn đã thấy chi tiết gì? Bạn so sánh nó với máy nào giống nhất? Và TẠI SAO bạn lại LOẠI TRỪ máy kia để chọn máy này?.\n"
             "7. NẾU ẢNH MỜ, THIẾU GÓC: Trả về brand: null, model: null, confidence: < 40.\n"
             "TUYỆT ĐỐI CHỈ TRẢ VỀ 1 CHUỖI JSON DUY NHẤT."
         )
@@ -647,7 +688,7 @@ def generate_chatbot_response(user_msg, chat_history=None):
 def analyze_search_intents(query):
     """
     [NÂNG CẤP LÕI]: Trích xuất Dữ liệu (Entity) + Suy luận Ngữ nghĩa (Reasoning) bằng LLM.
-    Bổ sung "semantic_query" để dịch các nhu cầu "lóng" thành truy vấn Vector chuẩn.
+    Bổ Bản "semantic_query" để dịch các nhu cầu "lóng" thành truy vấn Vector chuẩn.
     """
     system_instruction = """
     Bạn là hệ thống AI phân tích ý định tìm kiếm cao cấp cho MobileStore.

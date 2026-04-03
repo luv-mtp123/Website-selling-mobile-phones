@@ -325,98 +325,108 @@ def search_by_image():
         # [NEW]: Lấy mảng từ khóa để search linh hoạt
         search_keywords = ai_data.get('search_keywords', [])
 
-        if confidence < 40:
-             flash("Ảnh khá mờ hoặc thiếu góc độ, AI không chắc chắn 100%. Gợi ý kết quả gần giống nhất.", "warning")
+        # ---> [GIẢI QUYẾT LỖI TẠI ĐÂY]: ÁP DỤNG NGƯỠNG CẮT (CONFIDENCE THRESHOLD)
+        # Nếu AI không tự tin (< 50%), KHÔNG ĐƯỢC tin vào kết quả đoán bừa của nó.
+        # Xóa ngay model để ép hệ thống rơi xuống Tầng 3 (Dùng Vector DB ResNet50 quét bằng hình ảnh).
+        if confidence < 50:
+             flash(f"Ảnh mờ, AI không chắc chắn tên máy (Tự tin: {confidence}%). Hệ thống đang chuyển sang quét hình dáng quang học.", "warning")
+             brand = None
+             model = None
+             search_keywords = []
 
-        base_query = Product.query.filter_by(is_active=True, category='phone')
+        # Nếu AI tự tin nó biết chữ (model != None), thì mới đi tìm bằng SQL
+        if model:
+            base_query = Product.query.filter_by(is_active=True, category='phone')
 
-        # --- [TẦNG 1 MỚI]: TÌM KIẾM LINH HOẠT VỚI LOGIC (AND) ---
-        if brand:
-            base_query = base_query.filter(Product.brand.ilike(f"%{brand}%"))
+            # --- [TẦNG 1 MỚI]: TÌM KIẾM LINH HOẠT VỚI LOGIC (AND) ---
+            if brand:
+                base_query = base_query.filter(Product.brand.ilike(f"%{brand}%"))
 
-        # Khắc phục lỗi SQL cứng nhắc: Chuyển từ tìm nguyên cụm "%Redmi Note 13 Pro%"
-        # Sang tìm đồng thời: Chứa "Redmi" VÀ chứa "Note" VÀ chứa "13" VÀ chứa "Pro"
-        if not search_keywords and model:
-            search_keywords = model.split()
+            if not search_keywords and model:
+                search_keywords = model.split()
 
-        conditions = []
-        for kw in search_keywords:
-            if brand and kw.lower() == brand.lower(): continue  # Bỏ qua chữ hãng vì đã lọc trên
-            # ---> [SỬA LỖI 1]: Xóa bỏ việc chặn từ khóa < 2 ký tự.
-            # Chữ số "8" hay chữ "X", "V" chỉ có 1 ký tự nhưng CỰC KỲ quan trọng để phân biệt dòng máy!
-            if len(kw) == 1 and not kw.isalnum(): continue
-            conditions.append(Product.name.ilike(f"%{kw}%"))
+            conditions = []
+            for kw in search_keywords:
+                if brand and kw.lower() == brand.lower(): continue  # Bỏ qua chữ hãng vì đã lọc trên
+                if len(kw) == 1 and not kw.isalnum(): continue
+                conditions.append(Product.name.ilike(f"%{kw}%"))
 
-        if conditions:
-            exact_products_raw = base_query.filter(and_(*conditions)).all()
-        else:
-            exact_products_raw = []
+            if conditions:
+                exact_products_raw = base_query.filter(and_(*conditions)).all()
+            else:
+                exact_products_raw = []
 
-        strict_products = []
-        if exact_products_raw:
-            # ---> [SỬA LỖI 2]: THUẬT TOÁN LỌC NGHIÊM NGẶT (V2) - ÉP KHỚP THẾ HỆ MÁY <---
-            model_lower = model.lower() if model else " ".join([k.lower() for k in search_keywords])
+            strict_products = []
+            if exact_products_raw:
+                # ---> THUẬT TOÁN FINGERPRINT MATCHING (BAO PHỦ MỌI HÃNG) <---
+                model_lower = model.lower() if model else " ".join([k.lower() for k in search_keywords])
 
-            # [FIX LỖI MẢNG SUFFIX]: Bổ sung hậu tố của Samsung (Fold, Flip, Edge, Lite, Classic)
-            suffixes = ['pro', 'max', 'plus', 'ultra', 'ti', 'fe', 'se', 'mini', 'fold', 'flip', 'edge', 'lite', 'classic']
+                # Danh sách biến thể (Bắt buộc khớp 2 chiều bằng XOR Logic)
+                word_modifiers = [
+                    'pro', 'max', 'plus', 'ultra', 'ti', 'fe', 'se', 'mini',
+                    'fold', 'flip', 'edge', 'lite', 'classic', 'neo', 'narzo',
+                    'play', 'active', 'zoom', 'note', 'pad', 'tab', 'gt'
+                ]
+                strict_modifiers = set(word_modifiers + list('abcdefghijklmnopqrstuvwxyz'))
 
-            for p in exact_products_raw:
-                p_name_lower = p.name.lower()
-                is_valid = True
+                for p in exact_products_raw:
+                    p_name_lower = p.name.lower()
+                    is_valid = True
 
-                # Kiểm tra A: Hậu tố (Plus, Pro, Ultra, Mini...) phải khớp
-                for suf in suffixes:
-                    # [FIX LỖI DÍNH CHỮ]: Người nhập DB có thể gõ "promax", cần tách ra để regex chuẩn
-                    p_name_check = p_name_lower.replace('promax', 'pro max')
-                    model_check = model_lower.replace('promax', 'pro max')
+                    # 1. Đồng bộ dữ liệu đặc thù và loại bỏ hoàn toàn rác RAM/ROM/Mạng
+                    p_name_clean = p_name_lower.replace('promax', 'pro max').replace('+', ' plus ')
+                    model_clean = model_lower.replace('promax', 'pro max').replace('+', ' plus ')
 
-                    if re.search(rf'\b{suf}\b', p_name_check) and not re.search(rf'\b{suf}\b', model_check):
+                    # Quét bay mọi con số liên quan đến dung lượng để tránh làm nhiễu số thế hệ máy
+                    storage_pattern = r'\b\d{1,4}\s*(?:gb|tb|mb|g|t)\b|\b(?:5g|4g|ram|rom)\b'
+                    p_name_clean = re.sub(storage_pattern, '', p_name_clean)
+                    model_clean = re.sub(storage_pattern, '', model_clean)
+
+                    # 2. Tách rời chữ và số CẢ 2 CHIỀU (VD: S24 -> S 24, 13T -> 13 T)
+                    db_base = re.sub(r'([a-z])(\d)', r'\1 \2', p_name_clean)
+                    db_base = re.sub(r'(\d)([a-z])', r'\1 \2', db_base)
+
+                    ai_base = re.sub(r'([a-z])(\d)', r'\1 \2', model_clean)
+                    ai_base = re.sub(r'(\d)([a-z])', r'\1 \2', ai_base)
+
+                    db_tokens = set(db_base.split())
+                    ai_tokens = set(ai_base.split())
+
+                    # 3. CHẶN ĐỨNG SAI LỆCH BIẾN THỂ (XOR LOGIC)
+                    for mod in strict_modifiers:
+                        if (mod in ai_tokens) != (mod in db_tokens):
+                            is_valid = False
+                            break
+
+                    if not is_valid:
+                        continue
+
+                    # 4. KHỚP MÃ SỐ THẾ HỆ (SUBSET MATCH)
+                    db_numbers = set(re.findall(r'\b\d+\b', db_base))
+                    ai_numbers = set(re.findall(r'\b\d+\b', ai_base))
+
+                    if not ai_numbers.issubset(db_numbers):
                         is_valid = False
-                        break
 
-                # Kiểm tra B (QUAN TRỌNG NHẤT): Số thế hệ máy & Dòng Samsung/iPhone PHẢI KHỚP
-                # Loại bỏ chữ '5g', '4g' trước để hàm Regex không bóc nhầm số 5 và số 4
-                db_clean = p_name_lower.replace('5g', '').replace('4g', '')
-                ai_clean = model_lower.replace('5g', '').replace('4g', '')
+                    if is_valid:
+                        strict_products.append(p)
 
-                # Tách chữ và số bằng khoảng trắng để tránh lỗi (VD: "S24" và "S 24" sẽ đều bị regex bóc chuẩn xác)
-                db_clean = re.sub(r'([a-z])(\d)', r'\1 \2', db_clean)
-                ai_clean = re.sub(r'([a-z])(\d)', r'\1 \2', ai_clean)
+            if strict_products:
+                # Nếu tìm thấy chính xác bản máy đó trong shop -> Chỉ hiển thị nó!
+                products = strict_products
+                ai_message = f"🎯 Đã nhận diện: {brand or ''} {model} (Độ tin cậy: {confidence}%). Chỉ hiển thị dòng máy chính xác!"
+            else:
+                products = []  # Trả về rỗng để giao diện hiển thị "Không tìm thấy"
+                price_segment = ai_data.get('price_segment', 'Không xác định')
 
-                # [BẢN VÁ LỖI CỰC MẠNH CHO SAMSUNG VÀ APPLE]:
-                # Biểu thức Regex mới bóc chuẩn xác: (1) Mọi số (2) Tên đặc trưng dòng máy (note, fold, flip, z, s, a, m) (3) Tên của Apple
-                regex_pattern = r'\b\d+\b|\bnote\b|\bfold\b|\bflip\b|\bz\b|\bs\b|\ba\b|\bm\b|\bxr\b|\bxs\b|\bx\b'
-                db_gen_tokens = re.findall(regex_pattern, db_clean)
-                ai_gen_tokens = re.findall(regex_pattern, ai_clean)
-
-                for token in db_gen_tokens:
-                    # Ràng buộc chéo: Nếu máy ở DB là "S23" (có 's', '23'), mà ảnh khách là "A23" (có 'a', '23') -> Đánh trượt
-                    if token not in ai_gen_tokens:
-                        is_valid = False
-                        break
-
-                if is_valid:
-                    strict_products.append(p)
-
-        if strict_products:
-            # Nếu tìm thấy chính xác bản máy đó trong shop -> Chỉ hiển thị nó!
-            products = strict_products
-            ai_message = f"🎯 Đã nhận diện: {brand or ''} {model} (Độ tin cậy: {confidence}%). Chỉ hiển thị dòng máy chính xác!"
-        else:
-            # ---> [UPDATE: XÓA BỎ VECTOR FALLBACK - LÀM THEO LỜI THẦY GÓP Ý] <---
-            # AI đọc được tên máy, nhưng shop không bán -> Trả về KHÔNG CÓ.
-            # Đồng thời hiển thị phân khúc giá do AI gán nhãn.
-            products = []  # Trả về rỗng để giao diện hiển thị "Không tìm thấy"
-            price_segment = ai_data.get('price_segment', 'Không xác định')
-
-            ai_message = (
-                f"🎯 Đã nhận diện thiết bị: <b>{brand or ''} {model}</b><br>"
-                f"🏷️ Phân loại AI: <b>{price_segment}</b><br>"
-                f"❌ <b>Kết quả:</b> Rất tiếc, sản phẩm này hiện <b>KHÔNG CÓ</b> sẵn trong cửa hàng của chúng tôi."
-            )
+                ai_message = (
+                    f"🎯 Đã nhận diện thiết bị: <b>{brand or ''} {model}</b><br>"
+                    f"🏷️ Phân loại AI: <b>{price_segment}</b><br>"
+                    f"❌ <b>Kết quả:</b> Rất tiếc, sản phẩm này hiện <b>KHÔNG CÓ</b> sẵn trong cửa hàng của chúng tôi."
+                )
 
     # --- [TẦNG 3]: VISUAL VECTOR FALLBACK CHỈ CHẠY KHI AI MÙ CHỮ, KHÔNG NHẬN DIỆN ĐƯỢC TÊN MÁY ---
-    # THÊM ĐIỀU KIỆN "and not model": Tức là nếu AI đã biết tên máy rồi thì KHÔNG ĐƯỢC chạy tầng 3 nữa
+    # Nhờ bản vá ở trên (model = None khi tự tin thấp), tầng này nay sẽ được GỌI THÀNH CÔNG cứu vớt người dùng!
     if not products and not model:
         file.seek(0) # Trả con trỏ file về 0
         matched_ids = search_image_vector_db(file, n_results=5)
@@ -432,10 +442,10 @@ def search_by_image():
 
                 if same_brand_shape:
                     products = same_brand_shape[:4]
-                    ai_message = f"📷 AI không đọc được tên máy. Đã quét theo BỐ CỤC CAMERA để gợi ý {len(products)} thiết bị {brand}."
+                    ai_message = f"📷 AI không nhận diện được tên chuẩn. Đã quét theo BỐ CỤC CAMERA gợi ý {len(products)} thiết bị {brand}."
                 else:
                     products = shape_similar_products[:4]
-                    ai_message = f"📷 AI không tìm thấy máy chính xác. Gợi ý các máy có CỤM CAMERA / HÌNH DÁNG tương đồng."
+                    ai_message = f"📷 AI không tìm thấy tên chính xác. Gợi ý các máy có CỤM CAMERA / HÌNH DÁNG tương đồng nhất."
             else:
                 products = shape_similar_products[:4]
                 ai_message = "📷 Không thể nhận diện tên. Đã tự động lọc các máy có cụm camera hoặc mặt lưng giống với ảnh nhất."

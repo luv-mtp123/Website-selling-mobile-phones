@@ -17,7 +17,7 @@ from itsdangerous import URLSafeTimedSerializer
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 import requests
-from PIL import Image
+from PIL import Image, ImageEnhance # ---> [SỬA LỖI]: Bổ sung ImageEnhance để đeo kính cận cho AI
 import io
 
 
@@ -236,9 +236,19 @@ def identify_phone_by_gemini(image_file):
         return None
 
     try:
-        # [TỐI ƯU 3]: Nén và Resize thông minh trước khi gửi đi.
+        # ---> [GIẢI PHÁP SỬA LỖI]: BỔ SUNG AUTO-ENHANCE (ĐEO KÍNH CẬN CHO AI)
+        # Khách chụp mờ cũng không sao, hệ thống sẽ tự động làm nét viền kim loại và tương phản
         img = Image.open(image_file).convert('RGB')
         img.thumbnail((1024, 1024))
+
+        # 1. Tăng cường độ nét (Sharpness) lên 150% để nổi rõ viền Camera, vết ghép màn hình
+        enhancer_sharpness = ImageEnhance.Sharpness(img)
+        img = enhancer_sharpness.enhance(1.5)
+
+        # 2. Tăng cường tương phản (Contrast) lên 110% để nổi rõ logo in mờ đằng sau lưng
+        enhancer_contrast = ImageEnhance.Contrast(img)
+        img = enhancer_contrast.enhance(1.1)
+
         img_byte_arr = io.BytesIO()
         img.save(img_byte_arr, format='JPEG', quality=85)
         image_bytes = img_byte_arr.getvalue()

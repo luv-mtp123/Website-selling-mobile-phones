@@ -24,11 +24,13 @@ import io
 # [NEW] Khởi tạo thư viện PyTorch cho Visual Search
 try:
     import torch
-    import torchvision.models as models
-    import torchvision.transforms as transforms
+    import torch.nn.functional as F  # ---> [NEW]: Thêm thư viện để chuẩn hóa Vector an toàn
+    # ---> [NÂNG CẤP]: Thay thế torchvision/ResNet bằng thư viện transformers để dùng CLIP Model
+    from transformers import CLIPProcessor, CLIPModel
 except ImportError:
     torch = None
-    print("⚠️ PyTorch chưa được cài đặt. Tính năng tìm kiếm bằng hình ảnh sẽ không hoạt động. Chạy: pip install torch torchvision")
+    F = None
+    print("⚠️ Thư viện xử lý ảnh chưa đủ. Chạy lệnh: pip install torch torchvision transformers")
 
 # =========================================================================
 # [HOTFIX] Khóa mõm triệt để lỗi rác Telemetry của ChromaDB 0.4.22
@@ -57,17 +59,16 @@ except Exception as e:
     chroma_client = None
 
 # =========================================================================
-# ---> [UPGRADED V3] ResNet-50 Feature Extractor với Hardware Acceleration (GPU)
-# Tối đa hóa sức mạnh phần cứng để chạy Real-time Visual Search
+# ---> [UPGRADED V4] CLIP Feature Extractor (Semantic Visual Search)
+# Tối ưu hóa tuyệt đối cho phần cứng VRAM 4GB (NVIDIA Quadro P620)
+# Thay thế ResNet50 bằng CLIP ViT-B/32 để hiểu ngữ nghĩa thiết kế hạt mịn (FGVC)
 # =========================================================================
 visual_model = None
-visual_transforms = None
+visual_processor = None
 device = None
 
 if torch is not None:
     try:
-        # [TỐI ƯU 1]: Dò tìm Card Đồ Họa (NVIDIA CUDA hoặc Apple MPS). Nếu không có mới dùng CPU.
-        # Giúp tốc độ trích xuất vector tăng gấp 10-50 lần so với phiên bản trước.
         if torch.cuda.is_available():
             device = torch.device("cuda")
         elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
@@ -75,28 +76,18 @@ if torch is not None:
         else:
             device = torch.device("cpu")
 
-        print(f"🚀 Visual Search Engine initialized on device: {device}")
+        print(f"🚀 Visual Search Engine (CLIP Model) initialized on device: {device}")
 
-        # Sử dụng trọng số ResNet-50 chuẩn
-        weights = models.ResNet50_Weights.DEFAULT
-        full_resnet = models.resnet50(weights=weights)
+        # ---> [NÂNG CẤP]: Tải mô hình CLIP của OpenAI (Siêu nhẹ, cực nhạy với chi tiết FGVC)
+        visual_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+        visual_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
-        # Cắt bỏ lớp Linear (Phân loại 1000 class) cuối cùng.
-        visual_model = torch.nn.Sequential(*(list(full_resnet.children())[:-1]))
-
-        # Đẩy mô hình lên GPU (nếu có) và thiết lập chế độ dự đoán
+        # Đẩy mô hình lên GPU P620 và thiết lập chế độ dự đoán (tốn khoảng ~1.5GB VRAM)
         visual_model = visual_model.to(device)
         visual_model.eval()
 
-        # Tiền xử lý ảnh theo chuẩn ResNet
-        visual_transforms = transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
     except Exception as e:
-        print(f"⚠️ Không thể tải mô hình ResNet-50: {e}")
+        print(f"⚠️ Không thể tải mô hình CLIP: {e}")
 
 
 
@@ -147,38 +138,61 @@ def validate_image_file(file):
 
 
 # =========================================================================
-# ---> [NEW] HỆ THỐNG XỬ LÝ ẢNH (VISUAL SEARCH ENGINE) - RESNET 2048D
+# ---> [NEW] HỆ THỐNG XỬ LÝ ẢNH (VISUAL SEARCH ENGINE) - CLIP 512D
 # =========================================================================
 def get_image_embedding(image_source, is_url=True):
     """
-    Biến đổi hình ảnh thành mảng Vector 2048 chiều bằng ResNet-50 (Tăng tốc GPU).
+    Biến đổi hình ảnh thành mảng Vector 512 chiều bằng mô hình ngôn ngữ thị giác CLIP.
+    Giúp ChromaDB hiểu được ngữ nghĩa "lưng da", "camera tròn", "viền phẳng".
     """
-    if not visual_model or not visual_transforms or not device:
+    if not visual_model or not visual_processor or not device:
         return None
 
     try:
         if is_url:
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
             response = requests.get(image_source, stream=True, timeout=5, headers=headers)
+
+            # ---> [HOTFIX]: Giấu lỗi 404 (Ảnh link bị chết) để Terminal sạch sẽ, không bị spam
+            if response.status_code == 404:
+                return None
+
             response.raise_for_status()
             img = Image.open(response.raw).convert('RGB')
         else:
             img = Image.open(image_source).convert('RGB')
 
-        # Chạy ảnh qua mạng CNN ResNet-50
-        input_tensor = visual_transforms(img)
-        # [TỐI ƯU 2]: Đẩy tensor dữ liệu ảnh lên cùng thiết bị với Model (GPU/CPU)
-        input_batch = input_tensor.unsqueeze(0).to(device)
+        # ---> [NÂNG CẤP]: Tiền xử lý và đẩy qua mạng CLIP
+        inputs = visual_processor(images=img, return_tensors="pt").to(device)
 
         with torch.no_grad():
-            output = visual_model(input_batch)
+            # ---> [FIX MATRIX LỖI NHÂN MA TRẬN]: Tự tay bóc tách Vector bỏ qua hàm có sẵn
+            vision_outputs = visual_model.vision_model(**inputs)
+
+            # Trích xuất Pooler Output (Thường là 768 chiều)
+            if hasattr(vision_outputs, 'pooler_output') and vision_outputs.pooler_output is not None:
+                image_features = vision_outputs.pooler_output
+            elif hasattr(vision_outputs, 'last_hidden_state'):
+                image_features = vision_outputs.last_hidden_state[:, 0, :]
+            else:
+                image_features = vision_outputs[1] if isinstance(vision_outputs, tuple) else vision_outputs
+
+            # Bức tường Lửa chặn Lỗi Nhân Ma Trận (1x512 and 768x512)
+            # CHỈ được đẩy qua màn lọc Projection khi và chỉ khi Vector bị sai chiều (khác 512)
+            if hasattr(visual_model, 'visual_projection'):
+                target_dim = visual_model.visual_projection.out_features
+                if image_features.shape[-1] != target_dim:
+                    image_features = visual_model.visual_projection(image_features)
+
+        # Chuẩn hóa Vector (L2 Normalization) bằng F (an toàn tuyệt đối, chống crash AttributeError)
+        image_features = F.normalize(image_features, p=2, dim=-1)
 
         # Kéo dữ liệu từ GPU về lại CPU để chuyển thành list lưu vào ChromaDB
-        flattened_vector = output.view(-1).cpu().numpy().tolist()
+        flattened_vector = image_features.squeeze().cpu().numpy().tolist()
         return flattened_vector
 
     except Exception as e:
-        print(f"⚠️ Lỗi trích xuất Vector Ảnh: {e}")
+        print(f"⚠️ Lỗi trích xuất Vector Ảnh bằng CLIP: {e}")
         return None
 
 
@@ -197,7 +211,7 @@ def sync_product_image_to_vector_db(product):
                 metadatas=[{"name": product.name, "brand": product.brand}],
                 ids=[str(product.id)]
             )
-            print(f"📸 Indexed Image Vector: {product.name}")
+            print(f"📸 Indexed Semantic Image Vector (CLIP): {product.name}")
         except Exception as e:
             print(f"⚠️ Lỗi lưu Vector Ảnh vào ChromaDB: {e}")
 
@@ -236,18 +250,15 @@ def identify_phone_by_gemini(image_file):
         return None
 
     try:
-        # ---> [GIẢI PHÁP SỬA LỖI]: BỔ SUNG AUTO-ENHANCE (ĐEO KÍNH CẬN CHO AI)
-        # Khách chụp mờ cũng không sao, hệ thống sẽ tự động làm nét viền kim loại và tương phản
+        # Nhận diện ảnh bằng PIL để chuẩn bị nén gửi cho Gemini
         img = Image.open(image_file).convert('RGB')
-        img.thumbnail((1024, 1024))
+        img.thumbnail((1024, 1024)) # Nén về size tối ưu để Gemini đọc nhanh hơn
 
-        # 1. Tăng cường độ nét (Sharpness) lên 150% để nổi rõ viền Camera, vết ghép màn hình
-        enhancer_sharpness = ImageEnhance.Sharpness(img)
-        img = enhancer_sharpness.enhance(1.5)
-
-        # 2. Tăng cường tương phản (Contrast) lên 110% để nổi rõ logo in mờ đằng sau lưng
-        enhancer_contrast = ImageEnhance.Contrast(img)
-        img = enhancer_contrast.enhance(1.1)
+        # ---> [GIẢI QUYẾT TÌNH TRẠNG ẢO GIÁC - HALLUCINATION] <---
+        # Đã VÔ HIỆU HÓA các bộ lọc ImageEnhance (Sharpness 1.5, Contrast 1.1) theo lời khuyên của chuyên gia.
+        # Lý do: Các thuật toán tăng nét này tạo ra nhiễu hạt nhân tạo (artifacts).
+        # LLM Vision như Gemini rất nhạy cảm với nhiễu này, dễ nhìn nhầm "lưng nhám" thành "lưng sần",
+        # hoặc viền kim loại xước mờ thành viền nhựa bóng. Giữ nguyên chất lượng ảnh gốc là tốt nhất.
 
         img_byte_arr = io.BytesIO()
         img.save(img_byte_arr, format='JPEG', quality=85)
